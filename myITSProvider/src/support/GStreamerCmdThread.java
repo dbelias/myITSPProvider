@@ -1,0 +1,57 @@
+package support;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+import splibraries.GstreamerTool;
+
+public class GStreamerCmdThread extends Thread{
+	private GstreamerTool obj;
+	private String command;
+	private Process pid;
+	private String name;
+	public GStreamerCmdThread(String s,GstreamerTool o, String n ){
+		this.command=s;
+		this.obj=o;
+		this.name=n;
+		start();
+	}
+	public void run(){
+		System.out.println(command);
+			try {
+				pid=Runtime.getRuntime().exec(command);
+				//pid.waitFor();
+				
+				/*
+				BufferedReader in = new BufferedReader(new InputStreamReader(pid.getInputStream()));
+				String line = null;
+				while ((line = in.readLine()) != null) {
+					System.out.println(name+":"+line);
+				}
+
+				//pid.waitFor();
+				 * Don't use the while above because it never goes out of it. Consequently the while below 
+				 * is never taken into account!!!!
+				 */
+				while (!obj.getStopFlag()){
+					Thread.sleep(300);
+				}
+				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			finally {
+				System.out.println(name+":Stopped hopefully");
+				pid.destroy();
+				
+			}
+			
+		
+	}
+
+}
