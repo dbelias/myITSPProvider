@@ -4,9 +4,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.apache.log4j.Logger;
+
 import splibraries.GstreamerTool;
 
 public class GStreamerCmdThread extends Thread{
+	private static Logger logger=Logger.getLogger("GStreamerCmdThread");
 	private GstreamerTool obj;
 	private String command;
 	private Process pid;
@@ -18,8 +21,10 @@ public class GStreamerCmdThread extends Thread{
 		start();
 	}
 	public void run(){
-		System.out.println(command);
+		//System.out.println(command);
+		logger.info(command);
 			try {
+				
 				pid=Runtime.getRuntime().exec(command);
 				//pid.waitFor();
 				
@@ -40,13 +45,17 @@ public class GStreamerCmdThread extends Thread{
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
+				logger.error("IOException", e);
 				e.printStackTrace();
+				
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
+				logger.error("InterruptedException", e);
 				e.printStackTrace();
 			}
 			finally {
-				System.out.println(name+":Stopped hopefully");
+				//System.out.println(name+":Stopped hopefully");
+				logger.info(name+" stopped hopefully");
 				pid.destroy();
 				
 			}

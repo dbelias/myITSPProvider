@@ -7,6 +7,9 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import org.apache.log4j.Logger;
+
 import net.miginfocom.swing.MigLayout;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -17,7 +20,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 public class PortSettingsDialog extends JDialog {
-
+	private static Logger logger=Logger.getLogger("PortSettingsDialog");
 	private final JPanel contentPanel = new JPanel();
 	private JTextField txtFieldSIPPortServer;
 	private JTextField txtFieldAudioBasePort;
@@ -82,6 +85,7 @@ public class PortSettingsDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
+						logger.info("Audio Port/Video Port/SIP Port="+txtFieldAudioBasePort.getText()+"/"+txtFieldVideoBasePort.getText()+"/"+txtFieldSIPPortServer.getText());
 						config.setAudioPort(txtFieldAudioBasePort.getText());
 						config.setVideoPort(txtFieldVideoBasePort.getText());
 						config.setSIPPort(txtFieldSIPPortServer.getText());

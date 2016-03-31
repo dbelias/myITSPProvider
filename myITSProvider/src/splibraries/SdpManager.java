@@ -4,7 +4,10 @@ package splibraries;
 import java.util.*;
 import javax.sdp.*;
 
+import org.apache.log4j.Logger;
+
 public class SdpManager {
+	private static Logger logger=Logger.getLogger("SdpManager");
 
   SdpFactory mySdpFactory;
   SdpInfo mySdpInfo;
@@ -58,6 +61,7 @@ public class SdpManager {
     mySdpContent=mySdp.toString().getBytes();
 
     }catch(Exception e){
+    	logger.error("Exception", e);
       e.printStackTrace();
     }
 
@@ -105,6 +109,7 @@ public class SdpManager {
       mySdpInfo.vformat=myVideoMediaFormat;
 
     }catch(Exception e){
+    	logger.error("Exception", e);
       e.printStackTrace();
     }
 

@@ -6,6 +6,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import org.apache.log4j.Logger;
 
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -28,7 +29,7 @@ import splibraries.Configuration;
 import support.voiceConfiguration;
 
 public class VoiceSettingsWnd extends JFrame {
-
+	private static Logger logger=Logger.getLogger("VoiceSettingsWnd");
 	/**
 	 * 
 	 */

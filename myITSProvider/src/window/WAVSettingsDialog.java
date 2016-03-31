@@ -8,6 +8,9 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import org.apache.log4j.Logger;
+
 import net.miginfocom.swing.MigLayout;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -19,7 +22,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 public class WAVSettingsDialog extends JDialog {
-
+	private static Logger logger=Logger.getLogger("VoiceSettingsWnd");
 	private final JPanel contentPanel = new JPanel();
 	private JTextField textFieldRingBackTone;
 	private JTextField textFieldRingTone;
@@ -67,11 +70,13 @@ public class WAVSettingsDialog extends JDialog {
 					RingBackToneFile=openFileDialog.getFile();
 					RingBackTonePath=openFileDialog.getDirectory();
 					if (RingBackToneFile==null){
+						logger.warn("No RingBackTone file selected");
 						//TODO: Show an error message
 					}
 					else {
 						
 						String path=RingBackTonePath+RingBackToneFile;
+						logger.info("RingBackTone:"+path);
 						textFieldRingBackTone.setText(path);
 						
 					}
@@ -98,11 +103,13 @@ public class WAVSettingsDialog extends JDialog {
 					RingToneFile=openFileDialog.getFile();
 					RingTonePath=openFileDialog.getDirectory();
 					if (RingToneFile==null){
+						logger.warn("No RingTone file selected");
 						//TODO: Show an error message
 					}
 					else {
 						
 						String path=RingTonePath+RingToneFile;
+						logger.info("RingTone:"+path);
 						textFieldRingTone.setText(path);
 						
 					}
@@ -129,11 +136,13 @@ public class WAVSettingsDialog extends JDialog {
 					VoicePayloadFile=openFileDialog.getFile();
 					VoicePayloadPath=openFileDialog.getDirectory();
 					if (VoicePayloadFile==null){
+						logger.warn("No VoicePayload file selected");
 						//TODO: Show an error message
 					}
 					else {
 						
 						String path=VoicePayloadPath+VoicePayloadFile;
+						logger.info("VoicePayload:"+path);
 						textFieldVoicePayload.setText(path);
 						
 					}

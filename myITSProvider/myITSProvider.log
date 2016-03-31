@@ -89,3 +89,81 @@
 2016-03-27 18:47:49,346 - myStack - WARN - using default tls security policy
 2016-03-27 20:18:43,638 - myStack - WARN - using default tls security policy
 2016-03-27 22:38:32,277 - myStack - WARN - using default tls security policy
+2016-03-31 00:23:30,909 - myITSPmainWnd - INFO - main process is started
+2016-03-31 00:23:31,133 - SystemIPs - INFO - 192.168.1.2
+2016-03-31 00:23:31,133 - SystemIPs - INFO - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-03-31 00:23:31,134 - SystemIPs - INFO - fe80:0:0:0:207b:2864:3f57:fefd%4
+2016-03-31 00:23:31,134 - SystemIPs - INFO - 2001:0:5ef5:79fb:207b:2864:3f57:fefd
+2016-03-31 00:23:31,140 - myITSPmainWnd - INFO - initialize GUI objects started
+2016-03-31 00:23:31,141 - myITSPmainWnd - INFO - initialize GUI objects finished
+2016-03-31 00:23:47,487 - GStreamerSettingsDialog - INFO - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-03-31 00:23:55,678 - GStreamerSettingsDialog - INFO - file confirmed
+2016-03-31 00:24:14,242 - VoiceSettingsWnd - INFO - RingBackTone:C:\wavs\ringbacktone.wav
+2016-03-31 00:24:20,602 - VoiceSettingsWnd - INFO - RingTone:C:\wavs\uringtone.wav
+2016-03-31 00:24:28,819 - myITSPmainWnd - INFO - Button On is pressed
+2016-03-31 00:24:28,831 - ITSPListener - INFO - Initialize ITSP Listener
+2016-03-31 00:24:28,955 - myStack - WARN - using default tls security policy
+2016-03-31 00:24:40,509 - ITSPListener - INFO - User Input:Type=0 Status=0 Destination=sip:2106197313@192.168.1.121:5060
+2016-03-31 00:24:40,834 - ITSPListener - INFO - processResponse: Status=1 Response=100
+2016-03-31 00:24:40,849 - GStreamerToneCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 00:24:41,156 - ITSPListener - INFO - processResponse: Status=2 Response=180
+2016-03-31 00:24:41,158 - GStreamerToneCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 00:24:42,152 - ITSPListener - INFO - processResponse: Status=2 Response=200
+2016-03-31 00:24:42,155 - GStreamerToneTool - INFO - Stop Tone ordered
+2016-03-31 00:24:42,193 - GstreamerTool - INFO - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:8
+2016-03-31 00:24:42,201 - GStreamerCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmadepay ! alawdec ! audioconvert ! autoaudiosink
+2016-03-31 00:24:42,501 - GStreamerCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe autoaudiosrc ! audioconvert ! audioresample ! alawenc ! rtppcmapay pt=8 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1231685201 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-03-31 00:24:42,588 - ITSPListener - WARN - processTransactionTerminated --> no handling
+2016-03-31 00:24:47,369 - GStreamerToneCmdThread - INFO - PlayTone stopped hopefully
+2016-03-31 00:24:47,369 - GStreamerToneCmdThread - INFO - PlayTone stopped hopefully
+2016-03-31 00:25:07,604 - ITSPListener - INFO - User Input:Type=1 Status=4 Destination=null
+2016-03-31 00:25:07,606 - GstreamerTool - INFO - Stop Media ordered
+2016-03-31 00:25:07,622 - ITSPListener - INFO - processResponse: Status=0 Response=200
+2016-03-31 00:25:07,727 - GStreamerCmdThread - INFO - Trx stopped hopefully
+2016-03-31 00:25:07,728 - GStreamerCmdThread - INFO - Rcv stopped hopefully
+2016-03-31 00:25:12,622 - ITSPListener - WARN - processTransactionTerminated --> no handling
+2016-03-31 00:25:15,606 - ITSPListener - WARN - Process Dialog Terminated-->No handling
+2016-03-31 00:25:30,351 - ITSPListener - INFO - User Input:Type=0 Status=0 Destination=sip:2106197313@192.168.1.121:5060
+2016-03-31 00:25:30,565 - ITSPListener - INFO - processResponse: Status=1 Response=100
+2016-03-31 00:25:30,575 - GStreamerToneCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 00:25:30,704 - ITSPListener - INFO - processResponse: Status=2 Response=180
+2016-03-31 00:25:30,705 - GStreamerToneCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 00:25:39,216 - ITSPListener - INFO - processResponse: Status=2 Response=200
+2016-03-31 00:25:39,219 - GStreamerToneTool - INFO - Stop Tone ordered
+2016-03-31 00:25:39,220 - GstreamerTool - INFO - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40002 with Codec:8
+2016-03-31 00:25:39,221 - GStreamerCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40002 caps="application/x-rtp" ! queue ! rtppcmadepay ! alawdec ! audioconvert ! autoaudiosink
+2016-03-31 00:25:39,293 - GStreamerToneCmdThread - INFO - PlayTone stopped hopefully
+2016-03-31 00:25:39,498 - GStreamerToneCmdThread - INFO - PlayTone stopped hopefully
+2016-03-31 00:25:39,520 - ITSPListener - WARN - processTransactionTerminated --> no handling
+2016-03-31 00:25:39,521 - GStreamerCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe autoaudiosrc ! audioconvert ! audioresample ! alawenc ! rtppcmapay pt=8 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1231742228 ! udpsink host=192.168.1.121 port=30528 bind-port=40002
+2016-03-31 00:25:49,720 - ITSPListener - INFO - processRequest: Status=4 Method=BYE
+2016-03-31 00:25:49,725 - GstreamerTool - INFO - Stop Media ordered
+2016-03-31 00:25:49,733 - GStreamerCmdThread - INFO - Trx stopped hopefully
+2016-03-31 00:25:49,745 - GStreamerCmdThread - INFO - Rcv stopped hopefully
+2016-03-31 00:25:57,725 - ITSPListener - WARN - Process Dialog Terminated-->No handling
+2016-03-31 00:26:21,724 - ITSPListener - WARN - processTransactionTerminated --> no handling
+2016-03-31 00:27:09,804 - ITSPListener - INFO - processRequest: Status=0 Method=INVITE
+2016-03-31 00:27:09,808 - GStreamerToneCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 00:27:18,986 - ITSPListener - INFO - User Input:Type=1 Status=5 Destination=null
+2016-03-31 00:27:18,987 - GStreamerToneTool - INFO - Stop Tone ordered
+2016-03-31 00:27:19,055 - GStreamerToneCmdThread - INFO - PlayTone stopped hopefully
+2016-03-31 00:27:23,817 - ITSPListener - WARN - processTransactionTerminated --> no handling
+2016-03-31 00:27:26,986 - ITSPListener - WARN - Process Dialog Terminated-->No handling
+2016-03-31 00:27:45,258 - ITSPListener - INFO - processRequest: Status=0 Method=INVITE
+2016-03-31 00:27:45,260 - GStreamerToneCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 00:27:47,731 - ITSPListener - INFO - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-03-31 00:27:47,732 - GStreamerToneTool - INFO - Stop Tone ordered
+2016-03-31 00:27:47,733 - GstreamerTool - INFO - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40006 with Codec:0
+2016-03-31 00:27:47,733 - GStreamerCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40006 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-03-31 00:27:48,034 - GStreamerCmdThread - INFO - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe autoaudiosrc ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1231870741 ! udpsink host=192.168.1.121 port=30528 bind-port=40006
+2016-03-31 00:27:48,056 - ITSPListener - INFO - processRequest: Status=6 Method=ACK
+2016-03-31 00:27:50,584 - GStreamerToneCmdThread - INFO - PlayTone stopped hopefully
+2016-03-31 00:27:56,263 - ITSPListener - WARN - processTransactionTerminated --> no handling
+2016-03-31 00:28:07,839 - ITSPListener - INFO - processRequest: Status=4 Method=BYE
+2016-03-31 00:28:07,841 - GstreamerTool - INFO - Stop Media ordered
+2016-03-31 00:28:07,854 - GStreamerCmdThread - INFO - Rcv stopped hopefully
+2016-03-31 00:28:07,866 - GStreamerCmdThread - INFO - Trx stopped hopefully
+2016-03-31 00:28:15,840 - ITSPListener - WARN - Process Dialog Terminated-->No handling
+2016-03-31 00:28:39,840 - ITSPListener - WARN - processTransactionTerminated --> no handling
+2016-03-31 00:28:44,425 - myITSPmainWnd - INFO - Button Off is pressed
+2016-03-31 00:28:45,427 - ITSPListener - INFO - SetOff

@@ -8,6 +8,9 @@ import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+
+import org.apache.log4j.Logger;
+
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
@@ -21,7 +24,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 public class GStreamerSettingsDialog extends JDialog {
-
+	private static Logger logger=Logger.getLogger("GStreamerSettingsDialog");
 	private final JPanel contentPanel = new JPanel();
 	private JTextField textField;
 	private String GStreamerPath;
@@ -70,11 +73,13 @@ public class GStreamerSettingsDialog extends JDialog {
 					GStreamerPath=openFileDialog.getDirectory();
 					if (filename==null){
 						//TODO: Show an error message
+						logger.warn("no filename selected");
 					}
 					else {
 						
 						String path=GStreamerPath+filename;
 						textField.setText(path);
+						logger.info("file slected:"+path);
 						
 					}
 				}
@@ -94,6 +99,7 @@ public class GStreamerSettingsDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
+						logger.info("file confirmed");
 						gsl.updateGStreamerLocation(GStreamerPath, filename);
 						setVisible(false);
 						dispose();
@@ -107,6 +113,7 @@ public class GStreamerSettingsDialog extends JDialog {
 				JButton cancelButton = new JButton("Cancel");
 				cancelButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
+						logger.warn("selected file is candelled");
 						setVisible(false);
 						dispose();
 					}

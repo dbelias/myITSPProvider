@@ -1,10 +1,13 @@
 package splibraries;
 
 
+import org.apache.log4j.Logger;
+
 import support.GStreamerLocation;
 import support.GStreamerToneCmdThread;
 
 public class GStreamerToneTool {
+	private static Logger logger=Logger.getLogger("GStreamerToneTool");
 	private boolean stopFlag;
 	private String audioPath;
 	private String path;
@@ -30,7 +33,8 @@ public class GStreamerToneTool {
 		return stopFlag;
 	}
 	public void stopTone(){
-		System.out.println("gStreamerTone.StopTone ordered"); 
+		logger.info("Stop Tone ordered");
+		//System.out.println("gStreamerTone.StopTone ordered"); 
 		stopFlag=true;
 	}
 	public void setGstreamer(GStreamerLocation gsl){

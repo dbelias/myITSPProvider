@@ -40,13 +40,16 @@ import java.awt.Dimension;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import javax.swing.event.CaretListener;
+
+import org.apache.log4j.Logger;
+
 import javax.swing.event.CaretEvent;
 import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
 import javax.swing.SwingConstants;
 
 public class myITSPmainWnd {
-
+	private static Logger logger=Logger.getLogger("myITSPmainWnd");
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -85,9 +88,11 @@ public class myITSPmainWnd {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					logger.info("main process is started");
 					myITSPmainWnd window = new myITSPmainWnd();
 					window.frmMyItspSimulator.setVisible(true);
 				} catch (Exception e) {
+					logger.error("Exception", e);
 					e.printStackTrace();
 				}
 			}
@@ -237,6 +242,7 @@ public class myITSPmainWnd {
 		btnOnOff.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (state==STATE_ON){
+					logger.info("Button Off is pressed");
 					state=STATE_OFF;
 					list.setOff();
 				    list=null;
@@ -244,6 +250,7 @@ public class myITSPmainWnd {
 				    
 				}
 				else {//state==STATE_OFF
+					logger.info("Button On is pressed");
 					state=STATE_ON;
 					setGUIon();
 					showITSPSettings();
@@ -599,6 +606,7 @@ public class myITSPmainWnd {
 		
 	}
 	private void initializeGUIObjects(){
+		logger.info("initialize GUI objects started");
 		state=STATE_OFF;
 		gStreamer=new GStreamerLocation(null,null);
 		wav=new WAVLocation();
@@ -614,6 +622,7 @@ public class myITSPmainWnd {
 		textArea.setEnabled(false);
 		btnMakeCall.setEnabled(false);
 		btnReleaseCall.setEnabled(false);
+		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
 		state=STATE_ON;

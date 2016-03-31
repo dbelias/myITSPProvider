@@ -6,10 +6,13 @@ import java.io.InputStreamReader;
 import java.util.Calendar;
 import java.util.Random;
 
+import org.apache.log4j.Logger;
+
 import support.GStreamerCmdThread;
 import support.GStreamerLocation;
 
 public class GstreamerTool {
+	private static Logger logger=Logger.getLogger("GstreamerTool");
 	private boolean stopFlag;
 	private String peerIP;
 	private int peerPort;
@@ -58,7 +61,7 @@ public class GstreamerTool {
 		
 	}
 	public void startMedia(String destIP, int destPort, int sourcePort, int codec) throws InterruptedException{
-		
+		logger.info("Start media ordered. Dst:"+destIP+":"+destPort+" from SrcPort:"+sourcePort+" with Codec:"+codec);
 		stopFlag=false;
 		peerIP=destIP;
 		peerPort=destPort;
@@ -98,7 +101,8 @@ public class GstreamerTool {
 	}
 	
 	public void stopMedia(){
-		System.out.println("gStreamer.StopMedia ordered"); 
+		//System.out.println("gStreamer.StopMedia ordered"); 
+		logger.info("Stop Media ordered");
 		stopFlag=true;
 		//trx.destroy();
 		//rcv.destroy();

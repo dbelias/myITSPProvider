@@ -36,9 +36,7 @@ import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
 
-
-
-
+import org.apache.log4j.Logger;
 
 import splibraries.Configuration;
 import splibraries.GStreamerToneTool;
@@ -52,6 +50,7 @@ import support.SIPHeadersTxt;
 import window.myITSPmainWnd;
 
 public class ITSPListener implements SipListener{
+	private static Logger logger=Logger.getLogger("ITSPListener");
 	
 	private SipFactory mySipFactory;
 	private SipStack mySipStack;
@@ -120,6 +119,7 @@ public class ITSPListener implements SipListener{
 	
 	public ITSPListener(Configuration conf,myITSPmainWnd GUI)  {
 	    try{
+	    logger.info("Initialize ITSP Listener");
 	      myGUI = GUI;
 	      myIP = myGUI.getmyIP();
 	      myPort = conf.sipPort;
@@ -184,6 +184,7 @@ public class ITSPListener implements SipListener{
 	      myGUI.showStatus("Status: IDLE");
 
 	    }catch (Exception e) {
+	    	logger.error("Exception", e);
 	     e.printStackTrace();
 	    }
 	  }
@@ -202,8 +203,11 @@ public class ITSPListener implements SipListener{
 	    myAlertTool=null;
 	    myRingTool=null;
 	    myGUI.showStatus("");
+	    logger.info("SetOff");
 	    }
-	    catch(Exception e){}
+	    catch(Exception e){
+	    	logger.error("Exception", e);
+	    }
 	  }
 
 
@@ -217,6 +221,7 @@ public class ITSPListener implements SipListener{
 	}
 	public void userInput(int type, String destination){
      try {
+    	 logger.info("User Input:Type="+type+" Status="+status+" Destination="+destination);
        switch (status) {
          case IDLE:
            if (type == YES) {
@@ -355,6 +360,7 @@ public class ITSPListener implements SipListener{
        }
      }
      catch (Exception e){
+    	 logger.error("Exception", e);
      e.printStackTrace();
    }
 
@@ -362,11 +368,13 @@ public class ITSPListener implements SipListener{
 	
 	public void processDialogTerminated(DialogTerminatedEvent arg0) {
 		// TODO Auto-generated method stub
+		logger.warn("Process Dialog Terminated-->No handling");
 		
 	}
 
 	public void processIOException(IOExceptionEvent arg0) {
 		// TODO Auto-generated method stub
+		logger.warn("Process IOExcpetion-->No handling");
 		
 	}
 
@@ -380,7 +388,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
   }
 
   try{
-
+	  logger.info("processRequest: Status="+status+" Method="+method);
   switch (status) {
 
     case IDLE:
@@ -479,6 +487,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
   }
 
   }catch (Exception e) {
+	  logger.warn("Exception", e);
     e.printStackTrace();
   }
 }
@@ -489,13 +498,15 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
   Response myResponse=responseReceivedEvent.getResponse();
   myGUI.display("<<< "+myResponse.toString());
   ClientTransaction thisClientTransaction=responseReceivedEvent.getClientTransaction();
-  if (!thisClientTransaction.equals(myClientTransaction)) {return;}
+  if (!thisClientTransaction.equals(myClientTransaction)) {
+	  logger.warn("Not similar Client Transactions");
+	  return;}
   int myStatusCode=myResponse.getStatusCode();
   CSeqHeader originalCSeq=(CSeqHeader) myClientTransaction.getRequest().getHeader(CSeqHeader.NAME);
   long numseq=originalCSeq.getSeqNumber();
-
+  logger.info("processResponse: Status="+status+" Response="+myStatusCode);
 switch(status){
-
+	
   case WAIT_PROV:
     if (myStatusCode<200) {
       status=WAIT_FINAL;
@@ -581,17 +592,20 @@ switch(status){
     break;
 }
   }catch(Exception excep){
+	  logger.error("Exception", excep);
     excep.printStackTrace();
   }
 }
 
 	public void processTimeout(TimeoutEvent arg0) {
 		// TODO Auto-generated method stub
+		logger.warn("processTimeout --> no handling");
 		
 	}
 
 	public void processTransactionTerminated(TransactionTerminatedEvent arg0) {
 		// TODO Auto-generated method stub
+		logger.warn("processTransactionTerminated --> no handling");
 		
 	}
 	
