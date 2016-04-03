@@ -75,11 +75,13 @@ public class ITSPListener implements SipListener{
 	private SdpManager mySdpManager;
 	//private VoiceTool myVoiceTool;
 	private GstreamerTool myGVoiceTool;
+	private GstreamerTool myGAnnouncementTool;
 	private VideoTool myVideoTool;
 	//private TonesTool myAlertTool;
 	private GStreamerToneTool myAlertTool;
 	//private TonesTool myRingTool;
 	private GStreamerToneTool myRingTool;
+	private boolean isOnlyAnnouncment;
 	private SdpInfo answerInfo;
 	private SdpInfo offerInfo;
 
@@ -88,9 +90,11 @@ public class ITSPListener implements SipListener{
 	private int myVideoPort;
 	private int myAudioCodec;
 	private int myVideoCodec;
+	
 
 	static final int YES=0;
 	static final int NO=1;
+	static final int SEND183=2;
 
 	static final int IDLE=0;
 	static final int WAIT_PROV=1;
@@ -132,6 +136,8 @@ public class ITSPListener implements SipListener{
 	      //myVoiceTool=new VoiceTool();
 	      myGVoiceTool=new GstreamerTool();
 	      myGVoiceTool.setGstreamer(myGUI.getGStreamer());//Set the path of gStreamer gst-launch
+	      myGAnnouncementTool=new GstreamerTool();
+	      myGAnnouncementTool.setGstreamer(myGUI.getGStreamer());
 	      myVideoTool=new VideoTool();
 	      answerInfo=new SdpInfo();
 	      offerInfo=new SdpInfo();
@@ -157,6 +163,11 @@ public class ITSPListener implements SipListener{
 	      s=myGUI.getWAVLocation().getRingBackTonePath().replace('\\', '/');
 	      s=s+myGUI.getWAVLocation().getRingBackToneFile();
 	      myRingTool.prepareTone(s);
+	      String announcementFile=myGUI.getWAVLocation().getTrxPayloadPath().replace('\\', '/');
+	      announcementFile=announcementFile+myGUI.getWAVLocation().getTrxPayloadFile();
+	      myGAnnouncementTool.setAnnouncement(announcementFile);
+	      myGAnnouncementTool.setIsAnnouncement(true);
+	      isOnlyAnnouncment=!(myGUI.getWAVLocation().getIsAnnounceAsTrxSource());
 	      //myRingTool.prepareTone("c:/Users/BeliasD/eclipse_workspace/myITSProvider/wavs/ringbacktone.wav");
 
 
@@ -297,7 +308,11 @@ public class ITSPListener implements SipListener{
              myDialog.sendRequest(myClientTransaction);
              myGUI.display(">>> " + myBye.toString());
              //myVoiceTool.stopMedia();
-             myGVoiceTool.stopMedia();
+             if (isOnlyAnnouncment){
+             	myGVoiceTool.stopMedia();
+             }else {
+             	myGAnnouncementTool.stopMedia();
+             }
 
              if (answerInfo.vport>0) {
                myVideoTool.stopMedia();
@@ -341,7 +356,12 @@ public class ITSPListener implements SipListener{
              myResponse.setContent(content,contentTypeHeader);
 
              //myVoiceTool.startMedia(offerInfo.IpAddress,offerInfo.aport,answerInfo.aport,offerInfo.aformat);
-             myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+             if (isOnlyAnnouncment){
+            	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+             } else {
+            	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+             }
+             
 
             if (answerInfo.vport>0) {
               myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,offerInfo.vformat);
@@ -356,6 +376,19 @@ public class ITSPListener implements SipListener{
              myGUI.showStatus("Status: WAIT_ACK");
              myGUI.setButtonStatusEstablishedCall();
              break;
+           }
+           else if (type == SEND183){
+        	   Request originalRequest = myServerTransaction.getRequest();
+        	   Response myResponse=myMessageFactory.createResponse(183,originalRequest);
+               myResponse.addHeader(myContactHeader);
+               ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
+               myToHeader.setTag("454326");
+               myServerTransaction.sendResponse(myResponse);
+               myDialog=myServerTransaction.getDialog();
+               myGUI.display(">>> "+myResponse.toString());
+               status=RINGING;
+        	   
+        	   break;
            }
        }
      }
@@ -431,6 +464,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         status=RINGING;
         myGUI.showStatus("Status: RINGING");
         myGUI.setButtonStatusAnswerCall();
+        myGUI.setButtonStatusSend183();
         setTxtLines(myRequest);
         
       }
@@ -443,7 +477,12 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         myGUI.display(">>> "+myResponse.toString());
 
        //myVoiceTool.stopMedia();
-       myGVoiceTool.stopMedia();
+        if (isOnlyAnnouncment){
+        	myGVoiceTool.stopMedia();
+        }else {
+        	myGAnnouncementTool.stopMedia();
+        }
+       
 
         if (answerInfo.vport>0) {
           myVideoTool.stopMedia();
@@ -530,7 +569,11 @@ switch(status){
       answerInfo=mySdpManager.getSdp(cont);
 
       //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
-      myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,answerInfo.aformat);
+      if (isOnlyAnnouncment){
+     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+      } else {
+     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+      }
       if (answerInfo.vport>0) {
       myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,answerInfo.vformat);
       }
@@ -574,7 +617,11 @@ switch(status){
       answerInfo=mySdpManager.getSdp(cont);
 
         //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
-        myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,answerInfo.aformat);
+      if (isOnlyAnnouncment){
+     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+      } else {
+     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+      }
         System.out.println("Listen RTP at port:"+offerInfo.aport);
 
         if (answerInfo.vport>0) {
