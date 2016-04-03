@@ -10,6 +10,7 @@ public class WAVLocation {
 	private String pathRcvPayload;
 	private String fileRcvPayload;
 	private WAVLocation WAVLocObj;
+	private boolean isAnnounceAsTrxSource;
 	
 	public WAVLocation(){
 		this.pathRingBackTone=null;
@@ -20,6 +21,7 @@ public class WAVLocation {
 		this.fileTrxPayload=null;
 		this.pathRcvPayload=null;
 		this.fileRcvPayload=null;
+		this.isAnnounceAsTrxSource=false;
 	}
 	
 	public WAVLocation(String p1, String f1, String p2, String f2, String p3, String f3){
@@ -32,6 +34,10 @@ public class WAVLocation {
 		this.pathRcvPayload=null;
 		this.fileRcvPayload=null;
 	}
+	public WAVLocation(String p1, String f1, String p2, String f2, String p3, String f3, boolean b){
+		super();
+		this.isAnnounceAsTrxSource=b;
+	}
 	
 	public void updateWAVPaths(String p1, String f1, String p2, String f2, String p3, String f3){
 		pathRingBackTone=p1;
@@ -41,6 +47,10 @@ public class WAVLocation {
 		pathTrxPayload=p3;
 		fileTrxPayload=f3;
 	}
+	public void updateWAVPaths(String p1, String f1, String p2, String f2, String p3, String f3, boolean b){
+		updateWAVPaths(p1,f1,p2,f2,p3,f3);
+		isAnnounceAsTrxSource=b;
+	}
 	
 	public void updatePaths(WAVLocation c){
 		pathRingBackTone=c.pathRingBackTone;
@@ -49,6 +59,7 @@ public class WAVLocation {
 		fileRingTone=c.fileRingTone;
 		pathTrxPayload=c.pathTrxPayload;
 		fileTrxPayload=c.fileTrxPayload;
+		isAnnounceAsTrxSource=c.isAnnounceAsTrxSource;
 	}
 	public String getRingBackTonePath(){
 		return pathRingBackTone;
@@ -67,6 +78,9 @@ public class WAVLocation {
 	}
 	public String getTrxPayloadFile(){
 		return fileTrxPayload;
+	}
+	public boolean getIsAnnounceAsTrxSource(){
+		return isAnnounceAsTrxSource;
 	}
 	
 	
