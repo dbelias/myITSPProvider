@@ -80,6 +80,8 @@ public class myITSPmainWnd {
 	private JTextField txtPaiLine;
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
+	private JButton btnSend183;
+	private final String Version="V0.3";
 
 	/**
 	 * Launch the application.
@@ -126,7 +128,7 @@ public class myITSPmainWnd {
 		*/
 		frmMyItspSimulator.setPreferredSize(new Dimension(900, 550));
 		frmMyItspSimulator.setMinimumSize(new Dimension(800, 400));
-		frmMyItspSimulator.setTitle("my ITSP Simulator @Powered by Belia Dimitrios");
+		frmMyItspSimulator.setTitle("my ITSP Simulator @Powered by Belias Dimitrios "+Version);
 		frmMyItspSimulator.setBounds(100, 100, 800, 448);
 		frmMyItspSimulator.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
@@ -360,6 +362,19 @@ public class myITSPmainWnd {
 				list.userInput(1,null);
 			}
 		});
+		
+		btnSend183 = new JButton("Send 183");
+		btnSend183.setEnabled(false);
+		btnSend183.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				list.userInput(2,null);
+			}
+		});
+		GridBagConstraints gbc_btnSend183 = new GridBagConstraints();
+		gbc_btnSend183.insets = new Insets(0, 0, 5, 5);
+		gbc_btnSend183.gridx = 4;
+		gbc_btnSend183.gridy = 5;
+		frmMyItspSimulator.getContentPane().add(btnSend183, gbc_btnSend183);
 		GridBagConstraints gbc_btnReleaseCall = new GridBagConstraints();
 		gbc_btnReleaseCall.insets = new Insets(0, 0, 5, 5);
 		gbc_btnReleaseCall.gridx = 5;
@@ -393,7 +408,7 @@ public class myITSPmainWnd {
 		txtInviteLine.setEditable(false);
 		txtInviteLine.setText("call from xyz");
 		GridBagConstraints gbc_txtInviteLine = new GridBagConstraints();
-		gbc_txtInviteLine.gridwidth = 2;
+		gbc_txtInviteLine.gridwidth = 3;
 		gbc_txtInviteLine.insets = new Insets(0, 0, 5, 5);
 		gbc_txtInviteLine.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtInviteLine.gridx = 2;
@@ -414,7 +429,7 @@ public class myITSPmainWnd {
 		txtFromLine.setEditable(false);
 		txtFromLine.setText("From Line");
 		GridBagConstraints gbc_txtFromLine = new GridBagConstraints();
-		gbc_txtFromLine.gridwidth = 2;
+		gbc_txtFromLine.gridwidth = 3;
 		gbc_txtFromLine.insets = new Insets(0, 0, 5, 5);
 		gbc_txtFromLine.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtFromLine.gridx = 2;
@@ -434,7 +449,7 @@ public class myITSPmainWnd {
 		txtToLine.setEditable(false);
 		txtToLine.setText("To Line");
 		GridBagConstraints gbc_txtToLine = new GridBagConstraints();
-		gbc_txtToLine.gridwidth = 2;
+		gbc_txtToLine.gridwidth = 3;
 		gbc_txtToLine.insets = new Insets(0, 0, 5, 5);
 		gbc_txtToLine.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtToLine.gridx = 2;
@@ -454,7 +469,7 @@ public class myITSPmainWnd {
 		txtContactLine.setEditable(false);
 		txtContactLine.setText("Contact Line");
 		GridBagConstraints gbc_txtContactLine = new GridBagConstraints();
-		gbc_txtContactLine.gridwidth = 2;
+		gbc_txtContactLine.gridwidth = 3;
 		gbc_txtContactLine.insets = new Insets(0, 0, 5, 5);
 		gbc_txtContactLine.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtContactLine.gridx = 2;
@@ -474,7 +489,7 @@ public class myITSPmainWnd {
 		txtPaiLine.setEditable(false);
 		txtPaiLine.setText("PAI Line");
 		GridBagConstraints gbc_txtPaiLine = new GridBagConstraints();
-		gbc_txtPaiLine.gridwidth = 2;
+		gbc_txtPaiLine.gridwidth = 3;
 		gbc_txtPaiLine.insets = new Insets(0, 0, 5, 5);
 		gbc_txtPaiLine.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtPaiLine.gridx = 2;
@@ -494,7 +509,7 @@ public class myITSPmainWnd {
 		txtPpiLine.setEditable(false);
 		txtPpiLine.setText("PPI Line");
 		GridBagConstraints gbc_txtPpiLine = new GridBagConstraints();
-		gbc_txtPpiLine.gridwidth = 2;
+		gbc_txtPpiLine.gridwidth = 3;
 		gbc_txtPpiLine.insets = new Insets(0, 0, 5, 5);
 		gbc_txtPpiLine.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtPpiLine.gridx = 2;
@@ -514,7 +529,7 @@ public class myITSPmainWnd {
 		txtDiversionLine.setEditable(false);
 		txtDiversionLine.setText("Diversion Line");
 		GridBagConstraints gbc_txtDiversionLine = new GridBagConstraints();
-		gbc_txtDiversionLine.gridwidth = 2;
+		gbc_txtDiversionLine.gridwidth = 3;
 		gbc_txtDiversionLine.insets = new Insets(0, 0, 5, 5);
 		gbc_txtDiversionLine.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtDiversionLine.gridx = 2;
@@ -622,6 +637,7 @@ public class myITSPmainWnd {
 		textArea.setEnabled(false);
 		btnMakeCall.setEnabled(false);
 		btnReleaseCall.setEnabled(false);
+		btnSend183.setEnabled(false);
 		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
@@ -652,6 +668,7 @@ public class myITSPmainWnd {
 		textArea.setEnabled(false);
 		btnMakeCall.setEnabled(false);
 		btnReleaseCall.setEnabled(false);
+		btnSend183.setEnabled(false);
 		comboBoxMyIPs.setEnabled(true);
 	}
 	public void showStatus(String s){
@@ -702,6 +719,7 @@ public class myITSPmainWnd {
 		btnMakeCall.setText("Call");
 		btnReleaseCall.setEnabled(false);
 		btnReleaseCall.setText("Reject");
+		btnSend183.setEnabled(false);
 	}
 	public void setButtonStatusMakeCall(){
 		btnMakeCall.setEnabled(false);
@@ -712,6 +730,7 @@ public class myITSPmainWnd {
 	public void setButtonStatusEstablishedCall(){
 		btnMakeCall.setEnabled(false);
 		//btnMakeCall.setText("Call");
+		btnSend183.setEnabled(false);
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Release");
 	}
@@ -720,6 +739,9 @@ public class myITSPmainWnd {
 		btnMakeCall.setText("Answer");
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Reject");
+	}
+	public void setButtonStatusSend183(){
+		btnSend183.setEnabled(true);
 	}
 	public void setTxtLine(SIPHeadersTxt h,String s){
 		String temp="Not Available";
