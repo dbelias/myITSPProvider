@@ -34,6 +34,8 @@ public class GstreamerTool {
 	private String MTU;
 	private String frame;
 	private String ssrc;
+	private String announcement;
+	private boolean isAnnouncement;
 	
 
 	
@@ -44,6 +46,7 @@ public class GstreamerTool {
 		trx=null;
 		rcv=null;
 		this.stopFlag=false;
+		this.isAnnouncement=false;
 		this.MTU="172";
 		this.frame="20000000";
 		
@@ -54,11 +57,20 @@ public class GstreamerTool {
 		//execcmdTrx="autoaudiosrc do-timestamp=true  !  audioconvert ! audioresample ! avenc_g722 ! rtpg722pay pt=9 mtu=172  min-ptime=20000000 max-ptime=20000000 ssrc=1468797040 ! udpsink host=";
 		//execcmdTrxBase="autoaudiosrc do-timestamp=true  !  audioconvert ! audioresample ! ";
 		execcmdTrxBase="autoaudiosrc ! audioconvert ! audioresample ! ";
+		//String announcement="C:\\wavs\\holdmusic.wav".replace('\\', '/');
+		//execcmdTrxBase="filesrc location="+announcement+" ! wavparse ! audioconvert ! audioresample ! ";
 		
 		//execcmdRcv=" caps=\"application/x-rtp\" ! queue ! rtppcmadepay ! alawdec ! audioconvert ! autoaudiosink";
 		//execcmdRcv=" caps=\"application/x-rtp\" ! queue ! rtpg722depay ! avdec_g722 ! autoaudiosink";
 		execcmdRcvBase=" caps=\"application/x-rtp\" ! queue ! ";
 		
+	}
+	
+	public void setIsAnnouncement(boolean ia){
+		if (ia){
+			isAnnouncement=true;
+			execcmdTrxBase="filesrc location="+announcement+" ! wavparse ! audioconvert ! audioresample ! ";
+		}
 	}
 	public void startMedia(String destIP, int destPort, int sourcePort, int codec) throws InterruptedException{
 		logger.info("Start media ordered. Dst:"+destIP+":"+destPort+" from SrcPort:"+sourcePort+" with Codec:"+codec);
@@ -96,7 +108,12 @@ public class GstreamerTool {
 		//Thread.sleep(300);
 		rcv=new GStreamerCmdThread(cmdRcv,GstreamerTool.this,"Rcv");
 		Thread.sleep(300);
-		trx=new GStreamerCmdThread(cmdTrx,GstreamerTool.this,"Trx");
+		if (isAnnouncement){
+			trx=new GStreamerCmdThread(cmdTrx,GstreamerTool.this,"Trx-Announcement");
+		} else{
+			trx=new GStreamerCmdThread(cmdTrx,GstreamerTool.this,"Trx");
+		}
+		
 		
 	}
 	
@@ -112,6 +129,9 @@ public class GstreamerTool {
 	}
 	public void setGstreamer(GStreamerLocation gsl){
 		path=gsl.getPath()+gsl.getFile();
+	}
+	public void setAnnouncement(String a){
+		announcement=a;
 	}
 	private void setCodecAttributes(int c){
 		if (c==0){//G711U-ulaw
