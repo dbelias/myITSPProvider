@@ -25,7 +25,7 @@ public class SdpManager {
     Version myVersion = mySdpFactory.createVersion(0);
     long ss=mySdpFactory.getNtpTime(new Date());
     Origin myOrigin = mySdpFactory.createOrigin("-",ss,ss,"IN","IP4",sdpinfo.IpAddress);
-    SessionName mySessionName = mySdpFactory.createSessionName("-");
+    SessionName mySessionName = mySdpFactory.createSessionName("-Belias Dimitris "+String.valueOf(ss));
     Connection myConnection = mySdpFactory.createConnection("IN","IP4", sdpinfo.IpAddress);
 
     //Time description lines
@@ -82,13 +82,14 @@ public class SdpManager {
         Media myAudio = myAudioDescription.getMedia();
         int myAudioPort = myAudio.getMediaPort();
         Vector audioFormats = myAudio.getMediaFormats(false);
-
+        logger.info("Received AudioFormatsVector size="+audioFormats.size());
         int myAudioMediaFormat = Integer.parseInt(audioFormats.elementAt(0).toString());
 
         int myVideoPort=-1;
         int myVideoMediaFormat=-1;
 
-        System.out.println(recMediaDescriptionVector.size());
+        logger.info("Received MediaDescriptionVector size="+recMediaDescriptionVector.size());
+        //System.out.println(recMediaDescriptionVector.size());
         if (recMediaDescriptionVector.size()>1) {
           MediaDescription myVideoDescription = (MediaDescription)
               recMediaDescriptionVector.elementAt(1);
