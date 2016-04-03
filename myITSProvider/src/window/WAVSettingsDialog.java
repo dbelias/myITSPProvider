@@ -20,6 +20,7 @@ import support.WAVLocation;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.JCheckBox;
 
 public class WAVSettingsDialog extends JDialog {
 	private static Logger logger=Logger.getLogger("VoiceSettingsWnd");
@@ -34,6 +35,8 @@ public class WAVSettingsDialog extends JDialog {
 	private String RingToneFile;
 	private String VoicePayloadPath=null;
 	private String VoicePayloadFile=null;
+	private JCheckBox chckbxAnnouncAsTrxSource;
+	private boolean announcementAsTrxSource;
 
 	/**
 	 * Launch the application.
@@ -50,7 +53,7 @@ public class WAVSettingsDialog extends JDialog {
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new MigLayout("", "[][grow][][][][][][]", "[][][][][][]"));
+		contentPanel.setLayout(new MigLayout("", "[][grow][][][][][][]", "[][][][][][][]"));
 		{
 			JLabel lblRingbackTone = new JLabel("RingBack Tone");
 			contentPanel.add(lblRingbackTone, "cell 1 0");
@@ -97,7 +100,7 @@ public class WAVSettingsDialog extends JDialog {
 			JButton btn2 = new JButton("Browse");
 			btn2.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					FileDialog openFileDialog=new FileDialog(WAVSettingsDialog.this, "Locate the RingBack Tone  *.wav format", FileDialog.LOAD);
+					FileDialog openFileDialog=new FileDialog(WAVSettingsDialog.this, "Locate the Alert Tone  *.wav format", FileDialog.LOAD);
 					openFileDialog.setFile("*.wav");
 					openFileDialog.setVisible(true);
 					RingToneFile=openFileDialog.getFile();
@@ -118,7 +121,7 @@ public class WAVSettingsDialog extends JDialog {
 			contentPanel.add(btn2, "cell 7 3");
 		}
 		{
-			JLabel lblVoicePayload = new JLabel("Voice Payload (Don't set if microphone is used)");
+			JLabel lblVoicePayload = new JLabel("Announcement Payload");
 			contentPanel.add(lblVoicePayload, "cell 1 4");
 		}
 		{
@@ -130,13 +133,14 @@ public class WAVSettingsDialog extends JDialog {
 			JButton btn3 = new JButton("Browse");
 			btn3.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					FileDialog openFileDialog=new FileDialog(WAVSettingsDialog.this, "Locate the RingBack Tone  *.wav format", FileDialog.LOAD);
+					FileDialog openFileDialog=new FileDialog(WAVSettingsDialog.this, "Locate the Announcement  *.wav format", FileDialog.LOAD);
 					openFileDialog.setFile("*.wav");
 					openFileDialog.setVisible(true);
 					VoicePayloadFile=openFileDialog.getFile();
 					VoicePayloadPath=openFileDialog.getDirectory();
 					if (VoicePayloadFile==null){
 						logger.warn("No VoicePayload file selected");
+						chckbxAnnouncAsTrxSource.setEnabled(false);
 						//TODO: Show an error message
 					}
 					else {
@@ -144,11 +148,22 @@ public class WAVSettingsDialog extends JDialog {
 						String path=VoicePayloadPath+VoicePayloadFile;
 						logger.info("VoicePayload:"+path);
 						textFieldVoicePayload.setText(path);
+						chckbxAnnouncAsTrxSource.setEnabled(true);
 						
 					}
 				}
 			});
 			contentPanel.add(btn3, "cell 7 5");
+		}
+		{
+			chckbxAnnouncAsTrxSource = new JCheckBox("Use Announcement file instead of microphone");
+			chckbxAnnouncAsTrxSource.setEnabled(false);
+			chckbxAnnouncAsTrxSource.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					announcementAsTrxSource=chckbxAnnouncAsTrxSource.isSelected();
+				}
+			});
+			contentPanel.add(chckbxAnnouncAsTrxSource, "cell 1 6");
 		}
 		{
 			JPanel buttonPane = new JPanel();
@@ -158,7 +173,7 @@ public class WAVSettingsDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
-						wavl.updateWAVPaths(RingBackTonePath, RingBackToneFile, RingTonePath, RingToneFile, VoicePayloadPath, VoicePayloadFile);
+						wavl.updateWAVPaths(RingBackTonePath, RingBackToneFile, RingTonePath, RingToneFile, VoicePayloadPath, VoicePayloadFile, announcementAsTrxSource);
 						setVisible(false);
 						dispose();
 					}
