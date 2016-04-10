@@ -167,3 +167,572 @@
 2016-03-31 00:28:39,840 - ITSPListener - WARN - processTransactionTerminated --> no handling
 2016-03-31 00:28:44,425 - myITSPmainWnd - INFO - Button Off is pressed
 2016-03-31 00:28:45,427 - ITSPListener - INFO - SetOff
+2016-03-31 22:51:50,881 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-03-31 22:51:51,107 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-03-31 22:51:51,108 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-03-31 22:51:51,108 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:a2:2bf2:a1b8:622e%4
+2016-03-31 22:51:51,108 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6abd:a2:2bf2:a1b8:622e
+2016-03-31 22:51:51,114 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-03-31 22:51:51,115 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-03-31 22:52:16,131 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-03-31 22:52:18,418 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-03-31 22:52:30,029 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-03-31 22:52:35,144 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-03-31 22:52:42,618 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-03-31 22:52:42,630 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-03-31 22:52:42,691 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-03-31 22:52:55,492 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=0 Destination=sip:2106197313@192.168.1.121:5060
+2016-03-31 22:52:55,858 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=1 Response=100
+2016-03-31 22:52:55,860 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 22:52:56,181 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=2 Response=180
+2016-03-31 22:52:56,182 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 22:53:00,721 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=2 Response=200
+2016-03-31 22:53:00,726 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-03-31 22:53:00,763 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=1
+2016-03-31 22:53:00,763 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-03-31 22:53:00,763 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:8
+2016-03-31 22:53:00,764 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmadepay ! alawdec ! audioconvert ! autoaudiosink
+2016-03-31 22:53:01,065 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe autoaudiosrc ! audioconvert ! audioresample ! alawenc ! rtppcmapay pt=8 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1312583771 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-03-31 22:53:01,126 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-03-31 22:53:01,190 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-03-31 22:53:01,463 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-03-31 22:53:05,664 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-03-31 22:53:05,667 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-03-31 22:53:05,871 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-03-31 22:53:05,876 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-03-31 22:53:13,665 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-03-31 22:53:18,233 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-03-31 22:53:19,235 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-03-31 22:54:20,009 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-03-31 22:54:20,012 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-03-31 22:54:32,565 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-03-31 22:54:32,568 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-03-31 22:54:32,574 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-03-31 22:54:32,575 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-03-31 22:54:39,922 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-03-31 22:54:39,923 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-03-31 22:54:39,924 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-03-31 22:54:39,924 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-03-31 22:54:40,004 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-03-31 22:54:40,224 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe autoaudiosrc ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1312682932 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-03-31 22:54:40,249 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-03-31 22:54:48,581 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-03-31 22:55:13,779 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-03-31 22:55:13,783 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-03-31 22:55:13,857 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-03-31 22:55:13,860 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-03-31 22:55:17,430 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-03-31 22:55:18,432 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 01:39:43,895 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 01:39:44,187 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 01:39:44,188 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 01:39:44,189 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 01:39:44,190 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 01:39:44,201 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 01:39:44,216 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 01:40:00,040 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 01:40:01,273 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 01:40:24,410 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 01:40:27,158 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\ringbacktone.wav
+2016-04-03 01:40:40,441 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 01:40:40,454 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 01:40:40,541 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 01:41:06,242 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 01:41:06,266 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 01:41:06,297 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 01:41:06,297 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 01:41:09,113 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 01:41:09,114 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 01:41:09,115 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 01:41:09,116 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 01:41:09,416 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=holdmusic.wav ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1495472123 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 01:41:09,456 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 01:41:11,605 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 01:41:17,803 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:41:48,291 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 01:41:48,298 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 01:41:48,447 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-04-03 01:41:48,447 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 01:41:56,296 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 01:42:20,295 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:43:34,745 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 01:43:34,750 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 01:43:34,753 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 01:43:34,753 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 01:43:45,353 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 01:43:45,353 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 01:43:45,354 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40002 with Codec:0
+2016-04-03 01:43:45,355 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40002 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 01:43:45,471 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 01:43:45,656 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=holdmusic.wav ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1495628363 ! udpsink host=192.168.1.121 port=30528 bind-port=40002
+2016-04-03 01:43:45,675 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 01:43:53,327 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=1 Status=4 Destination=null
+2016-04-03 01:43:53,332 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 01:43:53,340 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=0 Response=200
+2016-04-03 01:43:53,465 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 01:43:53,469 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-04-03 01:43:53,759 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:43:58,340 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:44:01,332 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 01:49:29,429 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=0 Response=481
+2016-04-03 01:49:34,428 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:52:05,667 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=0 Response=481
+2016-04-03 01:52:10,667 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:54:56,868 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 01:54:56,872 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/ringbacktone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 01:54:56,872 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 01:54:56,873 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 01:55:03,744 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 01:55:03,745 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 01:55:03,746 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40004 with Codec:0
+2016-04-03 01:55:03,746 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40004 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 01:55:03,983 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 01:55:04,046 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=holdmusic.wav ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1496306754 ! udpsink host=192.168.1.121 port=30528 bind-port=40004
+2016-04-03 01:55:04,064 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 01:55:12,378 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:55:35,430 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 01:55:35,434 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 01:55:35,577 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 01:55:35,578 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-04-03 01:55:43,431 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 01:55:48,938 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 01:55:49,940 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 01:56:20,277 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 01:56:20,465 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 01:56:20,469 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 01:56:20,470 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 01:56:20,471 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 01:56:20,480 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 01:56:20,481 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 01:56:28,185 - GStreamerSettingsDialog - WARN -GStreamerSettingsDialog.java::actionPerformed - no filename selected
+2016-04-03 01:56:29,423 - GStreamerSettingsDialog - WARN -GStreamerSettingsDialog.java::actionPerformed - selected file is candelled
+2016-04-03 01:56:34,765 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 01:56:37,717 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-04-03 01:56:51,952 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 01:56:53,164 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 01:56:55,480 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 01:56:55,492 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 01:56:55,558 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 01:57:07,520 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 01:57:07,534 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 01:57:07,560 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 01:57:07,560 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 01:57:10,385 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 01:57:10,385 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 01:57:10,387 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 01:57:10,388 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 01:57:10,988 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=holdmusic.wav ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1496433395 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 01:57:11,007 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 01:57:12,842 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 01:57:19,067 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:57:21,398 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 01:57:21,401 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 01:57:21,501 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 01:57:21,506 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-04-03 01:57:29,399 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 01:57:53,400 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:58:17,043 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 01:58:18,044 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 01:58:26,071 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 01:58:26,253 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 01:58:26,253 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 01:58:26,253 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 01:58:26,254 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 01:58:26,258 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 01:58:26,260 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 01:58:35,373 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 01:58:36,786 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 01:58:47,997 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 01:58:50,291 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-04-03 01:58:52,809 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 01:58:52,819 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 01:58:52,875 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 01:59:16,136 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 01:59:16,149 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 01:59:16,170 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 01:59:16,171 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 01:59:19,054 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 01:59:19,055 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 01:59:19,056 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 01:59:19,358 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=holdmusic.wav ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1496562064 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 01:59:19,377 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 01:59:21,464 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 01:59:27,680 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 01:59:46,078 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 01:59:46,083 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 01:59:46,095 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-04-03 01:59:54,080 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 02:00:18,081 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 02:07:39,386 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=0 Response=481
+2016-04-03 02:07:44,385 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 02:08:41,794 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 02:08:42,795 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 02:08:58,632 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 02:08:58,817 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 02:08:58,817 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 02:08:58,817 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 02:08:58,818 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 02:08:58,824 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 02:08:58,824 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 02:09:06,118 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 02:09:09,199 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-04-03 02:09:26,454 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 02:09:28,591 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 02:09:29,682 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 02:09:29,693 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 02:09:29,748 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 02:10:01,536 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 02:10:01,550 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 02:10:01,578 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 02:10:01,578 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 02:10:03,951 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 02:10:03,952 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 02:10:03,953 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 02:10:03,954 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 02:10:04,255 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/holdmusic.wav ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1497206961 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 02:10:04,288 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 02:10:06,899 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 02:10:12,583 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 02:10:13,328 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=1 Status=4 Destination=null
+2016-04-03 02:10:13,334 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 02:10:13,343 - ITSPListener - INFO -ITSPListener.java::processResponse - processResponse: Status=0 Response=200
+2016-04-03 02:10:13,569 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 02:10:13,575 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-04-03 02:10:18,342 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 02:10:21,334 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 02:10:22,370 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 02:10:23,372 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 13:13:08,434 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 13:13:08,644 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 13:13:08,644 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 13:13:08,645 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 13:13:08,645 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 13:13:08,650 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 13:13:08,651 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 13:13:19,665 - VoiceSettingsWnd - WARN -WAVSettingsDialog.java::actionPerformed - No RingBackTone file selected
+2016-04-03 13:13:29,858 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 13:13:31,924 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 13:13:45,857 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 13:13:52,936 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-04-03 13:13:59,060 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - VoicePayload:C:\wavs\holdmusic.wav
+2016-04-03 13:14:09,901 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 13:14:09,912 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 13:14:09,968 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 13:14:25,623 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 13:14:25,641 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 13:14:25,662 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 13:14:25,662 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 13:14:34,107 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=2 Status=5 Destination=null
+2016-04-03 13:14:41,808 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 13:14:41,809 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 13:14:41,810 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 13:14:41,811 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 13:14:42,109 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 13:14:42,111 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe autoaudiosrc ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1537084818 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 13:14:42,137 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 13:14:50,175 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:14:51,911 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 13:14:51,915 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 13:14:52,023 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 13:14:52,033 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx stopped hopefully
+2016-04-03 13:14:59,913 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 13:15:23,913 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:15:32,097 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 13:15:33,098 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 13:15:53,393 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 13:15:53,582 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 13:15:53,582 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 13:15:53,583 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 13:15:53,583 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 13:15:53,587 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 13:15:53,589 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 13:16:00,618 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 13:16:03,134 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-04-03 13:16:07,507 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - VoicePayload:C:\wavs\holdmusic.wav
+2016-04-03 13:16:14,166 - VoiceSettingsWnd - WARN -WAVSettingsDialog.java::actionPerformed - No VoicePayload file selected
+2016-04-03 13:16:25,125 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - VoicePayload:C:\wavs\holdmusic.wav
+2016-04-03 13:16:37,619 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 13:16:37,629 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 13:16:37,681 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 13:16:59,954 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 13:16:59,968 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - nullnull filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 13:16:59,992 - GStreamerToneCmdThread - ERROR -GStreamerToneCmdThread.java::run - IOException
+java.io.IOException: Cannot run program "nullnull": CreateProcess error=2, The system cannot find the file specified
+	at java.lang.ProcessBuilder.start(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at support.GStreamerToneCmdThread.run(GStreamerToneCmdThread.java:26)
+Caused by: java.io.IOException: CreateProcess error=2, The system cannot find the file specified
+	at java.lang.ProcessImpl.create(Native Method)
+	at java.lang.ProcessImpl.<init>(Unknown Source)
+	at java.lang.ProcessImpl.start(Unknown Source)
+	... 5 more
+2016-04-03 13:16:59,993 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 13:17:00,004 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 13:17:00,004 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 13:17:05,461 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 13:17:05,461 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 13:17:05,463 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 13:17:05,464 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - nullnull udpsrc port=40000nullrtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 13:17:05,471 - GStreamerCmdThread - ERROR -GStreamerCmdThread.java::run - IOException
+java.io.IOException: Cannot run program "nullnull": CreateProcess error=2, The system cannot find the file specified
+	at java.lang.ProcessBuilder.start(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at support.GStreamerCmdThread.run(GStreamerCmdThread.java:28)
+Caused by: java.io.IOException: CreateProcess error=2, The system cannot find the file specified
+	at java.lang.ProcessImpl.create(Native Method)
+	at java.lang.ProcessImpl.<init>(Unknown Source)
+	at java.lang.ProcessImpl.start(Unknown Source)
+	... 5 more
+2016-04-03 13:17:05,471 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 13:17:05,765 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - nullnull filesrc location=null ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=null min-ptime=null max-ptime=null ssrc=1537228471 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 13:17:05,787 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 13:17:05,805 - GStreamerCmdThread - ERROR -GStreamerCmdThread.java::run - IOException
+java.io.IOException: Cannot run program "nullnull": CreateProcess error=2, The system cannot find the file specified
+	at java.lang.ProcessBuilder.start(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at java.lang.Runtime.exec(Unknown Source)
+	at support.GStreamerCmdThread.run(GStreamerCmdThread.java:28)
+Caused by: java.io.IOException: CreateProcess error=2, The system cannot find the file specified
+	at java.lang.ProcessImpl.create(Native Method)
+	at java.lang.ProcessImpl.<init>(Unknown Source)
+	at java.lang.ProcessImpl.start(Unknown Source)
+	... 5 more
+2016-04-03 13:17:05,807 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx-Announcement stopped hopefully
+2016-04-03 13:17:14,010 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:17:14,255 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 13:17:14,258 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 13:17:22,256 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 13:17:46,258 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:18:45,528 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 13:18:46,530 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 13:20:07,955 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 13:20:09,030 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 13:20:10,130 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 13:20:10,133 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 13:20:25,120 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 13:20:25,123 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 13:20:25,126 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 13:20:25,128 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 13:20:29,891 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 13:20:29,891 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 13:20:29,893 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 13:20:29,893 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000nullrtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 13:20:30,194 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=null ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=null min-ptime=null max-ptime=null ssrc=1537432901 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 13:20:30,219 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 13:20:30,496 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 13:20:38,634 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:20:46,942 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 13:20:46,945 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 13:20:47,016 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 13:20:47,047 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx-Announcement stopped hopefully
+2016-04-03 13:20:54,944 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 13:20:56,221 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 13:20:57,223 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 13:21:07,697 - VoiceSettingsWnd - WARN -WAVSettingsDialog.java::actionPerformed - No RingBackTone file selected
+2016-04-03 13:22:42,816 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 13:22:43,003 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 13:22:43,003 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 13:22:43,004 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 13:22:43,004 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 13:22:43,008 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 13:22:43,009 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 13:22:51,134 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 13:22:52,610 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 13:23:04,652 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 13:23:09,652 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-04-03 13:23:14,775 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - VoicePayload:C:\wavs\holdmusic.wav
+2016-04-03 13:23:20,534 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 13:23:20,545 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 13:23:20,601 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 13:23:45,425 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 13:23:45,439 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 13:23:45,465 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 13:23:45,465 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 13:23:50,556 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 13:23:50,557 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 13:23:50,559 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 13:23:50,560 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000nullrtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 13:23:50,744 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 13:23:50,860 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=null ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=null min-ptime=null max-ptime=null ssrc=1537633567 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 13:23:50,888 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 13:23:58,971 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:24:03,771 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 13:24:03,775 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 13:24:03,782 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 13:24:03,783 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx-Announcement stopped hopefully
+2016-04-03 13:24:07,116 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 13:24:08,116 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 13:42:18,384 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 13:42:18,593 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 13:42:18,594 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 13:42:18,594 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 13:42:18,594 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 13:42:18,599 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 13:42:18,600 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-03 13:42:30,693 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingBackTone:C:\wavs\ringbacktone.wav
+2016-04-03 13:42:38,614 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - RingTone:C:\wavs\uringtone.wav
+2016-04-03 13:42:42,327 - VoiceSettingsWnd - INFO -WAVSettingsDialog.java::actionPerformed - VoicePayload:C:\wavs\holdmusic.wav
+2016-04-03 13:43:02,881 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file slected:C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe
+2016-04-03 13:43:04,142 - GStreamerSettingsDialog - INFO -GStreamerSettingsDialog.java::actionPerformed - file confirmed
+2016-04-03 13:43:06,904 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button On is pressed
+2016-04-03 13:43:06,914 - ITSPListener - INFO -ITSPListener.java::<init> - Initialize ITSP Listener
+2016-04-03 13:43:06,969 - myStack - WARN -LogWriter.java::logWarning - using default tls security policy
+2016-04-03 13:43:24,028 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=0 Method=INVITE
+2016-04-03 13:43:24,041 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/uringtone.wav ! wavparse ! audioconvert ! autoaudiosink
+2016-04-03 13:43:24,068 - SdpManager - INFO -SdpManager.java::getSdp - Received AudioFormatsVector size=8
+2016-04-03 13:43:24,068 - SdpManager - INFO -SdpManager.java::getSdp - Received MediaDescriptionVector size=1
+2016-04-03 13:43:31,544 - ITSPListener - INFO -ITSPListener.java::userInput - User Input:Type=0 Status=5 Destination=sip:2106197313@192.168.1.121:5060
+2016-04-03 13:43:31,545 - GStreamerToneTool - INFO -GStreamerToneTool.java::stopTone - Stop Tone ordered
+2016-04-03 13:43:31,545 - GstreamerTool - INFO -GstreamerTool.java::startMedia - Start media ordered. Dst:192.168.1.121:30528 from SrcPort:40000 with Codec:0
+2016-04-03 13:43:31,547 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe udpsrc port=40000 caps="application/x-rtp" ! queue ! rtppcmudepay ! mulawdec ! audioconvert ! autoaudiosink
+2016-04-03 13:43:31,819 - GStreamerToneCmdThread - INFO -GStreamerToneCmdThread.java::run - PlayTone stopped hopefully
+2016-04-03 13:43:31,847 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - C:\gstreamer\1.0\x86_64\bin\gst-launch-1.0.exe filesrc location=C:/wavs/holdmusic.wav ! wavparse ! audioconvert ! audioresample ! mulawenc ! rtppcmupay pt=0 mtu=172 min-ptime=20000000 max-ptime=20000000 ssrc=1538814553 ! udpsink host=192.168.1.121 port=30528 bind-port=40000
+2016-04-03 13:43:31,879 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=6 Method=ACK
+2016-04-03 13:43:40,078 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:43:44,304 - ITSPListener - INFO -ITSPListener.java::processRequest - processRequest: Status=4 Method=BYE
+2016-04-03 13:43:44,307 - GstreamerTool - INFO -GstreamerTool.java::stopMedia - Stop Media ordered
+2016-04-03 13:43:44,461 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Rcv stopped hopefully
+2016-04-03 13:43:44,467 - GStreamerCmdThread - INFO -GStreamerCmdThread.java::run - Trx-Announcement stopped hopefully
+2016-04-03 13:43:52,306 - ITSPListener - WARN -ITSPListener.java::processDialogTerminated - Process Dialog Terminated-->No handling
+2016-04-03 13:44:16,306 - ITSPListener - WARN -ITSPListener.java::processTransactionTerminated - processTransactionTerminated --> no handling
+2016-04-03 13:44:50,215 - myITSPmainWnd - INFO -myITSPmainWnd.java::actionPerformed - Button Off is pressed
+2016-04-03 13:44:51,216 - ITSPListener - INFO -ITSPListener.java::setOff - SetOff
+2016-04-03 13:47:54,568 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-03 13:47:54,764 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-03 13:47:54,764 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-03 13:47:54,765 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:1c56:22f:3f57:fefd%4
+2016-04-03 13:47:54,765 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:5ef5:79fb:1c56:22f:3f57:fefd
+2016-04-03 13:47:54,770 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-03 13:47:54,771 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 13:58:54,597 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 13:58:54,815 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 13:58:54,815 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 13:58:54,815 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 13:58:54,816 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 13:58:54,821 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 13:58:54,824 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 13:59:14,062 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::intializeVariables - Initialize variables
+2016-04-10 14:01:41,024 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:01:41,280 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:01:41,281 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:01:41,281 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:01:41,281 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:01:41,286 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:01:41,289 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:02:10,354 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::intializeVariables - Initialize variables
+2016-04-10 14:06:19,854 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:06:20,134 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:06:20,135 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:06:20,135 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:06:20,136 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:06:20,141 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:06:20,144 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:11:07,429 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:11:07,624 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:11:07,624 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:11:07,624 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:11:07,624 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:11:07,629 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:11:07,632 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:12:31,961 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:12:32,170 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:12:32,170 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:12:32,170 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:12:32,171 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:12:32,175 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:12:32,178 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:12:35,182 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 14:12:35,183 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 14:13:02,415 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Value1:null
+2016-04-10 14:13:21,394 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Value2:null
+2016-04-10 14:13:28,030 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::removeComboBoxItem - null remove item with index:1 -->Value2:null
+2016-04-10 14:19:47,582 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:19:47,824 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:19:47,825 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:19:47,825 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:19:47,825 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:19:47,830 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:19:47,833 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:20:07,204 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 14:20:07,204 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 14:21:19,379 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:21:19,579 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:21:19,579 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:21:19,579 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:21:19,580 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:21:19,584 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:21:19,587 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:21:23,534 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:21:23,775 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:21:23,775 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:21:23,776 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:21:23,776 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:21:23,780 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:21:23,783 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:21:27,936 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 14:21:27,936 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 14:25:27,216 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:25:27,462 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:25:27,462 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:25:27,462 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:25:27,463 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:25:27,467 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:25:27,470 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:25:31,603 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 14:25:31,603 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 14:27:12,966 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:27:13,157 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:27:13,157 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:27:13,158 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:27:13,158 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:27:13,162 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:27:13,165 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:27:17,811 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 14:27:17,811 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 14:27:24,574 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Header1:Value1
+2016-04-10 14:27:35,020 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Header2:Value2
+2016-04-10 14:27:44,121 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Header3:Value3
+2016-04-10 14:27:50,616 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::removeComboBoxItem - null remove item with index:1 -->Header2:Value2
+2016-04-10 14:31:32,926 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 14:31:33,138 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 14:31:33,138 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 14:31:33,139 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 14:31:33,139 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 14:31:33,143 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 14:31:33,146 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 14:31:37,681 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 14:31:37,681 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 14:31:44,683 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Header1:Value1
+2016-04-10 14:31:51,395 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Header2:Value2
+2016-04-10 14:31:59,994 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - null add new item:Header3:Value3
+2016-04-10 14:32:05,495 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::removeComboBoxItem - null remove item with index:1 -->Header3:Value3
+2016-04-10 16:31:24,474 - myITSPmainWnd - INFO -myITSPmainWnd.java::run - main process is started
+2016-04-10 16:31:24,672 - SystemIPs - INFO -SystemIPs.java::<init> - 192.168.1.2
+2016-04-10 16:31:24,672 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:59db:125d:2775:9c77%7
+2016-04-10 16:31:24,673 - SystemIPs - INFO -SystemIPs.java::<init> - fe80:0:0:0:852:376f:3f57:fefd%4
+2016-04-10 16:31:24,673 - SystemIPs - INFO -SystemIPs.java::<init> - 2001:0:9d38:6ab8:852:376f:3f57:fefd
+2016-04-10 16:31:24,677 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects started
+2016-04-10 16:31:24,680 - myITSPmainWnd - INFO -myITSPmainWnd.java::initializeGUIObjects - initialize GUI objects finished
+2016-04-10 16:31:27,662 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 16:31:27,662 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 16:31:35,608 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - cmbBx183 add new item:Header1:Value1
+2016-04-10 16:31:47,269 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - cmbBx183 add new item:Header3:Value3
+2016-04-10 16:31:59,003 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::addComboBoxItem - cmbBx183 add new item:Header4:Value4
+2016-04-10 16:32:04,393 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::removeComboBoxItem - cmbBx183 remove item with index:1 -->Header4:Value4
+2016-04-10 16:32:06,642 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::saveAll - Save All
+2016-04-10 16:32:06,643 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::saveSettings183 - Save 183 settings
+2016-04-10 16:32:12,240 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 16:32:12,241 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 16:32:12,241 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::updateComboBox - cmbBx183 update ComboBox
+2016-04-10 16:32:12,242 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::updateComboBox - cmbBx183 update ComboBox
+2016-04-10 16:32:19,657 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::saveAll - Save All
+2016-04-10 16:32:19,657 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::saveSettings183 - Save 183 settings
+2016-04-10 16:32:23,624 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::initializeGUIObjectsData - Initialize variables
+2016-04-10 16:32:23,625 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::update183Tab - update 183 Tab
+2016-04-10 16:32:23,625 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::updateComboBox - cmbBx183 update ComboBox
+2016-04-10 16:32:23,626 - SIPResponseSettingsDialog - INFO -SIPResponseSettingsDialog.java::updateComboBox - cmbBx183 update ComboBox

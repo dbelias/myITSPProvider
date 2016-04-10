@@ -23,8 +23,12 @@ import javax.swing.JMenu;
 import core.ITSPListener;
 
 import splibraries.Configuration;
+import splibraries.Response180;
+import splibraries.Response183;
 import support.GStreamerLocation;
 import support.SIPHeadersTxt;
+import support.SIPRequestsInfo;
+import support.SIPResponsesInfo;
 import support.SystemIPs;
 import support.WAVLocation;
 import support.voiceConfiguration;
@@ -81,7 +85,11 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V0.3";
+	private final String Version="V0.4";
+	private Response183 my183Response;
+	private Response180 my180Response;
+	public SIPRequestsInfo SIPReqInfo;
+	public SIPResponsesInfo SIPRespInfo;
 
 	/**
 	 * Launch the application.
@@ -593,10 +601,28 @@ public class myITSPmainWnd {
 		JMenu mnImportHeaders = new JMenu("Import Headers");
 		menuBar.add(mnImportHeaders);
 		
-		JMenuItem mntmSipHeaders = new JMenuItem("SIP Headers");
+		JMenuItem mntmSipHeaders = new JMenuItem("SIP Respone Headers");
+		mntmSipHeaders.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				SIPResponseSettingsDialog dialog=new SIPResponseSettingsDialog(SIPRespInfo);
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);
+			}
+		});
 		mnImportHeaders.add(mntmSipHeaders);
 		
+		JMenuItem mntmSipRequestHeaders = new JMenuItem("SIP Request Headers");
+		mntmSipRequestHeaders.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			}
+		});
+		mnImportHeaders.add(mntmSipRequestHeaders);
+		
 		JMenuItem mntmSdpHeaders = new JMenuItem("SDP Headers");
+		mntmSdpHeaders.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			}
+		});
 		mnImportHeaders.add(mntmSdpHeaders);
 	}
 	private void setDestinationLbl(){
@@ -627,6 +653,13 @@ public class myITSPmainWnd {
 		wav=new WAVLocation();
 		config=new Configuration();
 		codecsList=new LinkedList<voiceConfiguration>();
+		SIPReqInfo=new SIPRequestsInfo();
+		SIPRespInfo=new SIPResponsesInfo();
+		my183Response= new Response183();
+		my180Response=new Response180();
+		SIPRespInfo.Resp183=my183Response;
+		SIPRespInfo.Resp180=my180Response;
+		
 		btnOnOff.setText("ON");
 		btnOnOff.setBackground(Color.RED);
 		txtCalledPartyNumber.setEnabled(false);

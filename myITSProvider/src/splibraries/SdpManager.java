@@ -70,6 +70,7 @@ public class SdpManager {
 
   public SdpInfo getSdp(byte[] content) {
     try{
+      mySdpInfo=new SdpInfo();
       String s = new String(content);
       SessionDescription recSdp = mySdpFactory.createSessionDescription(s);
 
@@ -77,18 +78,24 @@ public class SdpManager {
 
       String myPeerName=recSdp.getOrigin().getUsername();
       Vector recMediaDescriptionVector=recSdp.getMediaDescriptions(false);
-
+      logger.info("Received MediaDescriptionVector size="+recMediaDescriptionVector.size());
         MediaDescription myAudioDescription = (MediaDescription) recMediaDescriptionVector.elementAt(0);
         Media myAudio = myAudioDescription.getMedia();
         int myAudioPort = myAudio.getMediaPort();
         Vector audioFormats = myAudio.getMediaFormats(false);
+        
         logger.info("Received AudioFormatsVector size="+audioFormats.size());
+        
         int myAudioMediaFormat = Integer.parseInt(audioFormats.elementAt(0).toString());
-
+        logger.info("Audio Codec in first position="+myAudioMediaFormat);
+        if (audioFormats.size()>1){
+      	  setSDPinfoArrayList(audioFormats,mySdpInfo.audioFormatList);
+        }
+        
+        
+        
         int myVideoPort=-1;
-        int myVideoMediaFormat=-1;
-
-        logger.info("Received MediaDescriptionVector size="+recMediaDescriptionVector.size());
+        int myVideoMediaFormat=-1;    
         //System.out.println(recMediaDescriptionVector.size());
         if (recMediaDescriptionVector.size()>1) {
           MediaDescription myVideoDescription = (MediaDescription)
@@ -96,10 +103,15 @@ public class SdpManager {
           Media myVideo = myVideoDescription.getMedia();
           myVideoPort = myVideo.getMediaPort();
           Vector videoFormats = myVideo.getMediaFormats(false);
+          logger.info("Received VideoFormatsVector size="+audioFormats.size());
           myVideoMediaFormat =  Integer.parseInt(videoFormats.elementAt(0).toString());
+          logger.info("Video Codec in first position="+myVideoMediaFormat);
+          if (videoFormats.size()>1){
+        	  setSDPinfoArrayList(videoFormats,mySdpInfo.videoFormatList);
+          }
         }
 
-      mySdpInfo=new SdpInfo();
+      
 
 
     //  mySdpInfo.setIPAddress(myPeerIp);
@@ -108,6 +120,8 @@ public class SdpManager {
       mySdpInfo.aformat=myAudioMediaFormat;
       mySdpInfo.vport=myVideoPort;
       mySdpInfo.vformat=myVideoMediaFormat;
+      
+      
 
     }catch(Exception e){
     	logger.error("Exception", e);
@@ -115,5 +129,13 @@ public class SdpManager {
     }
 
     return mySdpInfo;
+  }
+  private void setSDPinfoArrayList(Vector<?> v, ArrayList<Integer> al){
+	  int i=v.size();
+	  int temp;
+	  for (int k=0;k<i; k++){
+		  temp=Integer.parseInt(v.elementAt(k).toString());
+		  al.add(temp);
+	  }
   }
 }

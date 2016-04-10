@@ -1,5 +1,6 @@
 package splibraries;
 
+import java.util.ArrayList;
 
 
 public class SdpInfo {
@@ -8,6 +9,8 @@ public class SdpInfo {
   public int aformat;
   public int vport;
   public int vformat;
+  public ArrayList<Integer> audioFormatList;
+  public ArrayList<Integer> videoFormatList;
 
  public SdpInfo() {
    IpAddress="";
@@ -15,6 +18,15 @@ public class SdpInfo {
    aformat=0;
    vport=0;
    vformat=0;
+   audioFormatList=new ArrayList<Integer>();
+   videoFormatList=new ArrayList<Integer>();
+   
+ }
+ public boolean isAudioCodecAvailable(int c){
+	 return audioFormatList.contains(c);
+ }
+ public boolean isVideoCodecAvailable(int c){
+	 return videoFormatList.contains(c);
  }
 }
 /*

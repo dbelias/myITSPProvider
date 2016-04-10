@@ -357,14 +357,14 @@ public class ITSPListener implements SipListener{
 
              //myVoiceTool.startMedia(offerInfo.IpAddress,offerInfo.aport,answerInfo.aport,offerInfo.aformat);
              if (isOnlyAnnouncment){
-            	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+            	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
              } else {
-            	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+            	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
              }
              
 
             if (answerInfo.vport>0) {
-              myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,offerInfo.vformat);
+              myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
             }
 
              myServerTransaction.sendResponse(myResponse);
@@ -386,6 +386,7 @@ public class ITSPListener implements SipListener{
                myServerTransaction.sendResponse(myResponse);
                myDialog=myServerTransaction.getDialog();
                myGUI.display(">>> "+myResponse.toString());
+               //TODO:handle SDP if exist, like 200 OK
                status=RINGING;
         	   
         	   break;
@@ -441,7 +442,11 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         myAudioPort=myAudioPort+2;
         //answerInfo.aformat=offerInfo.aformat;
         answerInfo.aformat=myAudioCodec; //needs control in case the codec is not existing in the offer.
-
+        if (offerInfo.isAudioCodecAvailable(myAudioCodec)){
+        	logger.info("myAudioCodec="+myAudioCodec+" exists in the list of requested INVITE");
+        } else {
+        	logger.warn("myAudioCodec="+myAudioCodec+" NOT exist in the list of requested INVITE");
+        }
         if (offerInfo.vport==-1) {
           answerInfo.vport=-1;
         }
@@ -570,12 +575,12 @@ switch(status){
 
       //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
       if (isOnlyAnnouncment){
-     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
       } else {
-     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
       }
       if (answerInfo.vport>0) {
-      myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,answerInfo.vformat);
+      myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
       }
 
     }
@@ -618,14 +623,14 @@ switch(status){
 
         //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
       if (isOnlyAnnouncment){
-     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
       } else {
-     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,offerInfo.aformat );
+     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
       }
         System.out.println("Listen RTP at port:"+offerInfo.aport);
 
         if (answerInfo.vport>0) {
-          myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,answerInfo.vformat);
+          myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
         }
 
     }
