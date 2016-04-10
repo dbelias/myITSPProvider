@@ -1,6 +1,9 @@
 package core;
 
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.ListIterator;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -45,6 +48,7 @@ import splibraries.SdpInfo;
 import splibraries.SdpManager;
 import splibraries.TonesTool;
 import splibraries.VideoTool;
+import support.HeadersValuesGeneric;
 import support.SIPHeadersTxt;
 //import splibraries.VoiceTool;
 import window.myITSPmainWnd;
@@ -64,6 +68,7 @@ public class ITSPListener implements SipListener{
 	private ContactHeader myContactHeader;
 	private UserAgentHeader myUserAgentHeader;
 	private Header myExtensionHeader;
+	private Header myAdditionalHeader;
 	private ViaHeader myViaHeader;
 	private Address fromAddress;
 	private Dialog myDialog;
@@ -84,6 +89,7 @@ public class ITSPListener implements SipListener{
 	private boolean isOnlyAnnouncment;
 	private SdpInfo answerInfo;
 	private SdpInfo offerInfo;
+	private boolean isSendSDP183;
 
 	private int myPort;
 	private int myAudioPort;
@@ -169,7 +175,7 @@ public class ITSPListener implements SipListener{
 	      myGAnnouncementTool.setIsAnnouncement(true);
 	      isOnlyAnnouncment=!(myGUI.getWAVLocation().getIsAnnounceAsTrxSource());
 	      //myRingTool.prepareTone("c:/Users/BeliasD/eclipse_workspace/myITSProvider/wavs/ringbacktone.wav");
-
+	      isSendSDP183=false;
 
 	      mySipFactory = SipFactory.getInstance();
 	      mySipFactory.setPathName("gov.nist");
@@ -333,6 +339,9 @@ public class ITSPListener implements SipListener{
              myServerTransaction.sendResponse(myResponse);
              myGUI.display(">>> " + myResponse.toString());
               myAlertTool.stopTone();
+              if (isSendSDP183){
+            	  myGAnnouncementTool.stopMedia();           	   
+              }
 
              status = IDLE;
              myGUI.showStatus("Status: IDLE");
@@ -349,6 +358,9 @@ public class ITSPListener implements SipListener{
              myResponse.addHeader(myContactHeader);
 
              myAlertTool.stopTone();
+             if (isSendSDP183){
+           	  myGAnnouncementTool.stopMedia();           	   
+             }
 
 
              ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
@@ -383,6 +395,13 @@ public class ITSPListener implements SipListener{
                myResponse.addHeader(myContactHeader);
                ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
                myToHeader.setTag("454326");
+               setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp183.getHeaderValuesList());
+              
+               isSendSDP183=myGUI.SIPRespInfo.Resp183.getSendSDP();
+               if (isSendSDP183){
+            	 
+            	   createSDPResponse(myResponse);
+               }
                myServerTransaction.sendResponse(myResponse);
                myDialog=myServerTransaction.getDialog();
                myGUI.display(">>> "+myResponse.toString());
@@ -463,6 +482,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         myResponse.addHeader(myContactHeader);
         ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
         myToHeader.setTag("454326");
+        setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());
         myServerTransaction.sendResponse(myResponse);
         myDialog=myServerTransaction.getDialog();
         myGUI.display(">>> "+myResponse.toString());
@@ -677,6 +697,46 @@ switch(status){
 		h=r.getHeader("Diversion");
 		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.DiversionLine, h.toString());
 		
+	}
+	private void setAdditionalHeadersResponse(Response r, LinkedList<HeadersValuesGeneric> ll){
+		ListIterator<HeadersValuesGeneric> listIterator = ll.listIterator();
+		while (listIterator.hasNext()) {
+			Object obj=listIterator.next();
+			HeadersValuesGeneric temp=(HeadersValuesGeneric)obj;
+			try {
+				myAdditionalHeader=myHeaderFactory.createHeader(temp.getHeader(), temp.getValue());
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				logger.error("ParseException", e);
+				e.printStackTrace();
+			}
+			r.addHeader(myAdditionalHeader);
+			logger.info(r.getStatusCode()+" add extra Header:Value="+temp.getHeader()+":"+temp.getValue());
+        }
+	}
+	private void setAdditionalHeaderRequest(Request r, LinkedList<HeadersValuesGeneric> ll){
+		ListIterator<HeadersValuesGeneric> listIterator = ll.listIterator();
+		while (listIterator.hasNext()) {
+			Object obj=listIterator.next();
+			HeadersValuesGeneric temp=(HeadersValuesGeneric)obj;
+			try {
+				myAdditionalHeader=myHeaderFactory.createHeader(temp.getHeader(), temp.getValue());
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				logger.error("ParseException", e);
+				e.printStackTrace();
+			}
+			r.addHeader(myAdditionalHeader);
+			logger.info(r.getMethod()+" add extra Header:Value="+temp.getHeader()+":"+temp.getValue());
+        }
+	}
+	
+	private void createSDPResponse(Response r) throws ParseException, InterruptedException{
+		ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+        byte[] content=mySdpManager.createSdp(answerInfo);
+        r.setContent(content,contentTypeHeader);        
+       	myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
+       
 	}
 
 }
