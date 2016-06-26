@@ -85,11 +85,12 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V0.4";
+	private final String Version="V0.6";
 	private Response183 my183Response;
 	private Response180 my180Response;
 	public SIPRequestsInfo SIPReqInfo;
 	public SIPResponsesInfo SIPRespInfo;
+	private JTextField txtFromOAD;
 
 	/**
 	 * Launch the application.
@@ -177,7 +178,7 @@ public class myITSPmainWnd {
 		gbc_lblItspConfiguration.gridy = 0;
 		frmMyItspSimulator.getContentPane().add(lblItspConfiguration, gbc_lblItspConfiguration);
 		
-		JLabel lblCall = new JLabel("Call");
+		JLabel lblCall = new JLabel("Call (To:)");
 		GridBagConstraints gbc_lblCall = new GridBagConstraints();
 		gbc_lblCall.anchor = GridBagConstraints.WEST;
 		gbc_lblCall.insets = new Insets(0, 0, 5, 5);
@@ -326,6 +327,24 @@ public class myITSPmainWnd {
 		frmMyItspSimulator.getContentPane().add(textFieldRemotePort, gbc_textFieldRemotePort);
 		textFieldRemotePort.setColumns(10);
 		
+		txtFromOAD = new JTextField();
+		GridBagConstraints gbc_txtFromOAD = new GridBagConstraints();
+		gbc_txtFromOAD.gridwidth = 4;
+		gbc_txtFromOAD.insets = new Insets(0, 0, 5, 5);
+		gbc_txtFromOAD.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtFromOAD.gridx = 7;
+		gbc_txtFromOAD.gridy = 3;
+		frmMyItspSimulator.getContentPane().add(txtFromOAD, gbc_txtFromOAD);
+		txtFromOAD.setColumns(10);
+		txtFromOAD.setText("2109567472");
+		
+		JLabel lblFromcaller = new JLabel("From (Caller)");
+		GridBagConstraints gbc_lblFromcaller = new GridBagConstraints();
+		gbc_lblFromcaller.insets = new Insets(0, 0, 5, 5);
+		gbc_lblFromcaller.gridx = 11;
+		gbc_lblFromcaller.gridy = 3;
+		frmMyItspSimulator.getContentPane().add(lblFromcaller, gbc_lblFromcaller);
+		
 		lblDestination = new JLabel("Destination");
 		GridBagConstraints gbc_lblDestination = new GridBagConstraints();
 		gbc_lblDestination.insets = new Insets(0, 0, 5, 5);
@@ -355,6 +374,9 @@ public class myITSPmainWnd {
 		btnMakeCall = new JButton("Call");
 		btnMakeCall.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				//update config (display and user part)
+				config.setUserPart(getFromOAD());
+				list.updateFromAddress(config);
 				list.userInput(0,getDestination());
 			}
 		});
@@ -814,4 +836,10 @@ public class myITSPmainWnd {
 			
 		
 	}
+	private String getFromOAD(){
+    	String s;
+    	s=txtFromOAD.getText();
+    	return s;
+    }
 }
+    

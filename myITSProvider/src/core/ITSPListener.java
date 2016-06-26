@@ -234,8 +234,21 @@ public class ITSPListener implements SipListener{
 	  myVideoPort=conf.videoPort;
 	  myAudioCodec=conf.audioCodec;
 	  myVideoCodec=conf.videoCodec;
+	  
 
 	}
+	
+	public void updateFromAddress(Configuration conf){
+		try {
+			fromAddress=myAddressFactory.createAddress(conf.name+ " <sip:"+conf.userID+"@"+myIP+":"+myPort+">");
+		} catch (ParseException e) {
+			logger.error("ParseException", e);
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
 	public void userInput(int type, String destination){
      try {
     	 logger.info("User Input:Type="+type+" Status="+status+" Destination="+destination);
