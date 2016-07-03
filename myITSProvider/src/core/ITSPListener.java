@@ -12,10 +12,12 @@ import javax.sip.ClientTransaction;
 import javax.sip.Dialog;
 import javax.sip.DialogTerminatedEvent;
 import javax.sip.IOExceptionEvent;
+import javax.sip.InvalidArgumentException;
 import javax.sip.ListeningPoint;
 import javax.sip.RequestEvent;
 import javax.sip.ResponseEvent;
 import javax.sip.ServerTransaction;
+import javax.sip.SipException;
 import javax.sip.SipFactory;
 import javax.sip.SipListener;
 import javax.sip.SipProvider;
@@ -96,6 +98,14 @@ public class ITSPListener implements SipListener{
 	private int myVideoPort;
 	private int myAudioCodec;
 	private int myVideoCodec;
+	private int myOldAudioPort;
+	private int myOldVideoPort;
+	private int myOldAudioCodec;
+	private int myOldVideoCodec;
+	private int remoteOldAudioPort;
+	private int remoteOldAudioCodec;
+	private int remoteOldVideoPort;
+	private int remoteOldVideoCodec;
 	
 
 	static final int YES=0;
@@ -108,6 +118,7 @@ public class ITSPListener implements SipListener{
 	static final int ESTABLISHED=4;
 	static final int RINGING=5;
 	static final int WAIT_ACK=6;
+	static final int RE_INVITE_WAIT_ACK=7;
 
 	class MyTimerTask extends TimerTask {
         ITSPListener myListener;
@@ -193,8 +204,13 @@ public class ITSPListener implements SipListener{
 	      myContactHeader = myHeaderFactory.createContactHeader(contactAddress);
 	      myExtensionHeader = myHeaderFactory.createHeader("User-Agent",
 	              "myITSP tool V1");
-
-	      fromAddress=myAddressFactory.createAddress(conf.name+ " <sip:"+conf.userID+"@"+myIP+":"+myPort+">");
+	      if (myGUI.getTelURI()){
+	    	  fromAddress=myAddressFactory.createAddress(conf.name+ " <tel:"+conf.userID+">");
+	      }
+	      else{
+	    	  fromAddress=myAddressFactory.createAddress(conf.name+ " <sip:"+conf.userID+"@"+myIP+":"+myPort+">");
+	      }
+	      
 	      status=IDLE;
 
 	      //myGUI.jLabel5.setText("At "+myIP+", port "+myPort);
@@ -240,7 +256,12 @@ public class ITSPListener implements SipListener{
 	
 	public void updateFromAddress(Configuration conf){
 		try {
-			fromAddress=myAddressFactory.createAddress(conf.name+ " <sip:"+conf.userID+"@"+myIP+":"+myPort+">");
+			if (myGUI.getTelURI()){
+		    	  fromAddress=myAddressFactory.createAddress(conf.name+ " <tel:"+conf.userID+">");
+		      }
+		      else{
+		    	  fromAddress=myAddressFactory.createAddress(conf.name+ " <sip:"+conf.userID+"@"+myIP+":"+myPort+">");
+		      }
 		} catch (ParseException e) {
 			logger.error("ParseException", e);
 			e.printStackTrace();
@@ -282,8 +303,10 @@ public class ITSPListener implements SipListener{
              offerInfo=new SdpInfo();
              offerInfo.IpAddress=myIP;
              offerInfo.aport=myAudioPort;
+             myOldAudioPort=myAudioPort;
              myAudioPort=myAudioPort+2;
              offerInfo.aformat=myAudioCodec;
+             myOldAudioCodec=myAudioCodec;
              offerInfo.vport=myVideoPort;
              offerInfo.vformat=myVideoCodec;
 
@@ -379,7 +402,8 @@ public class ITSPListener implements SipListener{
              ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
              byte[] content=mySdpManager.createSdp(answerInfo);
              myResponse.setContent(content,contentTypeHeader);
-
+             remoteOldAudioPort=offerInfo.aport;
+             remoteOldAudioCodec=myAudioCodec;
              //myVoiceTool.startMedia(offerInfo.IpAddress,offerInfo.aport,answerInfo.aport,offerInfo.aformat);
              if (isOnlyAnnouncment){
             	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
@@ -471,9 +495,11 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 
         answerInfo.IpAddress=myIP;
         answerInfo.aport=myAudioPort;
-        myAudioPort=myAudioPort+2;
+        myOldAudioPort=myAudioPort;
+        myAudioPort=myAudioPort+2; //next call will use different ports
         //answerInfo.aformat=offerInfo.aformat;
         answerInfo.aformat=myAudioCodec; //needs control in case the codec is not existing in the offer.
+        myOldAudioCodec=myAudioCodec;
         if (offerInfo.isAudioCodecAvailable(myAudioCodec)){
         	logger.info("myAudioCodec="+myAudioCodec+" exists in the list of requested INVITE");
         } else {
@@ -531,6 +557,17 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         myGUI.setButtonStatusIdle();
         myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
       }
+      if (method.equals("INVITE")){ //Re-Invite handling
+    	  // it may occur that my myServerTransaction is not created yet (e.g call is initiated by tool first)
+    	  if (myServerTransaction == null) {
+              myServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+    	  }
+    	  answerToReInvite(myRequest) ;
+    	  status=RE_INVITE_WAIT_ACK;
+    	  myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
+      }
+      
+      
     break;
 
     case RINGING:
@@ -560,6 +597,54 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         myGUI.showStatus("Status: ESTABLISHED");
         myGUI.setButtonStatusEstablishedCall();
       }
+        break;
+      
+      case RE_INVITE_WAIT_ACK:
+    	if (method.equals("ACK")) { //ACK from Re-Invite sent from System Under Test
+           status=ESTABLISHED;
+           myGUI.showStatus("Status: ESTABLISHED");
+           byte[] cont=(byte[]) myRequest.getContent(); 
+           if (cont==null){
+        	   logger.info("ACK w/o SDP is received");  
+           }else {
+        	   logger.info("ACK with SDP is received");
+        	   answerInfo=mySdpManager.getSdp(cont);
+        	   if (answerInfo.isAudioCodecAvailable(myOldAudioCodec)){
+        	        	logger.info("myAudioCodec="+myOldAudioCodec+" exists in the list of requested 200 OK");
+        	   } else {
+        	        	logger.warn("myAudioCodec="+myOldAudioCodec+" NOT exist in the list of requested 200 OK");
+        	   }
+        	   if (remoteOldAudioPort==answerInfo.aport && remoteOldAudioCodec==answerInfo.aformat){
+               	//Do nothing. It's not necessary to re-initiate RTP stream
+               			logger.info("Same remote Audio Port and Audio codec for response to 200 OK. Not necessary to restart RTP");
+               }
+               else{
+               			logger.info("Different remote Audio Port OR  Audio codec for response to 200 OK. Necessary to restart RTP");
+               			//Stop old RTP media
+               			if (isOnlyAnnouncment){
+               					myGVoiceTool.stopMedia();
+               			}else {
+               					myGAnnouncementTool.stopMedia();
+               			}
+               			remoteOldAudioPort=answerInfo.aport;
+               			remoteOldAudioCodec=myAudioCodec;
+               			//Start new RTP media
+               			if (isOnlyAnnouncment){
+               					myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,myAudioCodec );
+               			} else {
+               					myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,myAudioCodec );
+               			}     
+
+               			if (answerInfo.vport>0) {
+               					myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
+               			}
+               	
+               }
+         	  } 
+        	      
+          
+              
+        }  
 
   }
 
@@ -605,6 +690,8 @@ switch(status){
 
       byte[] cont=(byte[]) myResponse.getContent();
       answerInfo=mySdpManager.getSdp(cont);
+      remoteOldAudioPort=offerInfo.aport;
+      remoteOldAudioCodec=myAudioCodec;
 
       //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
       if (isOnlyAnnouncment){
@@ -653,7 +740,9 @@ switch(status){
 
       byte[] cont=(byte[]) myResponse.getContent();
       answerInfo=mySdpManager.getSdp(cont);
-
+      
+      remoteOldAudioPort=offerInfo.aport;
+      remoteOldAudioCodec=myAudioCodec;
         //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
       if (isOnlyAnnouncment){
      	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
@@ -750,6 +839,89 @@ switch(status){
         r.setContent(content,contentTypeHeader);        
        	myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
        
+	}
+	
+private void answerToReInvite(Request r)  throws ParseException, InterruptedException, SipException, InvalidArgumentException{
+		// TODO handle Re-invites with or without SDP
+		byte[] content;
+        Response myResponse = myMessageFactory.createResponse(200,
+                r);
+
+        myResponse.addHeader(myContactHeader);
+        ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+        
+		byte[] cont=(byte[]) r.getContent();
+  	  	
+  	   if (cont==null){
+  		  logger.info("Re-Invite w/o SDP is received");
+  		//TODO handle Re-Invite w/o SDP  
+  		offerInfo.IpAddress=myIP;
+        offerInfo.aport=myOldAudioPort;
+        offerInfo.aformat=myOldAudioCodec;
+        offerInfo.vport=myVideoPort;
+        offerInfo.vformat=myVideoCodec;
+        content=mySdpManager.createSdp(offerInfo);
+        myResponse.setContent(content,contentTypeHeader);
+  		
+  	  }else {
+  		answerInfo.IpAddress=myIP;
+        answerInfo.aport=myOldAudioPort; 
+        answerInfo.aformat=myOldAudioCodec; 
+  		 logger.info("Re-Invite with SDP is received");
+  		//TODO handle Re-Invite with SDP
+  		offerInfo=mySdpManager.getSdp(cont);
+        if (offerInfo.isAudioCodecAvailable(myOldAudioCodec)){
+        	logger.info("myAudioCodec="+myOldAudioCodec+" exists in the list of requested INVITE");
+        } else {
+        	logger.warn("myAudioCodec="+myOldAudioCodec+" NOT exist in the list of requested INVITE");
+        }
+        if (offerInfo.vport==-1) {
+          answerInfo.vport=-1;
+        }
+        else if (myVideoPort==-1) {
+          answerInfo.vport=0;
+          answerInfo.vformat=offerInfo.vformat;
+        }
+        else {
+          answerInfo.vport=myVideoPort;
+          answerInfo.vformat=offerInfo.vformat;
+        }
+        content=mySdpManager.createSdp(answerInfo);
+        myResponse.setContent(content,contentTypeHeader);
+      //Check if port and codec are the same as before. 
+        if (remoteOldAudioPort==offerInfo.aport && remoteOldAudioCodec==myAudioCodec){
+        	//Do nothing. It's not necessary to re-initiate RTP stream
+        	logger.info("Same remote Audio Port and Audio codec for response to Re-Invite. Not necessary to restart RTP");
+        }
+        else{
+        	logger.info("Different remote Audio Port OR  Audio codec for response to Re-Invite. Necessary to restart RTP");
+        	//Stop old RTP media
+        	if (isOnlyAnnouncment){
+            	myGVoiceTool.stopMedia();
+            }else {
+            	myGAnnouncementTool.stopMedia();
+            }
+        	remoteOldAudioPort=offerInfo.aport;
+            remoteOldAudioCodec=myAudioCodec;
+        	//Start new RTP media
+        	if (isOnlyAnnouncment){
+              	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
+               } else {
+              	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
+               }     
+
+              if (answerInfo.vport>0) {
+                myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
+              }
+        	
+        }
+  	  } 
+        myServerTransaction.sendResponse(myResponse);
+        myDialog = myServerTransaction.getDialog();
+
+        //new Timer().schedule(new MyTimerTask(this),500000);
+        myGUI.display(">>> " + myResponse.toString());
+        //myGUI.setButtonStatusEstablishedCall(); State is already established
 	}
 
 }

@@ -51,6 +51,11 @@ import javax.swing.event.CaretEvent;
 import java.awt.event.InputMethodListener;
 import java.awt.event.InputMethodEvent;
 import javax.swing.SwingConstants;
+import javax.swing.JCheckBox;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
@@ -85,12 +90,14 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V0.6";
+	private final String Version="V1.0";
 	private Response183 my183Response;
 	private Response180 my180Response;
 	public SIPRequestsInfo SIPReqInfo;
 	public SIPResponsesInfo SIPRespInfo;
 	private JTextField txtFromOAD;
+	private JCheckBox chckbxTelUri;
+	private JButton btnReInvite;
 
 	/**
 	 * Launch the application.
@@ -143,7 +150,7 @@ public class myITSPmainWnd {
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{0, 120, 80, 200, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		frmMyItspSimulator.getContentPane().setLayout(gridBagLayout);
 		
@@ -174,7 +181,7 @@ public class myITSPmainWnd {
 		JLabel lblItspConfiguration = new JLabel("ITSP configuration");
 		GridBagConstraints gbc_lblItspConfiguration = new GridBagConstraints();
 		gbc_lblItspConfiguration.insets = new Insets(0, 0, 5, 5);
-		gbc_lblItspConfiguration.gridx = 7;
+		gbc_lblItspConfiguration.gridx = 5;
 		gbc_lblItspConfiguration.gridy = 0;
 		frmMyItspSimulator.getContentPane().add(lblItspConfiguration, gbc_lblItspConfiguration);
 		
@@ -206,6 +213,19 @@ public class myITSPmainWnd {
 		gbc_txtTypeTheCdpn.gridy = 1;
 		frmMyItspSimulator.getContentPane().add(txtCalledPartyNumber, gbc_txtTypeTheCdpn);
 		txtCalledPartyNumber.setColumns(10);
+		
+		chckbxTelUri = new JCheckBox("Tel URI");
+		chckbxTelUri.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				
+			}
+		});
+		GridBagConstraints gbc_chckbxTelUri = new GridBagConstraints();
+		gbc_chckbxTelUri.fill = GridBagConstraints.HORIZONTAL;
+		gbc_chckbxTelUri.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxTelUri.gridx = 7;
+		gbc_chckbxTelUri.gridy = 1;
+		frmMyItspSimulator.getContentPane().add(chckbxTelUri, gbc_chckbxTelUri);
 		
 		txtDomain = new JTextField();
 		txtDomain.setText("domain");
@@ -424,6 +444,13 @@ public class myITSPmainWnd {
 		gbc_lblStatus_1.gridx = 3;
 		gbc_lblStatus_1.gridy = 6;
 		frmMyItspSimulator.getContentPane().add(lblCallStatus, gbc_lblStatus_1);
+		
+		btnReInvite = new JButton("Re-Invite");
+		GridBagConstraints gbc_btnReInvite = new GridBagConstraints();
+		gbc_btnReInvite.insets = new Insets(0, 0, 5, 5);
+		gbc_btnReInvite.gridx = 5;
+		gbc_btnReInvite.gridy = 6;
+		frmMyItspSimulator.getContentPane().add(btnReInvite, gbc_btnReInvite);
 		//frame.getContentPane().add(textArea, gbc_textArea);
 		
 		JLabel lblInvite = new JLabel("Invite");
@@ -566,6 +593,19 @@ public class myITSPmainWnd {
 		gbc_txtDiversionLine.gridy = 13;
 		frmMyItspSimulator.getContentPane().add(txtDiversionLine, gbc_txtDiversionLine);
 		txtDiversionLine.setColumns(10);
+		
+		JButton btnClearText = new JButton("Clear Text");
+		btnClearText.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				textArea.setText(null);
+			}
+		});
+		GridBagConstraints gbc_btnClearText = new GridBagConstraints();
+		gbc_btnClearText.insets = new Insets(0, 0, 5, 5);
+		gbc_btnClearText.gridx = 11;
+		gbc_btnClearText.gridy = 13;
+		frmMyItspSimulator.getContentPane().add(btnClearText, gbc_btnClearText);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmMyItspSimulator.setJMenuBar(menuBar);
@@ -841,5 +881,11 @@ public class myITSPmainWnd {
     	s=txtFromOAD.getText();
     	return s;
     }
+	
+	public Boolean getTelURI(){
+		Boolean status;
+		status=chckbxTelUri.isSelected();
+		return  status;
+	}
 }
     
