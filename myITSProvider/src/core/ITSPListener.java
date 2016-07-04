@@ -690,14 +690,14 @@ switch(status){
 
       byte[] cont=(byte[]) myResponse.getContent();
       answerInfo=mySdpManager.getSdp(cont);
-      remoteOldAudioPort=offerInfo.aport;
+      remoteOldAudioPort=answerInfo.aport;
       remoteOldAudioCodec=myAudioCodec;
 
       //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
       if (isOnlyAnnouncment){
-     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
+     	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,myAudioCodec );
       } else {
-     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
+     	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,myAudioCodec );
       }
       if (answerInfo.vport>0) {
       myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
@@ -741,13 +741,13 @@ switch(status){
       byte[] cont=(byte[]) myResponse.getContent();
       answerInfo=mySdpManager.getSdp(cont);
       
-      remoteOldAudioPort=offerInfo.aport;
+      remoteOldAudioPort=answerInfo.aport;
       remoteOldAudioCodec=myAudioCodec;
         //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
       if (isOnlyAnnouncment){
-     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
+     	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,myAudioCodec );
       } else {
-     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,myAudioCodec );
+     	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,myAudioCodec );
       }
         System.out.println("Listen RTP at port:"+offerInfo.aport);
 
@@ -864,10 +864,11 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
         myResponse.setContent(content,contentTypeHeader);
   		
   	  }else {
+  		logger.info("Re-Invite with SDP is received");
   		answerInfo.IpAddress=myIP;
         answerInfo.aport=myOldAudioPort; 
         answerInfo.aformat=myOldAudioCodec; 
-  		 logger.info("Re-Invite with SDP is received");
+  		 
   		//TODO handle Re-Invite with SDP
   		offerInfo=mySdpManager.getSdp(cont);
         if (offerInfo.isAudioCodecAvailable(myOldAudioCodec)){
