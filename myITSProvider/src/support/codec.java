@@ -44,5 +44,9 @@ public class codec {
 	public int getFrameSize(){
 		return framesize;
 	}
+	
+	public void setPayloadType(String s){
+		payloadType=Integer.parseInt(s);
+	}
 
 }

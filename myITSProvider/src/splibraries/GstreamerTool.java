@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Calendar;
 import java.util.Random;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 
@@ -36,10 +37,14 @@ public class GstreamerTool {
 	private String ssrc;
 	private String announcement;
 	private boolean isAnnouncement;
+	private static int callID=0;
+	private TreeMap<Integer, Boolean> tm;
+	
 	
 
 	
 	public GstreamerTool(){
+		this.tm=new TreeMap<Integer,Boolean>();
 		this.peerIP=null;
 		this.peerPort=0;
 		this.localPort=0;
@@ -74,6 +79,8 @@ public class GstreamerTool {
 	}
 	public void startMedia(String destIP, int destPort, int sourcePort, int codec) throws InterruptedException{
 		logger.info("Start media ordered. Dst:"+destIP+":"+destPort+" from SrcPort:"+sourcePort+" with Codec:"+codec);
+		++callID;
+		tm.put(callID, false);
 		stopFlag=false;
 		peerIP=destIP;
 		peerPort=destPort;
@@ -106,12 +113,12 @@ public class GstreamerTool {
 		System.out.println(cmdRcv);
 		*/
 		//Thread.sleep(300);
-		rcv=new GStreamerCmdThread(cmdRcv,GstreamerTool.this,"Rcv");
+		rcv=new GStreamerCmdThread(cmdRcv,GstreamerTool.this,"Rcv",callID);
 		Thread.sleep(300);
 		if (isAnnouncement){
-			trx=new GStreamerCmdThread(cmdTrx,GstreamerTool.this,"Trx-Announcement");
+			trx=new GStreamerCmdThread(cmdTrx,GstreamerTool.this,"Trx-Announcement",callID);
 		} else{
-			trx=new GStreamerCmdThread(cmdTrx,GstreamerTool.this,"Trx");
+			trx=new GStreamerCmdThread(cmdTrx,GstreamerTool.this,"Trx",callID);
 		}
 		
 		
@@ -119,13 +126,15 @@ public class GstreamerTool {
 	
 	public void stopMedia(){
 		//System.out.println("gStreamer.StopMedia ordered"); 
-		logger.info("Stop Media ordered");
+		logger.info("Stop Media ordered for CallID:"+callID);
 		stopFlag=true;
+		tm.put(callID, true);
 		//trx.destroy();
 		//rcv.destroy();
 	}
-	public boolean getStopFlag(){
-		return stopFlag;
+	public boolean getStopFlag(int i){
+		return tm.get(callID);
+		//return stopFlag;
 	}
 	public void setGstreamer(GStreamerLocation gsl){
 		path=gsl.getPath()+gsl.getFile();

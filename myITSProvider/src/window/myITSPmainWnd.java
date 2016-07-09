@@ -36,8 +36,11 @@ import support.voiceConfiguration;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.TreeMap;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.Dimension;
@@ -90,7 +93,7 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V1.0";
+	private final String Version="V1.2";
 	private Response183 my183Response;
 	private Response180 my180Response;
 	public SIPRequestsInfo SIPReqInfo;
@@ -217,7 +220,7 @@ public class myITSPmainWnd {
 		chckbxTelUri = new JCheckBox("Tel URI");
 		chckbxTelUri.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
-				
+				setTelUriDestinationLbl();
 			}
 		});
 		GridBagConstraints gbc_chckbxTelUri = new GridBagConstraints();
@@ -397,6 +400,7 @@ public class myITSPmainWnd {
 				//update config (display and user part)
 				config.setUserPart(getFromOAD());
 				list.updateFromAddress(config);
+				list.updateCodecList(getAvailableCodecs());
 				list.userInput(0,getDestination());
 			}
 		});
@@ -417,6 +421,7 @@ public class myITSPmainWnd {
 		btnSend183.setEnabled(false);
 		btnSend183.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				list.updateCodecList(getAvailableCodecs());
 				list.userInput(2,null);
 			}
 		});
@@ -446,6 +451,13 @@ public class myITSPmainWnd {
 		frmMyItspSimulator.getContentPane().add(lblCallStatus, gbc_lblStatus_1);
 		
 		btnReInvite = new JButton("Re-Invite");
+		btnReInvite.setEnabled(false);
+		btnReInvite.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				list.updateCodecList(getAvailableCodecs());
+				list.userInput(0,null);
+			}
+		});
 		GridBagConstraints gbc_btnReInvite = new GridBagConstraints();
 		gbc_btnReInvite.insets = new Insets(0, 0, 5, 5);
 		gbc_btnReInvite.gridx = 5;
@@ -688,8 +700,21 @@ public class myITSPmainWnd {
 		mnImportHeaders.add(mntmSdpHeaders);
 	}
 	private void setDestinationLbl(){
-		String destination=txtSip.getText()+":"+txtCalledPartyNumber.getText()+"@"+txtRemoteIp.getText()+":"+textFieldRemotePort.getText();
-		 lblRequestLine.setText(destination);
+		String destination;
+		if (chckbxTelUri.isSelected()){
+			//Handle Tel URI case
+			destination="tel:"+txtCalledPartyNumber.getText()+";phone-context="+txtRemoteIp.getText();
+			 
+		}else {
+			destination=txtSip.getText()+":"+txtCalledPartyNumber.getText()+"@"+txtRemoteIp.getText()+":"+textFieldRemotePort.getText();
+			 
+		}
+		lblRequestLine.setText(destination);
+		
+	}
+	
+	private void setTelUriDestinationLbl(){
+		setDestinationLbl();
 	}
 	private String getDestination(){
 		return  lblRequestLine.getText();
@@ -715,6 +740,7 @@ public class myITSPmainWnd {
 		wav=new WAVLocation();
 		config=new Configuration();
 		codecsList=new LinkedList<voiceConfiguration>();
+		setDefaultCodecSettings();
 		SIPReqInfo=new SIPRequestsInfo();
 		SIPRespInfo=new SIPResponsesInfo();
 		my183Response= new Response183();
@@ -733,6 +759,7 @@ public class myITSPmainWnd {
 		btnMakeCall.setEnabled(false);
 		btnReleaseCall.setEnabled(false);
 		btnSend183.setEnabled(false);
+		btnReInvite.setEnabled(false);
 		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
@@ -764,6 +791,7 @@ public class myITSPmainWnd {
 		btnMakeCall.setEnabled(false);
 		btnReleaseCall.setEnabled(false);
 		btnSend183.setEnabled(false);
+		btnReInvite.setEnabled(false);
 		comboBoxMyIPs.setEnabled(true);
 	}
 	public void showStatus(String s){
@@ -815,6 +843,7 @@ public class myITSPmainWnd {
 		btnReleaseCall.setEnabled(false);
 		btnReleaseCall.setText("Reject");
 		btnSend183.setEnabled(false);
+		btnReInvite.setEnabled(false);
 	}
 	public void setButtonStatusMakeCall(){
 		btnMakeCall.setEnabled(false);
@@ -828,6 +857,7 @@ public class myITSPmainWnd {
 		btnSend183.setEnabled(false);
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Release");
+		btnReInvite.setEnabled(true);
 	}
 	public void setButtonStatusAnswerCall(){
 		btnMakeCall.setEnabled(true);
@@ -886,6 +916,52 @@ public class myITSPmainWnd {
 		Boolean status;
 		status=chckbxTelUri.isSelected();
 		return  status;
+	}
+	
+	private void setDefaultCodecSettings(){
+		voiceConfiguration g711A=new voiceConfiguration();
+		voiceConfiguration g711U=new voiceConfiguration();
+		voiceConfiguration g729=new voiceConfiguration();
+		voiceConfiguration g722=new voiceConfiguration();
+		voiceConfiguration gsm=new voiceConfiguration();
+		voiceConfiguration DTMF=new voiceConfiguration();
+		g711A.setVoiceConfig("G711A", "8", "8000", "20",true, 1);
+		g711U.setVoiceConfig("G711U", "0", "8000", "20",true, 2);
+		g729.setVoiceConfig("G729", "18", "8000", "20",false, 0);
+		g722.setVoiceConfig("G722", "9", "8000", "20", true, 3);
+		gsm.setVoiceConfig("GSM", "3", "8000", "20",true, 4);
+		DTMF.setVoiceConfig("DTMF", "98", "8000", "0", true, 0);
+		codecsList.add(g711A);
+		codecsList.add(g711U);
+		codecsList.add(g729);
+		codecsList.add(g722);
+		codecsList.add(gsm);
+		codecsList.add(DTMF);
+		
+	}
+	
+	public ArrayList<Integer> getAvailableCodecs(){
+		//manipulate codecsList and find the supported codecs with the right priority
+		ArrayList<Integer> ali=new ArrayList<Integer>();
+		TreeMap<Integer, Integer> myMap= new TreeMap<Integer,Integer>();
+		Iterator<voiceConfiguration> itr=codecsList.iterator();
+		while (itr.hasNext()){
+			Object obj=itr.next();
+			voiceConfiguration vc=(voiceConfiguration) obj;
+			
+			if (!(vc.getSetCodec()) ||  vc.getPriority()==0){
+				
+			}else {
+				myMap.put(vc.getPriority(), vc.getVoiceConfig().getPayloadType());
+			}
+			
+		}
+		
+		for (Map.Entry<Integer, Integer> e : myMap.entrySet()){
+			ali.add(e.getValue());
+		}
+		ali.add(codecsList.getLast().getVoiceConfig().getPayloadType());
+		return ali;				
 	}
 }
     

@@ -14,10 +14,12 @@ public class GStreamerCmdThread extends Thread{
 	private String command;
 	private Process pid;
 	private String name;
-	public GStreamerCmdThread(String s,GstreamerTool o, String n ){
+	private int callID;
+	public GStreamerCmdThread(String s,GstreamerTool o, String n, int ID  ){
 		this.command=s;
 		this.obj=o;
 		this.name=n;
+		this.callID=ID;
 		start();
 	}
 	public void run(){
@@ -39,7 +41,7 @@ public class GStreamerCmdThread extends Thread{
 				 * Don't use the while above because it never goes out of it. Consequently the while below 
 				 * is never taken into account!!!!
 				 */
-				while (!obj.getStopFlag()){
+				while (!obj.getStopFlag(callID)){
 					Thread.sleep(300);
 				}
 				
@@ -55,7 +57,7 @@ public class GStreamerCmdThread extends Thread{
 			}
 			finally {
 				//System.out.println(name+":Stopped hopefully");
-				logger.info(name+" stopped hopefully");
+				logger.info(name+" stopped hopefully with callID:"+callID);
 				pid.destroy();
 				
 			}

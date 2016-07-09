@@ -30,6 +30,13 @@ public class voiceConfiguration {
 	public void setPreferred(boolean p){
 		preferred=p;
 	}
+	public void setPriority(int i){
+		priority=i;
+	}
+	
+	public void setSetCodec(boolean s){
+		setCodec=s;
+	}
 	
 	public codec getVoiceConfig(){
 		return voicecodec;

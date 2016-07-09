@@ -18,7 +18,7 @@ public class SdpManager {
     mySdpFactory = SdpFactory.getInstance();
   }
 
-  public byte[] createSdp(SdpInfo sdpinfo) {
+  public byte[] createSdp(SdpInfo sdpinfo, boolean b) {
 
     try{
     //Session-level description lines
@@ -34,11 +34,23 @@ public class SdpManager {
     myTimeVector.add(myTime);
 
     //Media description lines
-    int[] aaf=new int[1];
+    int[] aaf=new int[2];
     aaf[0]=sdpinfo.aformat;
-
+    sdpinfo.setDTMFPT();
+    aaf[1]=sdpinfo.DTMF_PT;
+    
+    MediaDescription myAudioDescription;
     //aaf[0]=sdpinfo.getAFormat();
-    MediaDescription myAudioDescription = mySdpFactory.createMediaDescription("audio", sdpinfo.aport, 1, "RTP/AVP", aaf);
+    if (b){
+    	 myAudioDescription = mySdpFactory.createMediaDescription("audio", sdpinfo.aport, 1, "RTP/AVP", aaf);
+    }else{
+    	 myAudioDescription = mySdpFactory.createMediaDescription("audio", sdpinfo.aport, 1, "RTP/AVP", sdpinfo.getAudioFormatList());
+        
+    }
+    String rtpmap=String.valueOf(sdpinfo.DTMF_PT)+" telephone-event/8000";
+    String fmtp=String.valueOf(sdpinfo.DTMF_PT)+" 0-15";
+    myAudioDescription.setAttribute("rtpmap", rtpmap);
+    myAudioDescription.setAttribute("fmtp", fmtp);
     Vector myMediaDescriptionVector=new Vector();
     myMediaDescriptionVector.add(myAudioDescription);
 
@@ -66,6 +78,9 @@ public class SdpManager {
     }
 
     return mySdpContent;
+  }
+  public byte[] createSdp(SdpInfo sdpinfo) {
+	  return createSdp(sdpinfo, false);
   }
 
   public SdpInfo getSdp(byte[] content) {
