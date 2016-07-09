@@ -172,5 +172,12 @@ public class GstreamerTool {
 			rtpDepay="rtpg729depay";
 			PayloadType="18";
 		}
+		else if (c==3){//GSM
+			codecEncoding="gsmenc";
+			codecDecoding="gsmdec";
+			rtpPay="rtpgsmpay";
+			rtpDepay="rtpgsmdepay";
+			PayloadType="3";
+		}
 	}
 }
