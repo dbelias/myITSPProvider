@@ -113,6 +113,26 @@ public class SdpInfo {
 	 }
 	 return myAudioCodecString;
  }
+ 
+ public String getAudioCodecString(){
+	 String s="Codec:N.A";
+	 if (aformat==0){
+		 s="Codec:G711U";
+	 }
+	 else if (aformat==8){
+		 s="Codec:G711A";
+	 }
+	 else if (aformat==9){
+		 s="Codec:G722";
+	 }
+	 else if (aformat==18){
+		 s="Codec:G729";
+	 }
+	 else if (aformat==3){
+		 s="Codec:GSM";
+	 }
+	 return s;
+ }
 }
 
 

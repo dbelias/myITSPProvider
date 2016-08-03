@@ -121,6 +121,8 @@ public class ITSPListener implements SipListener{
 	static final int RINGING=5;
 	static final int WAIT_ACK=6;
 	static final int RE_INVITE_WAIT_ACK=7;
+	static final int WAIT_PROV_LATE_SDP=8;
+	static final int WAIT_FINAL_LATE_SDP=9;
 
 	class MyTimerTask extends TimerTask {
         ITSPListener myListener;
@@ -308,6 +310,19 @@ public class ITSPListener implements SipListener{
                  myViaHeaders, myMaxForwardsHeader);
              myRequest.addHeader(myContactHeader);
              myRequest.addHeader(myExtensionHeader);
+             if (myGUI.getLateSDP()){
+            	 logger.info("Send Invite w/o SDP");
+            	//TODO:Send Invite w/o SDP 
+            	 myClientTransaction = mySipProvider.getNewClientTransaction(myRequest);
+                 //String bid=myClientTransaction.getBranchId();
+
+                 myClientTransaction.sendRequest();
+                 myDialog = myClientTransaction.getDialog();
+                 myGUI.display(">>> " + myRequest.toString());
+                 status = WAIT_PROV_LATE_SDP;
+                 myGUI.showStatus("Status: WAIT_PROV_LATE_SDP");
+             }
+             else { //Normal case: Send Invite with SDP
 
              offerInfo=new SdpInfo();
              offerInfo.IpAddress=myIP;
@@ -333,11 +348,15 @@ public class ITSPListener implements SipListener{
              myGUI.display(">>> " + myRequest.toString());
              status = WAIT_PROV;
              myGUI.showStatus("Status: WAIT_PROV");
+             
+             
+             }
              myGUI.setButtonStatusMakeCall();
              break;
            }
 
          case WAIT_FINAL:
+         case WAIT_FINAL_LATE_SDP:
            if (type == NO) {
              Request myCancelRequest = myClientTransaction.createCancel();
              ClientTransaction myCancelClientTransaction = mySipProvider.
@@ -374,7 +393,9 @@ public class ITSPListener implements SipListener{
              status = IDLE;
 
              myGUI.showStatus("Status: IDLE");
+             myGUI.showCodec("");
              myGUI.setButtonStatusIdle();
+             
              break;
            }
            if (type==YES){
@@ -414,6 +435,7 @@ public class ITSPListener implements SipListener{
 
              status = IDLE;
              myGUI.showStatus("Status: IDLE");
+             myGUI.showCodec("");
              myGUI.setButtonStatusIdle();
              break;
            }
@@ -428,7 +450,8 @@ public class ITSPListener implements SipListener{
 
              myAlertTool.stopTone();
              if (isSendSDP183){
-           	  myGAnnouncementTool.stopMedia();           	   
+           	  myGAnnouncementTool.stopMedia(); 
+           	  myGUI.showCodec("");
              }
 
 
@@ -463,6 +486,7 @@ public class ITSPListener implements SipListener{
              myGUI.display(">>> " + myResponse.toString());
              status = WAIT_ACK;
              myGUI.showStatus("Status: WAIT_ACK");
+             myGUI.showCodec(answerInfo.getAudioCodecString());
              myGUI.setButtonStatusEstablishedCall();
              break;
            }
@@ -598,6 +622,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 
         status=IDLE;
         myGUI.showStatus("Status: IDLE");
+        myGUI.showCodec("");
         myGUI.setButtonStatusIdle();
         myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
       }
@@ -673,6 +698,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
                			}else {
                					myGAnnouncementTool.stopMedia();
                			}
+               			myGUI.showCodec("");
                			myAudioPort=myAudioPort+2;
                			remoteOldAudioPort=answerInfo.aport;
                			remoteOldAudioCodec=offerInfo.aformat;
@@ -689,10 +715,12 @@ public void processRequest(RequestEvent requestReceivedEvent) {
                			if (answerInfo.vport>0) {
                					myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
                			}
+               			myGUI.showCodec(offerInfo.getAudioCodecString());
                	
                }
          	  } 
-           myGUI.showStatus("Status: ESTABLISHED");  
+           myGUI.showStatus("Status: ESTABLISHED"); 
+           
           
               
         }  
@@ -719,7 +747,70 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
   long numseq=originalCSeq.getSeqNumber();
   logger.info("processResponse: Status="+status+" Response="+myStatusCode);
 switch(status){
-	
+
+  case WAIT_PROV_LATE_SDP:
+	  if (myStatusCode<200) {
+	      status=WAIT_FINAL_LATE_SDP;
+	      myDialog=thisClientTransaction.getDialog();
+	      myRingTool.playTone();
+	      myGUI.showStatus("Status: ALERTING");
+	      myGUI.setButtonStatusMakeCall();
+	    }
+	  else if (myStatusCode<300) {
+		  myRingTool.stopTone();
+	      myDialog=thisClientTransaction.getDialog();
+	      Request myAck = myDialog.createAck(numseq);
+	      myAck.addHeader(myContactHeader);
+	      byte[] cont=(byte[]) myResponse.getContent();
+	      offerInfo=mySdpManager.getSdp(cont);
+	      
+	      answerInfo=new SdpInfo();
+	      answerInfo.IpAddress=myIP;
+	      answerInfo.aport=myAudioPort;
+          myOldAudioPort=myAudioPort;
+          myAudioPort=myAudioPort+2;
+          answerInfo.vport=myVideoPort;
+          answerInfo.vformat=myVideoCodec;
+	      answerInfo.setAudioFormatList(myCodecsList);
+	      //handle what is the best codec to use
+	      answerInfo.findProperCodec(offerInfo, true);
+	      myOldAudioCodec=answerInfo.aformat;
+	      remoteOldAudioCodec=myOldAudioCodec;
+	      remoteOldAudioPort=offerInfo.aport;
+	      byte[] content=mySdpManager.createSdp(answerInfo,true);//answer only to the matched codec
+	      ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+	      myAck.setContent(content,contentTypeHeader);
+	      if (isOnlyAnnouncment){
+		     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+		      } else {
+		     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+		      }
+		      if (answerInfo.vport>0) {
+		      myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
+		      }
+		  myGUI.showCodec(answerInfo.getAudioCodecString());
+	      
+	      myDialog.sendAck(myAck);
+	      myGUI.display(">>> "+myAck.toString());     
+	      status=ESTABLISHED;
+	      myGUI.showStatus("Status: ESTABLISHED");
+	      myGUI.setButtonStatusEstablishedCall();
+
+	    }
+	    else {
+
+	      status=IDLE;
+	      Request myAck = myDialog.createAck(numseq);
+	      myAck.addHeader(myContactHeader);
+	      myDialog.sendAck(myAck);
+	      myRingTool.stopTone();
+	      myGUI.display(">>> "+myAck.toString());
+	      myGUI.showStatus("Status: IDLE");
+	      myGUI.setButtonStatusIdle();
+
+	    }
+	    break;
+  
   case WAIT_PROV:
     if (myStatusCode<200) {
       status=WAIT_FINAL;
@@ -756,6 +847,7 @@ switch(status){
       if (answerInfo.vport>0) {
       myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
       }
+      myGUI.showCodec(offerInfo.getAudioCodecString());
 
     }
     else {
@@ -771,7 +863,63 @@ switch(status){
 
     }
     break;
+  case WAIT_FINAL_LATE_SDP:
+	  if (myStatusCode<200) {
+	      status=WAIT_FINAL_LATE_SDP;
+	      myDialog=thisClientTransaction.getDialog();
+	      myRingTool.playTone();
+	      myGUI.showStatus("Status: ALERTING");
+	      myGUI.setButtonStatusMakeCall();
+	    }
+	  else if (myStatusCode<300) {
+		  myRingTool.stopTone();
+	      myDialog=thisClientTransaction.getDialog();
+	      Request myAck = myDialog.createAck(numseq);
+	      myAck.addHeader(myContactHeader);
+	      byte[] cont=(byte[]) myResponse.getContent();
+	      offerInfo=mySdpManager.getSdp(cont);
+	      answerInfo=new SdpInfo();
+	      answerInfo.IpAddress=myIP;
+	      answerInfo.aport=myAudioPort;
+          myOldAudioPort=myAudioPort;
+          myAudioPort=myAudioPort+2;
+          answerInfo.vport=myVideoPort;
+          answerInfo.vformat=myVideoCodec;
+	      answerInfo.setAudioFormatList(myCodecsList);
+	      //handle what is the best codec to use
+	      answerInfo.findProperCodec(offerInfo, true);
+	      myOldAudioCodec=answerInfo.aformat;
+	      remoteOldAudioCodec=myOldAudioCodec;
+	      remoteOldAudioPort=offerInfo.aport;
+	      byte[] content=mySdpManager.createSdp(answerInfo,true);//answer only to the matched codec
+	      ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+	      myAck.setContent(content,contentTypeHeader);
+	      if (isOnlyAnnouncment){
+		     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+		      } else {
+		     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+		      }
+		      if (answerInfo.vport>0) {
+		      myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
+		      }
+		  myGUI.showCodec(answerInfo.getAudioCodecString());
+	      
+	      myDialog.sendAck(myAck);
+	      myGUI.display(">>> "+myAck.toString());     
+	      status=ESTABLISHED;
+	      myGUI.showStatus("Status: ESTABLISHED");
+	      myGUI.setButtonStatusEstablishedCall();
 
+	    }
+	    else {
+
+	      myRingTool.stopTone();
+	      status=IDLE;
+	      myGUI.showStatus("Status: IDLE");
+	      myGUI.setButtonStatusIdle();
+	    }
+	    break;
+	  
   case WAIT_FINAL:
     if (myStatusCode<200) {
       status=WAIT_FINAL;
@@ -811,6 +959,7 @@ switch(status){
         if (answerInfo.vport>0) {
           myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
         }
+        myGUI.showCodec(offerInfo.getAudioCodecString());
 
     }
     else {
@@ -843,6 +992,7 @@ switch(status){
           }else {
           	myGAnnouncementTool.stopMedia();
           }
+	      myGUI.showCodec("");
 	      Thread.sleep(1000);
 	      if (isOnlyAnnouncment){
 	      	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
@@ -856,6 +1006,7 @@ switch(status){
 	         }
 	         myDialog.sendAck(myAck);
 		     myGUI.display(">>> "+myAck.toString());
+		     myGUI.showCodec(offerInfo.getAudioCodecString());
 		  break;   
 	  }
 	  
@@ -940,7 +1091,7 @@ switch(status){
         r.setContent(content,contentTypeHeader);   
         //handle the best codec to use
        	myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
-       
+       	myGUI.showCodec(answerInfo.getAudioCodecString());
 	}
 	
 private void answerToReInvite(Request r)  throws ParseException, InterruptedException, SipException, InvalidArgumentException{
@@ -1006,6 +1157,7 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
             }else {
             	myGAnnouncementTool.stopMedia();
             }
+        	myGUI.showCodec("");
         	Thread.sleep(1000);
         	myAudioPort=myAudioPort+2;
         	answerInfo.aport=myAudioPort;
@@ -1024,6 +1176,7 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
               if (answerInfo.vport>0) {
                 myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
               }
+              myGUI.showCodec(answerInfo.getAudioCodecString());
         	
         }
         content=mySdpManager.createSdp(answerInfo,true);//sent only the matched codec

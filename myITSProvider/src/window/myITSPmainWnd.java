@@ -93,7 +93,7 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V1.2";
+	private final String Version="V1.3";
 	private Response183 my183Response;
 	private Response180 my180Response;
 	public SIPRequestsInfo SIPReqInfo;
@@ -101,6 +101,8 @@ public class myITSPmainWnd {
 	private JTextField txtFromOAD;
 	private JCheckBox chckbxTelUri;
 	private JButton btnReInvite;
+	private JLabel lblCodec;
+	private JCheckBox chckbxLateSdp;
 
 	/**
 	 * Launch the application.
@@ -404,6 +406,14 @@ public class myITSPmainWnd {
 				list.userInput(0,getDestination());
 			}
 		});
+		
+		chckbxLateSdp = new JCheckBox("Late SDP");
+		chckbxLateSdp.setEnabled(false);
+		GridBagConstraints gbc_chckbxLateSdp = new GridBagConstraints();
+		gbc_chckbxLateSdp.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxLateSdp.gridx = 1;
+		gbc_chckbxLateSdp.gridy = 5;
+		frmMyItspSimulator.getContentPane().add(chckbxLateSdp, gbc_chckbxLateSdp);
 		GridBagConstraints gbc_btnMakeCall = new GridBagConstraints();
 		gbc_btnMakeCall.insets = new Insets(0, 0, 5, 5);
 		gbc_btnMakeCall.gridx = 3;
@@ -458,6 +468,13 @@ public class myITSPmainWnd {
 				list.userInput(0,null);
 			}
 		});
+		
+		lblCodec = new JLabel("Codec:N.A");
+		GridBagConstraints gbc_lblCodec = new GridBagConstraints();
+		gbc_lblCodec.insets = new Insets(0, 0, 5, 5);
+		gbc_lblCodec.gridx = 4;
+		gbc_lblCodec.gridy = 6;
+		frmMyItspSimulator.getContentPane().add(lblCodec, gbc_lblCodec);
 		GridBagConstraints gbc_btnReInvite = new GridBagConstraints();
 		gbc_btnReInvite.insets = new Insets(0, 0, 5, 5);
 		gbc_btnReInvite.gridx = 5;
@@ -760,6 +777,8 @@ public class myITSPmainWnd {
 		btnReleaseCall.setEnabled(false);
 		btnSend183.setEnabled(false);
 		btnReInvite.setEnabled(false);
+		showCodec("Codec:N.A");
+		chckbxLateSdp.setEnabled(false);
 		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
@@ -774,6 +793,8 @@ public class myITSPmainWnd {
 		textFieldRemotePort.setEnabled(true);
 		textArea.setEnabled(true);
 		setButtonStatusIdle();
+		chckbxLateSdp.setEnabled(true);
+		showCodec("");
 		
 		comboBoxMyIPs.setEnabled(false);
 		setTxtLine(SIPHeadersTxt.ResetLines,"");
@@ -793,9 +814,15 @@ public class myITSPmainWnd {
 		btnSend183.setEnabled(false);
 		btnReInvite.setEnabled(false);
 		comboBoxMyIPs.setEnabled(true);
+		chckbxLateSdp.setEnabled(false);
+		showCodec("Codec:N.A");
 	}
 	public void showStatus(String s){
 		lblCallStatus.setText(s);
+	}
+	
+	public void showCodec(String s){
+		lblCodec.setText(s);
 	}
 	
 	public void display(String s){
@@ -844,12 +871,14 @@ public class myITSPmainWnd {
 		btnReleaseCall.setText("Reject");
 		btnSend183.setEnabled(false);
 		btnReInvite.setEnabled(false);
+		chckbxLateSdp.setEnabled(true);
 	}
 	public void setButtonStatusMakeCall(){
 		btnMakeCall.setEnabled(false);
 		//btnMakeCall.setText("Call");
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Release");
+		chckbxLateSdp.setEnabled(false);
 	}
 	public void setButtonStatusEstablishedCall(){
 		btnMakeCall.setEnabled(false);
@@ -858,15 +887,18 @@ public class myITSPmainWnd {
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Release");
 		btnReInvite.setEnabled(true);
+		chckbxLateSdp.setEnabled(false);
 	}
 	public void setButtonStatusAnswerCall(){
 		btnMakeCall.setEnabled(true);
 		btnMakeCall.setText("Answer");
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Reject");
+		chckbxLateSdp.setEnabled(false);
 	}
 	public void setButtonStatusSend183(){
 		btnSend183.setEnabled(true);
+		chckbxLateSdp.setEnabled(false);
 	}
 	public void setTxtLine(SIPHeadersTxt h,String s){
 		String temp="Not Available";
@@ -911,6 +943,12 @@ public class myITSPmainWnd {
     	s=txtFromOAD.getText();
     	return s;
     }
+	
+	public Boolean getLateSDP(){
+		Boolean status;
+		status=chckbxLateSdp.isSelected();
+		return status;
+	}
 	
 	public Boolean getTelURI(){
 		Boolean status;
