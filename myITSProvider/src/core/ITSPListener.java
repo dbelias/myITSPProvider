@@ -1179,6 +1179,9 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
               myGUI.showCodec(answerInfo.getAudioCodecString());
         	
         }
+        //TODO: Handle the a:sendrecv, recvonly, etc
+        String attribute=getDirectionAttribute(offerInfo);
+        answerInfo.setDirection(attribute);
         content=mySdpManager.createSdp(answerInfo,true);//sent only the matched codec
         myResponse.setContent(content,contentTypeHeader);
   	  } 
@@ -1189,5 +1192,25 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
         myGUI.display(">>> " + myResponse.toString());
         //myGUI.setButtonStatusEstablishedCall(); State is already established
 	}
+private String getDirectionAttribute(SdpInfo s){
+	String temp=null;
+	String result=null;
+	temp=s.getDirection();
+	switch (temp){
+	case "sendrecv":
+		result="sendrecv";
+		break;
+	case "sendonly":
+		result="recvonly";
+		break;
+	case "recvonly":
+		result="sendonly";
+		break;
+	case "inactive":
+		result="inactive";
+		break;
+	}
+	return result;
+}
 
 }

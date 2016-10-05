@@ -15,6 +15,7 @@ public class SdpInfo {
   public ArrayList<Integer> videoFormatList;
   public boolean OnlyOneCodec;
   public int DTMF_PT;
+  public String direction;
   
 
  public SdpInfo() {
@@ -27,6 +28,7 @@ public class SdpInfo {
    videoFormatList=new ArrayList<Integer>();
    OnlyOneCodec=true;
    DTMF_PT=98;
+   direction="sendrecv";
    
  }
  public boolean isAudioCodecAvailable(int c){
@@ -132,6 +134,14 @@ public class SdpInfo {
 		 s="Codec:GSM";
 	 }
 	 return s;
+ }
+ 
+ public String getDirection(){
+	 return direction;
+ }
+ 
+ public void setDirection(String s){
+	 direction=s;
  }
 }
 

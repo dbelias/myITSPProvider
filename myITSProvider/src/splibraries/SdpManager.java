@@ -51,6 +51,7 @@ public class SdpManager {
     String fmtp=String.valueOf(sdpinfo.DTMF_PT)+" 0-15";
     myAudioDescription.setAttribute("rtpmap", rtpmap);
     myAudioDescription.setAttribute("fmtp", fmtp);
+    myAudioDescription.setAttribute(sdpinfo.getDirection(), null);
     Vector myMediaDescriptionVector=new Vector();
     myMediaDescriptionVector.add(myAudioDescription);
 
@@ -106,7 +107,18 @@ public class SdpManager {
         if (audioFormats.size()>1){
       	  setSDPinfoArrayList(audioFormats,mySdpInfo.audioFormatList);
         }
+        Vector attributeVector=new Vector();
+        attributeVector=myAudioDescription.getAttributes(true);
         
+        String directionAttribute="sendrecv";
+        int size=attributeVector.size();
+        if (size>0){
+        	Attribute a=(Attribute) attributeVector.get(size-1);
+        	directionAttribute=a.getName();
+        	logger.info("SDP with a="+directionAttribute);
+        }
+        
+        mySdpInfo.setDirection(directionAttribute);
         
         
         int myVideoPort=-1;
