@@ -31,6 +31,8 @@ import support.SIPRequestsInfo;
 import support.SIPResponsesInfo;
 import support.SystemIPs;
 import support.WAVLocation;
+import support.XMLBackup;
+import support.XMLRestore;
 import support.voiceConfiguration;
 
 import java.awt.event.KeyAdapter;
@@ -93,7 +95,7 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V1.3";
+	private final String Version="V1.5";
 	private Response183 my183Response;
 	private Response180 my180Response;
 	public SIPRequestsInfo SIPReqInfo;
@@ -638,6 +640,25 @@ public class myITSPmainWnd {
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmMyItspSimulator.setJMenuBar(menuBar);
+		
+		JMenu mnBr = new JMenu("B&R");
+		menuBar.add(mnBr);
+		
+		JMenuItem mntmBackup = new JMenuItem("Backup");
+		mntmBackup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				XMLBackup xmlb=new XMLBackup(gStreamer, wav);
+			}
+		});
+		mnBr.add(mntmBackup);
+		
+		JMenuItem mntmRestore = new JMenuItem("Restore");
+		mntmRestore.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				XMLRestore xmlr=new XMLRestore(gStreamer, wav);
+			}
+		});
+		mnBr.add(mntmRestore);
 		
 		JMenu mnSystemSettings = new JMenu("System Settings");
 		menuBar.add(mnSystemSettings);

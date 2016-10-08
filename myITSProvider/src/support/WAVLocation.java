@@ -67,6 +67,7 @@ public class WAVLocation {
 	public String getRingBackToneFile(){
 		return fileRingbackTone;
 	}
+	
 	public String getRingTonePath(){
 		return pathRingTone;		
 	}
@@ -81,6 +82,25 @@ public class WAVLocation {
 	}
 	public boolean getIsAnnounceAsTrxSource(){
 		return isAnnounceAsTrxSource;
+	}
+	public void setPathName(String path, String name, String index){
+		switch(index){
+		case "ringbacktone":
+			pathRingBackTone=path;
+			fileRingbackTone=name;
+			break;
+		case "ringtone":
+			pathRingTone=path;
+			fileRingTone=name;
+			break;	
+		case "announcement":
+			pathTrxPayload=path;
+			fileTrxPayload=name;
+			break;
+		}
+	}
+	public void setIsAnnounceAsTrxSource(Boolean b){
+		isAnnounceAsTrxSource=b;
 	}
 	
 	
