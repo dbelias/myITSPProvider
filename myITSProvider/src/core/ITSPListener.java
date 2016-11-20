@@ -72,6 +72,7 @@ public class ITSPListener implements SipListener{
 	private UserAgentHeader myUserAgentHeader;
 	private Header myExtensionHeader;
 	private Header myAdditionalHeader;
+	private Header myPAIHeader;
 	private ViaHeader myViaHeader;
 	private Address fromAddress;
 	private Dialog myDialog;
@@ -211,6 +212,7 @@ public class ITSPListener implements SipListener{
 	      myContactHeader = myHeaderFactory.createContactHeader(contactAddress);
 	      myExtensionHeader = myHeaderFactory.createHeader("User-Agent",
 	              "myITSP tool V1");
+	      myPAIHeader=myHeaderFactory.createHeader("P-Asserted-Identity", " <sip:"+conf.userID+"@"+myIP+">");
 	      if (myGUI.getTelURI()){
 	    	  fromAddress=myAddressFactory.createAddress(conf.name+ " <tel:"+conf.userID+">");
 	      }
@@ -272,6 +274,7 @@ public class ITSPListener implements SipListener{
 		      }
 		      else{
 		    	  fromAddress=myAddressFactory.createAddress(conf.name+ " <sip:"+conf.userID+"@"+myIP+":"+myPort+">");
+		    	  myPAIHeader=myHeaderFactory.createHeader("P-Asserted-Identity", " <sip:"+conf.userID+"@"+myIP+">");
 		      }
 		} catch (ParseException e) {
 			logger.error("ParseException", e);
@@ -446,6 +449,7 @@ public class ITSPListener implements SipListener{
                  originalRequest);
              ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
              myToHeader.setTag("454326");
+             myResponse.addHeader(myPAIHeader);
              myResponse.addHeader(myContactHeader);
 
              myAlertTool.stopTone();
@@ -587,6 +591,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 
         Response myResponse=myMessageFactory.createResponse(180,myRequest);
         myResponse.addHeader(myContactHeader);
+        myResponse.addHeader(myPAIHeader);
         ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
         myToHeader.setTag("454326");
         setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());

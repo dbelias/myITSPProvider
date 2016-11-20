@@ -492,7 +492,7 @@ public class VoiceSettingsWnd extends JFrame {
 				break;
 			case "G729":
 				codecsList.get(i).setPriority((int)cmbBoxG729Prio.getSelectedItem());
-				codecsList.get(i).setSetCodec(false);
+				codecsList.get(i).setSetCodec(true);
 				break;
 			case "G722":
 				codecsList.get(i).setPriority((int)cmbBoxG722Prio.getSelectedItem());

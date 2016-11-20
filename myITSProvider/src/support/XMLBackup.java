@@ -13,7 +13,7 @@ import org.jdom2.output.XMLOutputter;
 public class XMLBackup {
 	private static Logger logger=Logger.getLogger("XMLBackup");
 	
-	public XMLBackup(GStreamerLocation g, WAVLocation w){
+	public XMLBackup(GStreamerLocation g, WAVLocation w, BackupSettings b){
 		try{
 			Element configElement=new Element("configuration");
 			Document doc= new Document(configElement);
@@ -26,6 +26,7 @@ public class XMLBackup {
 			gstreamerElement.addContent(fileName);
 			doc.getRootElement().addContent(gstreamerElement);
 			doc.getRootElement().addContent(wavElement(w));
+			doc.getRootElement().addContent(settingsElement(b));
 			XMLOutputter xmlOutput = new XMLOutputter();
 	        xmlOutput.setFormat(Format.getPrettyFormat());
 	        xmlOutput.output(doc, new FileOutputStream("ITSPConfiguration.xml")); 
@@ -35,6 +36,23 @@ public class XMLBackup {
 			logger.error("IOException", e);
 	         e.printStackTrace();
 	      }		
+	}
+	
+	private Element settingsElement(BackupSettings b){
+		Element otherSettingElement=new Element("settings");
+		Element callerNumber=new Element("caller");
+		Element calledNumber=new Element ("called");
+		Element calledIPAddr=new Element ("calledIPAddress");
+		Element calledIPPort=new Element ("calledIPPort");
+		callerNumber.setText(b.CallingNumber);
+		calledNumber.setText(b.CalledNumber);
+		calledIPAddr.setText(b.CalledIPAddress);
+		calledIPPort.setText(b.CalledIPPort);
+		otherSettingElement.addContent(callerNumber);
+		otherSettingElement.addContent(calledNumber);
+		otherSettingElement.addContent(calledIPAddr);
+		otherSettingElement.addContent(calledIPPort);
+		return otherSettingElement;
 	}
 	
 	private Element wavElement(WAVLocation w){

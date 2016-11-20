@@ -166,9 +166,9 @@ public class GstreamerTool {
 			PayloadType="9";
 		}
 		else if (c==18){//G729
-			codecEncoding="avenc_g729";//not exist!!!!!DO NOT USE IT!!!!!!
+			codecEncoding="alawenc"; //"avenc_g729";//not exist!!!!!DO NOT USE IT!!!!!!
 			codecDecoding="avdec_g729";
-			rtpPay="rtpg729pay";
+			rtpPay="rtppcmapay"; //"rtpg729pay";// exist but !!!!!DO NOT USE IT!!!!!!
 			rtpDepay="rtpg729depay";
 			PayloadType="18";
 		}

@@ -13,7 +13,7 @@ import org.jdom2.input.SAXBuilder;
 public class XMLRestore {
 	private static Logger logger=Logger.getLogger("XMLRestore");
 	
-	public XMLRestore(GStreamerLocation g, WAVLocation w){
+	public XMLRestore(GStreamerLocation g, WAVLocation w, BackupSettings b){
 		
 		try {
 			File inputFile=new File("ITSPConfiguration.xml");
@@ -29,6 +29,8 @@ public class XMLRestore {
 				case "audio_files":
 					setWAVSettings(temp, w);
 					break;
+				case "settings":
+					setOtherSettings(temp,b);
 				}
 			}
 		} catch (JDOMException e) {
@@ -41,6 +43,16 @@ public class XMLRestore {
 		
 		
 	}
+	
+	private void setOtherSettings(Element e, BackupSettings b){
+		b.setIsAvailable();
+		b.setCallingSettings(e.getChildText("caller"));
+		logger.info("OAD set with:"+e.getChildText("caller"));
+		b.setCalledSettings(e.getChildText("called"), e.getChildText("calledIPAddress"), e.getChildText("calledIPPort"));
+		logger.info("DAD set with "+e.getChildText("called")+"@"+e.getChildText("calledIPAddress")+":"+e.getChildText("calledIPPort"));
+		
+	}
+	
 	private void setGstreamerSettings(Element e, GStreamerLocation g){
 		g.updateGStreamerLocation(e.getChildText("path"), e.getChildText("file"));
 		logger.info("gstreamer set with:"+e.getChildText("path")+e.getChildText("file"));

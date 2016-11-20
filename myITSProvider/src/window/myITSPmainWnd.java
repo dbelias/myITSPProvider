@@ -25,6 +25,7 @@ import core.ITSPListener;
 import splibraries.Configuration;
 import splibraries.Response180;
 import splibraries.Response183;
+import support.BackupSettings;
 import support.GStreamerLocation;
 import support.SIPHeadersTxt;
 import support.SIPRequestsInfo;
@@ -85,6 +86,7 @@ public class myITSPmainWnd {
 	private GStreamerLocation gStreamer;
 	private WAVLocation wav;
 	private Configuration config;
+	private BackupSettings myBackupSet;
 	private LinkedList<voiceConfiguration> codecsList;
 	static final int STATE_ON=1;
 	static final int STATE_OFF=0;
@@ -95,7 +97,7 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V1.5";
+	private final String Version="V1.7_beta";
 	private Response183 my183Response;
 	private Response180 my180Response;
 	public SIPRequestsInfo SIPReqInfo;
@@ -647,7 +649,9 @@ public class myITSPmainWnd {
 		JMenuItem mntmBackup = new JMenuItem("Backup");
 		mntmBackup.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				XMLBackup xmlb=new XMLBackup(gStreamer, wav);
+				myBackupSet.setCallingSettings(txtFromOAD.getText());
+				myBackupSet.setCalledSettings(txtCalledPartyNumber.getText(), txtRemoteIp.getText(), textFieldRemotePort.getText());
+				XMLBackup xmlb=new XMLBackup(gStreamer, wav, myBackupSet);
 			}
 		});
 		mnBr.add(mntmBackup);
@@ -655,7 +659,11 @@ public class myITSPmainWnd {
 		JMenuItem mntmRestore = new JMenuItem("Restore");
 		mntmRestore.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				XMLRestore xmlr=new XMLRestore(gStreamer, wav);
+				XMLRestore xmlr=new XMLRestore(gStreamer, wav, myBackupSet);
+				if (myBackupSet.getIsAvailable()){ //to be compatible with old backups
+					updateGUISettings(myBackupSet);
+				}
+				
 			}
 		});
 		mnBr.add(mntmRestore);
@@ -737,6 +745,15 @@ public class myITSPmainWnd {
 		});
 		mnImportHeaders.add(mntmSdpHeaders);
 	}
+	private void updateGUISettings(BackupSettings b) {
+		// TODO Auto-generated method stub
+		txtCalledPartyNumber.setText(b.CalledNumber);
+		txtRemoteIp.setText(b.CalledIPAddress);
+		textFieldRemotePort.setText(b.CalledIPPort);
+		txtFromOAD.setText(b.CallingNumber);
+		
+	}
+
 	private void setDestinationLbl(){
 		String destination;
 		if (chckbxTelUri.isSelected()){
@@ -777,6 +794,7 @@ public class myITSPmainWnd {
 		gStreamer=new GStreamerLocation(null,null);
 		wav=new WAVLocation();
 		config=new Configuration();
+		myBackupSet=new BackupSettings();
 		codecsList=new LinkedList<voiceConfiguration>();
 		setDefaultCodecSettings();
 		SIPReqInfo=new SIPRequestsInfo();
