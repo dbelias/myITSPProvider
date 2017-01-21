@@ -13,6 +13,7 @@ import java.awt.Insets;
 import javax.swing.JDialog;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -64,6 +65,12 @@ import javax.swing.JCheckBox;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
 import javax.swing.event.ChangeEvent;
 import javax.swing.JRadioButtonMenuItem;
 
@@ -82,7 +89,7 @@ public class myITSPmainWnd {
 	private JLabel lblDestination;
 	private JLabel lblRequestLine;
 	private JComboBox<String> comboBoxMyIPs;
-	private JTextArea textArea;
+	private JTextPane textArea;
 	private JButton btnMakeCall;
 	private JButton btnReleaseCall;
 	private JLabel lblCallStatus;
@@ -116,6 +123,7 @@ public class myITSPmainWnd {
 	private JRadioButtonMenuItem rdbtnmntmInfo;
 	private JRadioButtonMenuItem rdbtnmntmDebug;
 	private JRadioButtonMenuItem rdbtnmntmTrace;
+	private boolean colorSwitch;
 
 	/**
 	 * Launch the application.
@@ -398,7 +406,7 @@ public class myITSPmainWnd {
 		gbc_lblRequestLine.gridy = 4;
 		frmMyItspSimulator.getContentPane().add(lblRequestLine, gbc_lblRequestLine);
 		
-		textArea = new JTextArea();
+		textArea = new JTextPane();
 		GridBagConstraints gbc_textArea = new GridBagConstraints();
 		gbc_textArea.gridheight = 9;
 		gbc_textArea.gridwidth = 5;
@@ -876,6 +884,7 @@ public class myITSPmainWnd {
 		showCodec("Codec:N.A");
 		chckbxLateSdp.setEnabled(false);
 		hasDtmfFirstOrder=false;
+		colorSwitch=false;
 		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
@@ -922,8 +931,39 @@ public class myITSPmainWnd {
 		lblCodec.setText(s);
 	}
 	
-	public void display(String s){
-		textArea.append(s);
+	private void append(String s)  {
+		StyledDocument document = (StyledDocument) textArea.getDocument();
+	     try {
+			document.insertString(document.getLength(), s, null);
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			logger.error("Bad Location Exception when appending text", e);
+			e.printStackTrace();
+		}
+
+	}
+	
+	public void display(String s) {
+		if (colorSwitch){
+			displayWithStyle (s, Color.BLACK);
+		} else {
+			displayWithStyle (s, Color.GRAY);
+		}
+		colorSwitch=!colorSwitch;
+	}
+	
+	public void displayWithStyle (String s, Color c){
+		StyleContext sc = StyleContext.getDefaultStyleContext();
+        AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
+        StyledDocument document = (StyledDocument) textArea.getDocument();
+	     try {
+			document.insertString(document.getLength(), s, aset);
+		} catch (BadLocationException e) {
+			// TODO Auto-generated catch block
+			logger.error("Bad Location Exception when appending text", e);
+			e.printStackTrace();
+		}
+
 	}
 	public String getmyIP(){
 		String s;
@@ -944,22 +984,22 @@ public class myITSPmainWnd {
 		showConfiguration();
 	}
 	private void showGStreamerSettings(){
-		textArea.append("GStreamer Settings:"+gStreamer.getPath()+gStreamer.getFile()+"\n");
+		displayWithStyle("GStreamer Settings:"+gStreamer.getPath()+gStreamer.getFile()+"\n", Color.RED);
 	}
 	private void showWAVSettings(){
-		textArea.append("WAV Settings:"+"\n");
-		textArea.append("1)RingBackTone:"+wav.getRingBackTonePath()+wav.getRingBackToneFile()+"\n");
-		textArea.append("2)RingTone:"+wav.getRingTonePath()+wav.getRingToneFile()+"\n");
-		textArea.append("3)TrxPayload:"+"\n");
-		textArea.append("4)RcvPayload"+"\n");
+		displayWithStyle("WAV Settings:"+"\n", Color.BLUE);
+		displayWithStyle("1)RingBackTone:"+wav.getRingBackTonePath()+wav.getRingBackToneFile()+"\n", Color.BLUE);
+		displayWithStyle("2)RingTone:"+wav.getRingTonePath()+wav.getRingToneFile()+"\n", Color.BLUE);
+		displayWithStyle("3)TrxPayload:"+"\n", Color.BLUE);
+		displayWithStyle("4)RcvPayload"+"\n", Color.BLUE);
 	}
 	private void showConfiguration(){
-		textArea.append("Configuration Settings:"+"\n");
-		textArea.append("SIP Server Port:"+config.sipPort+"\n");
-		textArea.append("Audio Base Port:"+config.audioPort+"\n");
-		textArea.append("Video Base Port:"+config.videoPort+"\n");
-		textArea.append("Audio Codec:"+config.audioCodec+"\n");
-		textArea.append("Audio Codec:"+config.videoCodec+"\n");
+		displayWithStyle("Configuration Settings:"+"\n", Color.GREEN);
+		displayWithStyle("SIP Server Port:"+config.sipPort+"\n", Color.GREEN);
+		displayWithStyle("Audio Base Port:"+config.audioPort+"\n", Color.GREEN);
+		displayWithStyle("Video Base Port:"+config.videoPort+"\n", Color.GREEN);
+		displayWithStyle("Audio Codec:"+config.audioCodec+"\n", Color.GREEN);
+		displayWithStyle("Audio Codec:"+config.videoCodec+"\n", Color.GREEN);
 	}
 	public void setButtonStatusIdle(){
 		btnMakeCall.setEnabled(true);
