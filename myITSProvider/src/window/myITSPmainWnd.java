@@ -76,7 +76,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.8_beta";
+	private final String Version="V1.9";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
