@@ -13,6 +13,7 @@ import java.awt.Insets;
 import javax.swing.JDialog;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JTextArea;
@@ -51,6 +52,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import javax.swing.event.CaretListener;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import javax.swing.event.CaretEvent;
@@ -62,9 +65,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.JRadioButtonMenuItem;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
+	private final String Version="V1.8_beta";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -97,7 +102,7 @@ public class myITSPmainWnd {
 	private JTextField txtPpiLine;
 	private JTextField txtDiversionLine;
 	private JButton btnSend183;
-	private final String Version="V1.7_beta";
+	
 	private Response183 my183Response;
 	private Response180 my180Response;
 	public SIPRequestsInfo SIPReqInfo;
@@ -107,6 +112,10 @@ public class myITSPmainWnd {
 	private JButton btnReInvite;
 	private JLabel lblCodec;
 	private JCheckBox chckbxLateSdp;
+	private boolean hasDtmfFirstOrder;
+	private JRadioButtonMenuItem rdbtnmntmInfo;
+	private JRadioButtonMenuItem rdbtnmntmDebug;
+	private JRadioButtonMenuItem rdbtnmntmTrace;
 
 	/**
 	 * Launch the application.
@@ -744,7 +753,55 @@ public class myITSPmainWnd {
 			}
 		});
 		mnImportHeaders.add(mntmSdpHeaders);
+		
+		JMenu mnTraces = new JMenu("Traces");
+		
+		ButtonGroup traceGroup = new ButtonGroup();
+
+		rdbtnmntmInfo = new JRadioButtonMenuItem("INFO");
+		rdbtnmntmInfo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				setTraceLevel();
+			}
+		});
+		rdbtnmntmInfo.setSelected(true);
+		rdbtnmntmDebug = new JRadioButtonMenuItem("DEBUG");
+		rdbtnmntmDebug.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				setTraceLevel();
+			}
+		});
+		rdbtnmntmTrace = new JRadioButtonMenuItem("TRACE");
+		rdbtnmntmTrace.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				setTraceLevel();
+			}
+		});
+		traceGroup.add(rdbtnmntmInfo);
+		traceGroup.add(rdbtnmntmDebug);
+		traceGroup.add(rdbtnmntmTrace);
+		
+		mnTraces.add(rdbtnmntmInfo);
+		mnTraces.add(rdbtnmntmDebug);
+		mnTraces.add(rdbtnmntmTrace);
+		menuBar.add(mnTraces);
 	}
+	protected void setTraceLevel() {
+		// TODO Auto-generated method stub
+		if (rdbtnmntmInfo.isSelected()){
+			LogManager.getRootLogger().setLevel(Level.INFO);
+			logger.trace("Trace Level:INFO is set");
+		}
+		if (rdbtnmntmDebug.isSelected()){
+			LogManager.getRootLogger().setLevel(Level.DEBUG);
+			logger.trace("Trace Level:DEBUG is set");
+		}
+		if (rdbtnmntmTrace.isSelected()){
+			LogManager.getRootLogger().setLevel(Level.TRACE);
+			logger.trace("Trace Level:TRACE is set");
+		}
+	}
+
 	private void updateGUISettings(BackupSettings b) {
 		// TODO Auto-generated method stub
 		txtCalledPartyNumber.setText(b.CalledNumber);
@@ -818,6 +875,7 @@ public class myITSPmainWnd {
 		btnReInvite.setEnabled(false);
 		showCodec("Codec:N.A");
 		chckbxLateSdp.setEnabled(false);
+		hasDtmfFirstOrder=false;
 		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
@@ -1017,6 +1075,10 @@ public class myITSPmainWnd {
 		
 	}
 	
+	public boolean getDtmfFirstOrder(){
+		return hasDtmfFirstOrder;
+	}
+	
 	public ArrayList<Integer> getAvailableCodecs(){
 		//manipulate codecsList and find the supported codecs with the right priority
 		ArrayList<Integer> ali=new ArrayList<Integer>();
@@ -1037,7 +1099,8 @@ public class myITSPmainWnd {
 		for (Map.Entry<Integer, Integer> e : myMap.entrySet()){
 			ali.add(e.getValue());
 		}
-		ali.add(codecsList.getLast().getVoiceConfig().getPayloadType());
+		ali.add(codecsList.getLast().getVoiceConfig().getPayloadType()); //It's always DTMF
+		hasDtmfFirstOrder=codecsList.getLast().getHasOverrideOrder();
 		return ali;				
 	}
 }
