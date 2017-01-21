@@ -333,7 +333,7 @@ public class SIPResponseSettingsDialog extends JDialog {
 		isModified183=false;
 		chckbxSendSdp183.setSelected(r.Resp183.getSendSDP());
 		extraHeaders183=r.Resp183.getHeaderValuesList();
-		logger.info("update 183 Tab");
+		logger.trace("update 183 Tab");
 		updateComboBox(comboBox183,extraHeaders183);
 	}
 private void update180Tab(SIPResponsesInfo r){
@@ -341,7 +341,7 @@ private void update180Tab(SIPResponsesInfo r){
 		isModified180=false;
 		chckbxSendSdp180.setSelected(r.Resp180.getSendSDP());
 		extraHeaders180=r.Resp180.getHeaderValuesList();
-		logger.info("update 180 Tab");
+		logger.trace("update 180 Tab");
 		updateComboBox(comboBox180,extraHeaders180);
 	}
 	
@@ -352,7 +352,7 @@ private void update180Tab(SIPResponsesInfo r){
 			HeadersValuesGeneric temp=(HeadersValuesGeneric)obj;
 			String s=temp.getHeaderValue();
 			cmbBx.addItem(s);
-			logger.info(cmbBx.getName()+" update ComboBox");
+			logger.debug(cmbBx.getName()+" update ComboBox");
 			
         }
 	}
@@ -362,7 +362,7 @@ private void update180Tab(SIPResponsesInfo r){
 			ll.add(temp);
 			String s=ll.getLast().getHeaderValue(); 
 			cmbBx.addItem(s);
-			logger.info(cmbBx.getName()+" add new item:"+s);
+			logger.debug(cmbBx.getName()+" add new item:"+s);
 			
 		}
 		private void removeComboBoxItem(JComboBox<String> cmbBx, LinkedList<HeadersValuesGeneric> ll){
@@ -370,12 +370,12 @@ private void update180Tab(SIPResponsesInfo r){
 			i=cmbBx.getSelectedIndex();
 			ll.remove(i);
 			cmbBx.removeItemAt(i);
-			logger.info(cmbBx.getName()+" remove item with index:"+i+" -->"+cmbBx.getItemAt(i));
+			logger.debug(cmbBx.getName()+" remove item with index:"+i+" -->"+cmbBx.getItemAt(i));
 			
 		}
 		
 		private void saveAll(){
-			logger.info("Save All");
+			logger.trace("Save All");
 			saveSettings183();
 			saveSettings180();
 			
@@ -383,17 +383,17 @@ private void update180Tab(SIPResponsesInfo r){
 		private void saveSettings183(){
 			if (isModified183){
 				SIPRespInf.Resp183.setSendSDP(chckbxSendSdp183.isSelected());
-				logger.info("Save 183 settings");
+				logger.trace("Save 183 settings");
 			}else {
-				logger.info("No changes for 183 settings to save");
+				logger.trace("No changes for 183 settings to save");
 			}
 		}
 		private void saveSettings180(){
 			if (isModified180){
 				SIPRespInf.Resp180.setSendSDP(chckbxSendSdp180.isSelected());
-				logger.info("Save 180 settings");
+				logger.trace("Save 180 settings");
 			}else {
-				logger.info("No changes for 180 settings to save");
+				logger.trace("No changes for 180 settings to save");
 			}
 		}
 		

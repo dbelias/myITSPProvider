@@ -85,7 +85,7 @@ public class PortSettingsDialog extends JDialog {
 				JButton okButton = new JButton("OK");
 				okButton.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent arg0) {
-						logger.info("Audio Port/Video Port/SIP Port="+txtFieldAudioBasePort.getText()+"/"+txtFieldVideoBasePort.getText()+"/"+txtFieldSIPPortServer.getText());
+						logger.debug("Audio Port/Video Port/SIP Port="+txtFieldAudioBasePort.getText()+"/"+txtFieldVideoBasePort.getText()+"/"+txtFieldSIPPortServer.getText());
 						config.setAudioPort(txtFieldAudioBasePort.getText());
 						config.setVideoPort(txtFieldVideoBasePort.getText());
 						config.setSIPPort(txtFieldSIPPortServer.getText());

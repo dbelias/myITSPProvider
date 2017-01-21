@@ -5,12 +5,14 @@ public class voiceConfiguration {
 	private boolean setCodec;
 	private boolean preferred;
 	private int priority;
+	private boolean hasOverrideOrder;
 	
 	public voiceConfiguration(){
 		this.voicecodec=new codec();
 		this.setCodec=false;
 		this.preferred=false;
 		this.priority=0;
+		this.hasOverrideOrder=false;
 		
 	}
 	public voiceConfiguration(String name, String payloadtype, String clockrate, String framesize, boolean s, int prio){
@@ -18,6 +20,7 @@ public class voiceConfiguration {
 		this.setCodec=s;
 		this.preferred=false;
 		this.priority=prio;
+		this.hasOverrideOrder=false;
 		
 	}
 	
@@ -52,6 +55,14 @@ public class voiceConfiguration {
 	
 	public int getPriority(){
 		return priority;
+	}
+	
+	public void setHasOverrideOrder(boolean b){
+		hasOverrideOrder=b;
+	}
+	
+	public boolean getHasOverrideOrder(){
+		return hasOverrideOrder;
 	}
 
 }

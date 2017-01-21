@@ -2,6 +2,9 @@ package splibraries;
 
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.sdp.*;
 
 import org.apache.log4j.Logger;
@@ -35,9 +38,16 @@ public class SdpManager {
 
     //Media description lines
     int[] aaf=new int[2];
-    aaf[0]=sdpinfo.aformat;
     sdpinfo.setDTMFPT();
-    aaf[1]=sdpinfo.DTMF_PT;
+    if (sdpinfo.isDtmfFirst){
+    	 aaf[0]=sdpinfo.DTMF_PT;
+    	 aaf[1]=sdpinfo.aformat;  	  	   
+    }else {
+    	 aaf[0]=sdpinfo.aformat;  	 
+    	 aaf[1]=sdpinfo.DTMF_PT;
+    }
+    
+    
     
     MediaDescription myAudioDescription;
     //aaf[0]=sdpinfo.getAFormat();
@@ -100,10 +110,10 @@ public class SdpManager {
         int myAudioPort = myAudio.getMediaPort();
         Vector audioFormats = myAudio.getMediaFormats(false);
         
-        logger.info("Received AudioFormatsVector size="+audioFormats.size());
+        logger.debug("Received AudioFormatsVector size="+audioFormats.size());
         
         int myAudioMediaFormat = Integer.parseInt(audioFormats.elementAt(0).toString());
-        logger.info("Audio Codec in first position="+myAudioMediaFormat);
+        logger.debug("Audio Codec in first position="+myAudioMediaFormat);
         if (audioFormats.size()>1){
       	  setSDPinfoArrayList(audioFormats,mySdpInfo.audioFormatList);
         }
@@ -115,8 +125,10 @@ public class SdpManager {
         if (size>0){
         	Attribute a=(Attribute) attributeVector.get(size-1);
         	directionAttribute=a.getName();
-        	logger.info("SDP with a="+directionAttribute);
+        	logger.debug("SDP with a="+directionAttribute);
+        	findDTMFpt(attributeVector);
         }
+        
         
         mySdpInfo.setDirection(directionAttribute);
         
@@ -130,9 +142,9 @@ public class SdpManager {
           Media myVideo = myVideoDescription.getMedia();
           myVideoPort = myVideo.getMediaPort();
           Vector videoFormats = myVideo.getMediaFormats(false);
-          logger.info("Received VideoFormatsVector size="+audioFormats.size());
+          logger.debug("Received VideoFormatsVector size="+audioFormats.size());
           myVideoMediaFormat =  Integer.parseInt(videoFormats.elementAt(0).toString());
-          logger.info("Video Codec in first position="+myVideoMediaFormat);
+          logger.debug("Video Codec in first position="+myVideoMediaFormat);
           if (videoFormats.size()>1){
         	  setSDPinfoArrayList(videoFormats,mySdpInfo.videoFormatList);
           }
@@ -157,7 +169,30 @@ public class SdpManager {
 
     return mySdpInfo;
   }
-  private void setSDPinfoArrayList(Vector<?> v, ArrayList<Integer> al){
+  private void findDTMFpt(Vector v) throws SdpParseException {
+	  Attribute a;//=(Attribute) attributeVector.get(size-1);
+	  Pattern pattern=Pattern.compile("\\s*(\\d+)\\s*telephone-event[/]\\d+");
+	  String temp=null;
+  	 boolean isDTMFAvalailable=false;
+	for (int i=0;i<v.size();i++){
+		a=(Attribute) v.get(i);
+		temp=a.getValue(); //if attribute does not have value, returns null
+		if (temp!=null){
+			 Matcher matcher=pattern.matcher(temp);
+			 if (matcher.find()){
+				 mySdpInfo.setDTMFPT(Integer.valueOf(matcher.group(1)));
+		    	logger.debug("DTMF rtpmap is found:"+matcher.group(1));	
+		    	isDTMFAvalailable=true;
+		    	}
+		}
+	}
+	if (!isDTMFAvalailable){
+		logger.warn("DTMF rtpmap is Not Found");
+	}
+	
+}
+
+private void setSDPinfoArrayList(Vector<?> v, ArrayList<Integer> al){
 	  int i=v.size();
 	  int temp;
 	  for (int k=0;k<i; k++){

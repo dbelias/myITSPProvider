@@ -70,6 +70,8 @@ public class VoiceSettingsWnd extends JFrame {
 	private LinkedList<JComboBox<Integer>> cmbBoxList;
 	private LinkedList<Integer> itemList;
 	private JComboBox<Integer> sourceOfEvent;
+	private JCheckBox chckbxFirst;
+	private JLabel lblDtmfOrderIn;
 	
 	
 	
@@ -244,6 +246,20 @@ public class VoiceSettingsWnd extends JFrame {
 		gbc_textFieldG711U_FS.gridy = 2;
 		contentPane.add(textFieldG711U_FS, gbc_textFieldG711U_FS);
 		textFieldG711U_FS.setColumns(10);
+		
+		lblDtmfOrderIn = new JLabel("DTMF order in m-line");
+		GridBagConstraints gbc_lblDtmfOrderIn = new GridBagConstraints();
+		gbc_lblDtmfOrderIn.insets = new Insets(0, 0, 5, 5);
+		gbc_lblDtmfOrderIn.gridx = 5;
+		gbc_lblDtmfOrderIn.gridy = 2;
+		contentPane.add(lblDtmfOrderIn, gbc_lblDtmfOrderIn);
+		
+		chckbxFirst = new JCheckBox("First");
+		GridBagConstraints gbc_chckbxFirst = new GridBagConstraints();
+		gbc_chckbxFirst.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxFirst.gridx = 6;
+		gbc_chckbxFirst.gridy = 2;
+		contentPane.add(chckbxFirst, gbc_chckbxFirst);
 		
 		cmbBoxG729Prio = new JComboBox<Integer>();
 		cmbBoxG729Prio.setName("G729");
@@ -504,6 +520,7 @@ public class VoiceSettingsWnd extends JFrame {
 				break;
 			case "DTMF":
 				codecsList.get(i).getVoiceConfig().setPayloadType(textFieldDTMF_PT.getText());
+				codecsList.get(i).setHasOverrideOrder(chckbxFirst.isSelected());
 				break;
 			}
 		}
@@ -530,7 +547,7 @@ public class VoiceSettingsWnd extends JFrame {
 	}
 	
 	private void initializeCodecSettings(){
-		logger.info("Initialize Codec Settings");
+		logger.trace("Initialize Codec Settings");
 		for (int i=0; i<codecsList.size(); i++){
 			String temp=codecsList.get(i).getVoiceConfig().getName();
 			switch(temp){
@@ -579,7 +596,7 @@ public class VoiceSettingsWnd extends JFrame {
 	}
 	
 	private void changePriority(JComboBox<Integer> cmbx){
-		logger.info("change Codec Priorities for "+cmbx.getName());
+		logger.debug("change Codec Priorities for "+cmbx.getName());
 		int temp;
 		int position=cmbBoxList.indexOf(cmbx);
 		temp=(int)cmbx.getSelectedItem();

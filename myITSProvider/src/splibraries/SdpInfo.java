@@ -16,6 +16,7 @@ public class SdpInfo {
   public boolean OnlyOneCodec;
   public int DTMF_PT;
   public String direction;
+  public boolean isDtmfFirst;
   
 
  public SdpInfo() {
@@ -29,6 +30,7 @@ public class SdpInfo {
    OnlyOneCodec=true;
    DTMF_PT=98;
    direction="sendrecv";
+   isDtmfFirst=false;
    
  }
  public boolean isAudioCodecAvailable(int c){
@@ -60,7 +62,8 @@ public class SdpInfo {
  
  public void  findProperCodec(SdpInfo s, boolean b ){
 		int myCodec=999;
-		int DTMFCodec=s.audioFormatList.get(s.audioFormatList.size()-1);
+		//int DTMFCodec=s.audioFormatList.get(s.audioFormatList.size()-1);
+		int DTMFCodec=s.DTMF_PT;  //supposed to be found before when handling incoming offer
 		boolean bingo=false;
 		logger.info("SDP 1:"+ getAudioFormatListToString());
 		logger.info("SDP 2:"+s.getAudioFormatListToString());
@@ -98,12 +101,26 @@ public class SdpInfo {
  }
  public int[] getAudioFormatList(){
 	 int size=audioFormatList.size();
-	 int[] myAudioCodecArray=new int[size];
 	 int i=0;
-	 for (int temp : audioFormatList ){
-		 myAudioCodecArray[i]=temp;
-		 i++;
-	 }
+	 int[] myAudioCodecArray=new int[size];
+	 if (isDtmfFirst){ //DTMF must be set first
+		 int last=audioFormatList.get(size-1);
+		 int first=audioFormatList.get(0);
+		 ArrayList<Integer> tempArray=new ArrayList<Integer>();
+		 tempArray.add(last);
+		 tempArray.add(first);
+		 tempArray.addAll(audioFormatList.subList(1,size-2));
+		 for (int temp : tempArray ){
+			 myAudioCodecArray[i]=temp;
+			 i++;
+		 }
+		 
+	 }else {
+		 for (int temp : audioFormatList ){
+			 myAudioCodecArray[i]=temp;
+			 i++;
+		 }
+	 }	 
 	 return myAudioCodecArray;
  }
  public String getAudioFormatListToString(){
@@ -144,40 +161,3 @@ public class SdpInfo {
 	 direction=s;
  }
 }
-
-
-
-
-/*
- * 
-
-public class SdpInfo {
-  private String IpAddress;
-  private int aport;
-  private int aformat;
-  private int vport;
-  private int vformat;
-
- public SdpInfo() {
-   IpAddress="";
-   aport=0;
-   aformat=0;
-   vport=0;
-   vformat=0;
- }
-
-public void setIPAddress(String IP) { IpAddress=IP;}
-public void setAPort(int AP) { aport=AP;}
-public void setAFormat(int AF) { aformat=AF;}
-public void setVPort(int VP) { vport=VP;}
-public void setVFormat(int VF) { vformat=VF;}
-
-public String getIPAddress() { return IpAddress;}
-public int getAPort() { return aport;}
-public int getAFormat() { return aformat;}
-public int getVPort() { return vport;}
-public int getVFormat() { return vformat;}
-
-
-}
-*/

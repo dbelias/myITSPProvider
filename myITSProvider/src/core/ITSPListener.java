@@ -314,7 +314,7 @@ public class ITSPListener implements SipListener{
              myRequest.addHeader(myContactHeader);
              myRequest.addHeader(myExtensionHeader);
              if (myGUI.getLateSDP()){
-            	 logger.info("Send Invite w/o SDP");
+            	 logger.trace("Send Invite w/o SDP");
             	//TODO:Send Invite w/o SDP 
             	 myClientTransaction = mySipProvider.getNewClientTransaction(myRequest);
                  //String bid=myClientTransaction.getBranchId();
@@ -337,6 +337,7 @@ public class ITSPListener implements SipListener{
              offerInfo.vport=myVideoPort;
              offerInfo.vformat=myVideoCodec;
              offerInfo.setAudioFormatList(myCodecsList);
+             offerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
              
 
              ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
@@ -413,6 +414,7 @@ public class ITSPListener implements SipListener{
                offerInfo.vport=myVideoPort;
                offerInfo.vformat=myVideoCodec;
                offerInfo.setAudioFormatList(myCodecsList);
+               offerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
                ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
                byte[] content=mySdpManager.createSdp(offerInfo);
                myReInvite.setContent(content,contentTypeHeader);
@@ -461,6 +463,7 @@ public class ITSPListener implements SipListener{
 
              ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
              answerInfo.setAudioFormatList(myCodecsList);
+             answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
              answerInfo.findProperCodec(offerInfo,true);
              //TODO: special handle in case codec is not existing =999
              //myAudioCodec=answerInfo.aformat;
@@ -540,7 +543,7 @@ public class ITSPListener implements SipListener{
 public void processRequest(RequestEvent requestReceivedEvent) {
   Request myRequest=requestReceivedEvent.getRequest();
   String method=myRequest.getMethod();
-  myGUI.display("<<< "+myRequest.toString());
+  myGUI.display("<<<<<<<<<< "+myRequest.toString());
   if (!method.equals("CANCEL")) {
   myServerTransaction=requestReceivedEvent.getServerTransaction();
   }
@@ -693,10 +696,10 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         	   */
         	   if (remoteOldAudioPort==answerInfo.aport && remoteOldAudioCodec==offerInfo.aformat){
                	//Do nothing. It's not necessary to re-initiate RTP stream
-               			logger.info("Same remote Audio Port and Audio codec for response to 200 OK. Not necessary to restart RTP");
+               			logger.trace("Same remote Audio Port and Audio codec for response to 200 OK. Not necessary to restart RTP");
                }
                else{
-               			logger.info("Different remote Audio Port OR  Audio codec for response to 200 OK. Necessary to restart RTP");
+               			logger.trace("Different remote Audio Port OR  Audio codec for response to 200 OK. Necessary to restart RTP");
                			//Stop old RTP media
                			if (isOnlyAnnouncment){
                					myGVoiceTool.stopMedia();
@@ -742,7 +745,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 public void processResponse(ResponseEvent responseReceivedEvent) {
   try{
   Response myResponse=responseReceivedEvent.getResponse();
-  myGUI.display("<<< "+myResponse.toString());
+  myGUI.display("<<<<<<<<<< "+myResponse.toString());
   ClientTransaction thisClientTransaction=responseReceivedEvent.getClientTransaction();
   if (!thisClientTransaction.equals(myClientTransaction)) {
 	  logger.warn("Not similar Client Transactions");
@@ -777,6 +780,7 @@ switch(status){
           answerInfo.vport=myVideoPort;
           answerInfo.vformat=myVideoCodec;
 	      answerInfo.setAudioFormatList(myCodecsList);
+	      answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
 	      //handle what is the best codec to use
 	      answerInfo.findProperCodec(offerInfo, true);
 	      myOldAudioCodec=answerInfo.aformat;
@@ -891,6 +895,7 @@ switch(status){
           answerInfo.vport=myVideoPort;
           answerInfo.vformat=myVideoCodec;
 	      answerInfo.setAudioFormatList(myCodecsList);
+	      answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
 	      //handle what is the best codec to use
 	      answerInfo.findProperCodec(offerInfo, true);
 	      myOldAudioCodec=answerInfo.aformat;
@@ -959,7 +964,7 @@ switch(status){
       } else {
      	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
       }
-        System.out.println("Listen RTP at port:"+offerInfo.aport);
+        logger.debug("Listen RTP at port:"+offerInfo.aport);
 
         if (answerInfo.vport>0) {
           myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
@@ -1004,7 +1009,7 @@ switch(status){
 	       } else {
 	      	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
 	       }
-	         System.out.println("Listen RTP at port:"+offerInfo.aport);
+	         logger.debug("Listen RTP at port:"+offerInfo.aport);
 
 	         if (answerInfo.vport>0) {
 	           myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
@@ -1064,7 +1069,7 @@ switch(status){
 				e.printStackTrace();
 			}
 			r.addHeader(myAdditionalHeader);
-			logger.info(r.getStatusCode()+" add extra Header:Value="+temp.getHeader()+":"+temp.getValue());
+			logger.debug(r.getStatusCode()+" add extra Header:Value="+temp.getHeader()+":"+temp.getValue());
         }
 	}
 	private void setAdditionalHeaderRequest(Request r, LinkedList<HeadersValuesGeneric> ll){
@@ -1080,13 +1085,14 @@ switch(status){
 				e.printStackTrace();
 			}
 			r.addHeader(myAdditionalHeader);
-			logger.info(r.getMethod()+" add extra Header:Value="+temp.getHeader()+":"+temp.getValue());
+			logger.debug(r.getMethod()+" add extra Header:Value="+temp.getHeader()+":"+temp.getValue());
         }
 	}
 	
 	private void createSDPResponse(Response r) throws ParseException, InterruptedException{
 		ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
 		answerInfo.setAudioFormatList(myCodecsList);
+		answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
 		answerInfo.findProperCodec(offerInfo,true);
         //TODO: special handle in case codec is not existing =999
         myOldAudioCodec=answerInfo.aformat;
@@ -1111,22 +1117,24 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
 		byte[] cont=(byte[]) r.getContent();
   	  	
   	   if (cont==null){
-  		  logger.info("Re-Invite w/o SDP is received");
+  		  logger.trace("Re-Invite w/o SDP is received");
   		//TODO handle Re-Invite w/o SDP  
   		offerInfo.IpAddress=myIP;
         offerInfo.aport=myOldAudioPort;
         //offerInfo.aformat=myOldAudioCodec;
         offerInfo.setAudioFormatList(myCodecsList);
+        offerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
         offerInfo.vport=myVideoPort;
         offerInfo.vformat=myVideoCodec;
         content=mySdpManager.createSdp(offerInfo);
         myResponse.setContent(content,contentTypeHeader);
   		
   	  }else {
-  		logger.info("Re-Invite with SDP is received");
+  		logger.trace("Re-Invite with SDP is received");
   		answerInfo.IpAddress=myIP;
         answerInfo.aport=myOldAudioPort; 
         answerInfo.setAudioFormatList(myCodecsList);
+        answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
         //answerInfo.aformat=myOldAudioCodec; 
   		offerInfo=mySdpManager.getSdp(cont);
   		answerInfo.findProperCodec(offerInfo,true);
@@ -1152,10 +1160,10 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
       //Check if port and codec are the same as before. 
         if (remoteOldAudioPort==offerInfo.aport && remoteOldAudioCodec==answerInfo.aformat){
         	//Do nothing. It's not necessary to re-initiate RTP stream
-        	logger.info("Same remote Audio Port and Audio codec for response to Re-Invite. Not necessary to restart RTP");
+        	logger.trace("Same remote Audio Port and Audio codec for response to Re-Invite. Not necessary to restart RTP");
         }
         else{
-        	logger.info("Different remote Audio Port OR  Audio codec for response to Re-Invite. Necessary to restart RTP");
+        	logger.trace("Different remote Audio Port OR  Audio codec for response to Re-Invite. Necessary to restart RTP");
         	//Stop old RTP media
         	if (isOnlyAnnouncment){
             	myGVoiceTool.stopMedia();

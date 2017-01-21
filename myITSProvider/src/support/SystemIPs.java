@@ -17,12 +17,12 @@ public class SystemIPs {
 			myIP=InetAddress.getLocalHost();			
 			InetAddress[] allMyIps = InetAddress.getAllByName(myIP.getCanonicalHostName());
 			if (allMyIps != null && allMyIps.length > 1) {
-				System.out.println(" Full list of IP addresses:");
+				logger.debug(" Full list of IP addresses:");
 			    for (int i = 0; i < allMyIps.length; i++) {
 			    	
 			    	allMyIPsToString.add(allMyIps[i].getHostAddress());
 			    	//System.out.println("    " + allMyIps[i].getHostAddress());
-			    	logger.info(allMyIps[i].getHostAddress());
+			    	logger.debug(allMyIps[i].getHostAddress());
 			    }
 			}
 		} catch (UnknownHostException e) {
