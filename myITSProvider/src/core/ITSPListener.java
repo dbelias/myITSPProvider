@@ -451,7 +451,10 @@ public class ITSPListener implements SipListener{
                  originalRequest);
              ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
              myToHeader.setTag("454326");
-             myResponse.addHeader(myPAIHeader);
+             if (myGUI.SIPRespInfo.Resp200.getCOLP()){
+            	 myResponse.addHeader(myPAIHeader);
+             }
+             
              myResponse.addHeader(myContactHeader);
 
              myAlertTool.stopTone();
@@ -489,7 +492,7 @@ public class ITSPListener implements SipListener{
              myServerTransaction.sendResponse(myResponse);
              myDialog = myServerTransaction.getDialog();
 
-             new Timer().schedule(new MyTimerTask(this),500000);
+             //new Timer().schedule(new MyTimerTask(this),500000);
              myGUI.display(">>> " + myResponse.toString());
              status = WAIT_ACK;
              myGUI.showStatus("Status: WAIT_ACK");

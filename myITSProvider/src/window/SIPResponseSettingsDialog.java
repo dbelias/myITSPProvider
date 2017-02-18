@@ -52,6 +52,9 @@ public class SIPResponseSettingsDialog extends JDialog {
 	private JTextField txtValue180;
 	private JComboBox<String> comboBox180;
 	
+	private boolean isModified200;
+	private JCheckBox chckbxColpSupport;
+	
 
 	/**
 	 * Launch the application.
@@ -273,6 +276,19 @@ public class SIPResponseSettingsDialog extends JDialog {
 			{
 				JPanel panel200 = new JPanel();
 				tabbedPane.addTab("200", null, panel200, null);
+				GridBagLayout gbl_panel200 = new GridBagLayout();
+				gbl_panel200.columnWidths = new int[]{0, 0, 0};
+				gbl_panel200.rowHeights = new int[]{0, 0, 0};
+				gbl_panel200.columnWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+				gbl_panel200.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+				panel200.setLayout(gbl_panel200);
+				{
+					chckbxColpSupport = new JCheckBox("COLP Support");
+					GridBagConstraints gbc_chckbxColpSupport = new GridBagConstraints();
+					gbc_chckbxColpSupport.gridx = 1;
+					gbc_chckbxColpSupport.gridy = 1;
+					panel200.add(chckbxColpSupport, gbc_chckbxColpSupport);
+				}
 			}
 			{
 				JPanel panel486 = new JPanel();
@@ -327,6 +343,14 @@ public class SIPResponseSettingsDialog extends JDialog {
 		logger.info("Initialize variables");
 		update180Tab(SIPRespInf);
 		update183Tab(SIPRespInf);
+		update200Tab(SIPRespInf);
+	}
+	private void update200Tab(SIPResponsesInfo r) {
+		// TODO Auto-generated method stub
+		isModified200=false;
+		chckbxColpSupport.setSelected(r.Resp200.getCOLP());
+		logger.trace("update 200 Tab");
+		
 	}
 	private void update183Tab(SIPResponsesInfo r){
 		
@@ -378,6 +402,16 @@ private void update180Tab(SIPResponsesInfo r){
 			logger.trace("Save All");
 			saveSettings183();
 			saveSettings180();
+			saveSettings200();
+			
+		}
+		private void saveSettings200() {
+			if (isModified200){
+				SIPRespInf.Resp200.setCOLP(chckbxColpSupport.isSelected());
+				logger.trace("Save 200 settings");
+			}else {
+				logger.trace("No changes for 200 settings to save");
+			}
 			
 		}
 		private void saveSettings183(){

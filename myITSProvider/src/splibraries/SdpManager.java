@@ -9,6 +9,8 @@ import javax.sdp.*;
 
 import org.apache.log4j.Logger;
 
+import gov.nist.javax.sdp.fields.AttributeField;
+
 public class SdpManager {
 	private static Logger logger=Logger.getLogger("SdpManager");
 
@@ -61,6 +63,7 @@ public class SdpManager {
     String fmtp=String.valueOf(sdpinfo.DTMF_PT)+" 0-15";
     myAudioDescription.setAttribute("rtpmap", rtpmap);
     myAudioDescription.setAttribute("fmtp", fmtp);
+    //TODO: this create exception and causes problem with java 1.8.101
     myAudioDescription.setAttribute(sdpinfo.getDirection(), null);
     Vector myMediaDescriptionVector=new Vector();
     myMediaDescriptionVector.add(myAudioDescription);
@@ -123,14 +126,14 @@ public class SdpManager {
         String directionAttribute="sendrecv";
         int size=attributeVector.size();
         if (size>0){
-        	Attribute a=(Attribute) attributeVector.get(size-1);
-        	directionAttribute=a.getName();
-        	logger.debug("SDP with a="+directionAttribute);
+        	findDirections(attributeVector);
         	findDTMFpt(attributeVector);
+        }else {
+        	mySdpInfo.setDirection(directionAttribute);
         }
         
         
-        mySdpInfo.setDirection(directionAttribute);
+        
         
         
         int myVideoPort=-1;
@@ -169,7 +172,32 @@ public class SdpManager {
 
     return mySdpInfo;
   }
-  private void findDTMFpt(Vector v) throws SdpParseException {
+  private void findDirections(Vector v) throws SdpParseException{
+	// TODO Auto-generated method stub
+	  Attribute a;//=(Attribute) attributeVector.get(size-1);
+	  Pattern pattern=Pattern.compile("\\s*(sendrecv|recvonly|sendonly|inactive)\\s*$");
+	  String temp=null;
+  	  boolean isDirectionAvailable=false;
+  	  for (int i=0;i<v.size();i++){
+		a=(Attribute) v.get(i);
+		temp=a.getName(); //if attribute does not have name, returns null
+		if (temp!=null){
+			 Matcher matcher=pattern.matcher(temp);
+			 if (matcher.find()){
+				 mySdpInfo.setDirection(matcher.group(1));
+		    	logger.debug("Direction is found: a="+matcher.group(1));	
+		    	isDirectionAvailable=true;
+		    	}
+		}
+	}
+	if (!isDirectionAvailable){
+		logger.warn("Direction 'a=' is not found in SDP. 'sendrecv' is assumed");
+		mySdpInfo.setDirection("sendrecv");
+	}
+	
+}
+
+private void findDTMFpt(Vector v) throws SdpParseException {
 	  Attribute a;//=(Attribute) attributeVector.get(size-1);
 	  Pattern pattern=Pattern.compile("\\s*(\\d+)\\s*telephone-event[/]\\d+");
 	  String temp=null;
