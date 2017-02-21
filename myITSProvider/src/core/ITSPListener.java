@@ -597,7 +597,10 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 
         Response myResponse=myMessageFactory.createResponse(180,myRequest);
         myResponse.addHeader(myContactHeader);
-        myResponse.addHeader(myPAIHeader);
+        //TODO:Perhaps this control is wrong. 180 Ringing doesn't need PAI, does it?
+        if (myGUI.SIPRespInfo.Resp200.getCOLP()){
+       	 myResponse.addHeader(myPAIHeader);
+        }
         ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
         myToHeader.setTag("454326");
         setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());

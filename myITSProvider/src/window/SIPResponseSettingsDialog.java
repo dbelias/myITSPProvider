@@ -284,6 +284,11 @@ public class SIPResponseSettingsDialog extends JDialog {
 				panel200.setLayout(gbl_panel200);
 				{
 					chckbxColpSupport = new JCheckBox("COLP Support");
+					chckbxColpSupport.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent arg0) {
+							isModified200=true;
+						}
+					});
 					GridBagConstraints gbc_chckbxColpSupport = new GridBagConstraints();
 					gbc_chckbxColpSupport.gridx = 1;
 					gbc_chckbxColpSupport.gridy = 1;

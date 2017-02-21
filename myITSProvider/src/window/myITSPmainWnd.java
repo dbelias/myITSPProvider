@@ -27,6 +27,7 @@ import core.ITSPListener;
 import splibraries.Configuration;
 import splibraries.Response180;
 import splibraries.Response183;
+import splibraries.Response200;
 import support.BackupSettings;
 import support.GStreamerLocation;
 import support.SIPHeadersTxt;
@@ -76,7 +77,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.9.2 ";
+	private final String Version="V1.9.2a ";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -112,6 +113,7 @@ public class myITSPmainWnd {
 	
 	private Response183 my183Response;
 	private Response180 my180Response;
+	private Response200 my200Response;
 	public SIPRequestsInfo SIPReqInfo;
 	public SIPResponsesInfo SIPRespInfo;
 	private JTextField txtFromOAD;
@@ -866,8 +868,10 @@ public class myITSPmainWnd {
 		SIPRespInfo=new SIPResponsesInfo();
 		my183Response= new Response183();
 		my180Response=new Response180();
+		my200Response=new Response200();
 		SIPRespInfo.Resp183=my183Response;
 		SIPRespInfo.Resp180=my180Response;
+		SIPRespInfo.Resp200=my200Response;
 		
 		btnOnOff.setText("ON");
 		btnOnOff.setBackground(Color.RED);
