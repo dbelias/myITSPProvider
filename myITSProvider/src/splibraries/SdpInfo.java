@@ -1,6 +1,8 @@
 package splibraries;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+
 import org.apache.log4j.Logger;
 
 
@@ -17,6 +19,7 @@ public class SdpInfo {
   public int DTMF_PT;
   public String direction;
   public boolean isDtmfFirst;
+  public boolean isDtmfAvailable;
   
 
  public SdpInfo() {
@@ -31,6 +34,7 @@ public class SdpInfo {
    DTMF_PT=98;
    direction="sendrecv";
    isDtmfFirst=false;
+   isDtmfAvailable=true;
    
  }
  public boolean isAudioCodecAvailable(int c){
@@ -100,9 +104,11 @@ public class SdpInfo {
 	 findProperCodec(s, false); 
  }
  public int[] getAudioFormatList(){
-	 int size=audioFormatList.size();
+	 int size;
+	 size=audioFormatList.size(); 
 	 int i=0;
 	 int[] myAudioCodecArray=new int[size];
+	 int[] myAudioCodecArraywoDTMF;
 	 if (isDtmfFirst){ //DTMF must be set first
 		 int last=audioFormatList.get(size-1);
 		 int first=audioFormatList.get(0);
@@ -114,14 +120,19 @@ public class SdpInfo {
 			 myAudioCodecArray[i]=temp;
 			 i++;
 		 }
-		 
+		 myAudioCodecArraywoDTMF=Arrays.copyOfRange(myAudioCodecArray, 1, size);
 	 }else {
 		 for (int temp : audioFormatList ){
 			 myAudioCodecArray[i]=temp;
 			 i++;
 		 }
+		 myAudioCodecArraywoDTMF=Arrays.copyOfRange(myAudioCodecArray, 0, size-1);
 	 }	 
-	 return myAudioCodecArray;
+	 if (isDtmfAvailable){
+		 return myAudioCodecArray;
+	 }else
+		 return myAudioCodecArraywoDTMF; 
+	 
  }
  public String getAudioFormatListToString(){
 	 String  myAudioCodecString="";
@@ -159,5 +170,12 @@ public class SdpInfo {
  
  public void setDirection(String s){
 	 direction=s;
+ }
+ 
+ public void setDtmfAvailable(Boolean b){
+	 isDtmfAvailable=b;
+ }
+ public Boolean getDTMFAvailable(){
+	 return isDtmfAvailable;
  }
 }

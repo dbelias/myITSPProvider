@@ -59,10 +59,13 @@ public class SdpManager {
     	 myAudioDescription = mySdpFactory.createMediaDescription("audio", sdpinfo.aport, 1, "RTP/AVP", sdpinfo.getAudioFormatList());
         
     }
-    String rtpmap=String.valueOf(sdpinfo.DTMF_PT)+" telephone-event/8000";
-    String fmtp=String.valueOf(sdpinfo.DTMF_PT)+" 0-15";
-    myAudioDescription.setAttribute("rtpmap", rtpmap);
-    myAudioDescription.setAttribute("fmtp", fmtp);
+    if (sdpinfo.getDTMFAvailable()){
+    	String rtpmap=String.valueOf(sdpinfo.DTMF_PT)+" telephone-event/8000";
+        String fmtp=String.valueOf(sdpinfo.DTMF_PT)+" 0-15";
+        myAudioDescription.setAttribute("rtpmap", rtpmap);
+        myAudioDescription.setAttribute("fmtp", fmtp);
+    }
+    
     //TODO: this create exception and causes problem with java 1.8.101
     myAudioDescription.setAttribute(sdpinfo.getDirection(), null);
     Vector myMediaDescriptionVector=new Vector();

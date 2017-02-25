@@ -114,6 +114,8 @@ public class ITSPListener implements SipListener{
 	static final int YES=0;
 	static final int NO=1;
 	static final int SEND183=2;
+	static final int HOLD=3;
+	static final int UNHOLD=4;
 
 	static final int IDLE=0;
 	static final int WAIT_PROV=1;
@@ -402,7 +404,7 @@ public class ITSPListener implements SipListener{
              
              break;
            }
-           if (type==YES){
+           if (type==YES || type==HOLD || type==UNHOLD){
         	  //TODO: Send Re-Invite from ITSP
         	   Request myReInvite = myDialog.createRequest("INVITE");
         	   //myReInvite.addHeader(myContactHeader);
@@ -415,6 +417,10 @@ public class ITSPListener implements SipListener{
                offerInfo.vformat=myVideoCodec;
                offerInfo.setAudioFormatList(myCodecsList);
                offerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
+               if (type==HOLD){
+            	   offerInfo.setDirection("sendonly");
+            	   offerInfo.setDtmfAvailable(false);
+               }
                ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
                byte[] content=mySdpManager.createSdp(offerInfo);
                myReInvite.setContent(content,contentTypeHeader);
@@ -425,6 +431,8 @@ public class ITSPListener implements SipListener{
         	   myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
         	   break;
            }
+           
+           
 
          case RINGING:
            if (type == NO) {
@@ -618,7 +626,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
     case ESTABLISHED:
       if (method.equals("BYE")) {
         Response myResponse=myMessageFactory.createResponse(200,myRequest);
-        myResponse.addHeader(myContactHeader);
+        //myResponse.addHeader(myContactHeader);
         myServerTransaction.sendResponse(myResponse);
         myGUI.display(">>> "+myResponse.toString());
 
@@ -774,7 +782,7 @@ switch(status){
 		  myRingTool.stopTone();
 	      myDialog=thisClientTransaction.getDialog();
 	      Request myAck = myDialog.createAck(numseq);
-	      myAck.addHeader(myContactHeader);
+	      //myAck.addHeader(myContactHeader);
 	      byte[] cont=(byte[]) myResponse.getContent();
 	      offerInfo=mySdpManager.getSdp(cont);
 	      
@@ -816,7 +824,7 @@ switch(status){
 
 	      status=IDLE;
 	      Request myAck = myDialog.createAck(numseq);
-	      myAck.addHeader(myContactHeader);
+	      //myAck.addHeader(myContactHeader);
 	      myDialog.sendAck(myAck);
 	      myRingTool.stopTone();
 	      myGUI.display(">>> "+myAck.toString());
@@ -837,7 +845,7 @@ switch(status){
     else if (myStatusCode<300) {
       myDialog=thisClientTransaction.getDialog();
       Request myAck = myDialog.createAck(numseq);
-      myAck.addHeader(myContactHeader);
+      //myAck.addHeader(myContactHeader);
       myDialog.sendAck(myAck);
       myGUI.display(">>> "+myAck.toString());
       myRingTool.stopTone();
@@ -869,7 +877,7 @@ switch(status){
 
       status=IDLE;
       Request myAck = myDialog.createAck(numseq);
-      myAck.addHeader(myContactHeader);
+      //myAck.addHeader(myContactHeader);
       myDialog.sendAck(myAck);
       myRingTool.stopTone();
       myGUI.display(">>> "+myAck.toString());
@@ -890,7 +898,7 @@ switch(status){
 		  myRingTool.stopTone();
 	      myDialog=thisClientTransaction.getDialog();
 	      Request myAck = myDialog.createAck(numseq);
-	      myAck.addHeader(myContactHeader);
+	      //myAck.addHeader(myContactHeader);
 	      byte[] cont=(byte[]) myResponse.getContent();
 	      offerInfo=mySdpManager.getSdp(cont);
 	      answerInfo=new SdpInfo();
@@ -948,7 +956,7 @@ switch(status){
       status=ESTABLISHED;
       myDialog=thisClientTransaction.getDialog();
       Request myAck = myDialog.createAck(numseq);
-      myAck.addHeader(myContactHeader);
+      //myAck.addHeader(myContactHeader);
       myDialog.sendAck(myAck);
       myGUI.display(">>> "+myAck.toString());
       myRingTool.stopTone();
@@ -993,7 +1001,7 @@ switch(status){
 		  status=ESTABLISHED;
 		  myDialog=thisClientTransaction.getDialog();
 	      Request myAck = myDialog.createAck(numseq);
-	      myAck.addHeader(myContactHeader);
+	      //myAck.addHeader(myContactHeader);
 	      
 	      myGUI.showStatus("Status: ESTABLISHED");
 	      byte[] cont=(byte[]) myResponse.getContent();

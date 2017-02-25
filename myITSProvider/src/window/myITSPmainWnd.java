@@ -77,7 +77,7 @@ import javax.swing.JRadioButtonMenuItem;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.9.2a ";
+	private final String Version="V1.10.0 ";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -126,6 +126,10 @@ public class myITSPmainWnd {
 	private JRadioButtonMenuItem rdbtnmntmDebug;
 	private JRadioButtonMenuItem rdbtnmntmTrace;
 	private boolean colorSwitch;
+	static final int SEND183=2;
+	static final int HOLD=3;
+	static final int UNHOLD=4;
+	private int btnSend183Status=2;
 
 	/**
 	 * Launch the application.
@@ -455,7 +459,15 @@ public class myITSPmainWnd {
 		btnSend183.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				list.updateCodecList(getAvailableCodecs());
-				list.userInput(2,null);
+				list.userInput(btnSend183Status,null);
+				if (btnSend183Status==HOLD){
+					setButton183Status(UNHOLD);
+				} else if (btnSend183Status==UNHOLD){
+					setButton183Status(HOLD);
+				} else {
+					//setButton183Status(SEND183);
+				}
+				
 			}
 		});
 		GridBagConstraints gbc_btnSend183 = new GridBagConstraints();
@@ -922,6 +934,7 @@ public class myITSPmainWnd {
 		btnMakeCall.setEnabled(false);
 		btnReleaseCall.setEnabled(false);
 		btnSend183.setEnabled(false);
+		setButton183Status(SEND183);
 		btnReInvite.setEnabled(false);
 		comboBoxMyIPs.setEnabled(true);
 		chckbxLateSdp.setEnabled(false);
@@ -1011,6 +1024,7 @@ public class myITSPmainWnd {
 		btnReleaseCall.setEnabled(false);
 		btnReleaseCall.setText("Reject");
 		btnSend183.setEnabled(false);
+		setButton183Status(SEND183);
 		btnReInvite.setEnabled(false);
 		chckbxLateSdp.setEnabled(true);
 	}
@@ -1024,7 +1038,8 @@ public class myITSPmainWnd {
 	public void setButtonStatusEstablishedCall(){
 		btnMakeCall.setEnabled(false);
 		//btnMakeCall.setText("Call");
-		btnSend183.setEnabled(false);
+		btnSend183.setEnabled(true);
+		setButton183Status(HOLD);
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Release");
 		btnReInvite.setEnabled(true);
@@ -1146,6 +1161,24 @@ public class myITSPmainWnd {
 		ali.add(codecsList.getLast().getVoiceConfig().getPayloadType()); //It's always DTMF
 		hasDtmfFirstOrder=codecsList.getLast().getHasOverrideOrder();
 		return ali;				
+	}
+	
+	private void setButton183Status(int i){
+		switch (i){
+		case SEND183:
+			btnSend183.setText("Send 183");
+			btnSend183Status=SEND183;
+			break;
+		case HOLD:
+			btnSend183.setText("Hold");
+			btnSend183Status=HOLD;
+			break;
+		case UNHOLD:
+			btnSend183.setText("UnHold");
+			btnSend183Status=UNHOLD;
+			break;
+		}
+			
 	}
 }
     
