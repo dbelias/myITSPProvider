@@ -54,6 +54,7 @@ public class SIPResponseSettingsDialog extends JDialog {
 	
 	private boolean isModified200;
 	private JCheckBox chckbxColpSupport;
+	private JCheckBox chckbxColpSupport180;
 	
 
 	/**
@@ -99,6 +100,19 @@ public class SIPResponseSettingsDialog extends JDialog {
 					gbc_chckbxSendSdp180.gridx = 1;
 					gbc_chckbxSendSdp180.gridy = 0;
 					panel180.add(chckbxSendSdp180, gbc_chckbxSendSdp180);
+				}
+				{
+					chckbxColpSupport180 = new JCheckBox("COLP Support");
+					chckbxColpSupport180.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent arg0) {
+							isModified180=true;
+						}
+					});
+					GridBagConstraints gbc_chckbxColpSupport180 = new GridBagConstraints();
+					gbc_chckbxColpSupport180.insets = new Insets(0, 0, 5, 5);
+					gbc_chckbxColpSupport180.gridx = 2;
+					gbc_chckbxColpSupport180.gridy = 0;
+					panel180.add(chckbxColpSupport180, gbc_chckbxColpSupport180);
 				}
 				{
 					JLabel lblAddHeadervalue = new JLabel("Add Additional Header:Value");
@@ -152,7 +166,7 @@ public class SIPResponseSettingsDialog extends JDialog {
 					comboBox180.setName("cmbBx180");
 					GridBagConstraints gbc_comboBox180 = new GridBagConstraints();
 					gbc_comboBox180.gridwidth = 2;
-					gbc_comboBox180.insets = new Insets(0, 0, 5, 5);
+					gbc_comboBox180.insets = new Insets(0, 0, 5, 0);
 					gbc_comboBox180.fill = GridBagConstraints.HORIZONTAL;
 					gbc_comboBox180.gridx = 2;
 					gbc_comboBox180.gridy = 3;
@@ -369,6 +383,7 @@ private void update180Tab(SIPResponsesInfo r){
 		
 		isModified180=false;
 		chckbxSendSdp180.setSelected(r.Resp180.getSendSDP());
+		chckbxColpSupport180.setSelected(r.Resp180.getCOLP());
 		extraHeaders180=r.Resp180.getHeaderValuesList();
 		logger.trace("update 180 Tab");
 		updateComboBox(comboBox180,extraHeaders180);
@@ -430,6 +445,7 @@ private void update180Tab(SIPResponsesInfo r){
 		private void saveSettings180(){
 			if (isModified180){
 				SIPRespInf.Resp180.setSendSDP(chckbxSendSdp180.isSelected());
+				SIPRespInf.Resp180.setCOLP(chckbxColpSupport180.isSelected());
 				logger.trace("Save 180 settings");
 			}else {
 				logger.trace("No changes for 180 settings to save");

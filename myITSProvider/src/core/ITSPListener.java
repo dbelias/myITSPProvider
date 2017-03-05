@@ -51,7 +51,10 @@ import splibraries.SdpInfo;
 import splibraries.SdpManager;
 import splibraries.TonesTool;
 import splibraries.VideoTool;
+import support.Feature;
 import support.HeadersValuesGeneric;
+import support.HoldMode;
+import support.ReInviteMode;
 import support.SIPHeadersTxt;
 //import splibraries.VoiceTool;
 import window.myITSPmainWnd;
@@ -404,7 +407,7 @@ public class ITSPListener implements SipListener{
              
              break;
            }
-           if (type==YES || type==HOLD || type==UNHOLD){
+           if (type==HOLD || type==UNHOLD){
         	  //TODO: Send Re-Invite from ITSP
         	   Request myReInvite = myDialog.createRequest("INVITE");
         	   //myReInvite.addHeader(myContactHeader);
@@ -418,8 +421,15 @@ public class ITSPListener implements SipListener{
                offerInfo.setAudioFormatList(myCodecsList);
                offerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
                if (type==HOLD){
-            	   offerInfo.setDirection("sendonly");
-            	   offerInfo.setDtmfAvailable(false);
+            	   if (myGUI.myCallFeaturesInfo.getHoldMode()==HoldMode.INACTIVE){
+            		   offerInfo.setDirection("inactive");
+                	   offerInfo.setDtmfAvailable(false); 
+            		   
+            	   } else {
+            		   //Handle RecvOnly,SendOnly and SendReceive as SendOnly state
+            		   offerInfo.setDirection("sendonly");
+                	   offerInfo.setDtmfAvailable(false); 
+            	   }            	  
                }
                ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
                byte[] content=mySdpManager.createSdp(offerInfo);
@@ -430,6 +440,41 @@ public class ITSPListener implements SipListener{
         	   status=RE_INVITE_WAIT_ACK;
         	   myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
         	   break;
+           }
+           
+           if (type==YES){
+        	 //TODO: Send Re-Invite from ITSP
+        	   Request myReInvite = myDialog.createRequest("INVITE");
+        	   //myReInvite.addHeader(myContactHeader);
+        	   if (myGUI.myCallFeaturesInfo.reInviteMode==ReInviteMode.WithSDP){
+        		   offerInfo=new SdpInfo();
+                   offerInfo.IpAddress=myIP;
+                   offerInfo.aport=myAudioPort;
+                   myOldAudioPort=myAudioPort;
+                   myAudioPort=myAudioPort+2;
+                   offerInfo.vport=myVideoPort;
+                   offerInfo.vformat=myVideoCodec;
+                   offerInfo.setAudioFormatList(myCodecsList);
+                   offerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
+                   ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+                   byte[] content=mySdpManager.createSdp(offerInfo);
+                   myReInvite.setContent(content,contentTypeHeader);
+                   myClientTransaction= mySipProvider.getNewClientTransaction(myReInvite);
+                   myDialog.sendRequest(myClientTransaction);
+                   myGUI.display(">>> " + myReInvite.toString());
+            	   status=RE_INVITE_WAIT_ACK;
+            	   myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
+        	   } else {
+        		   //ReInvite w/o SDP
+        		   myClientTransaction= mySipProvider.getNewClientTransaction(myReInvite);
+                   myDialog.sendRequest(myClientTransaction);
+        		   myGUI.display(">>> " + myReInvite.toString());
+            	   status=WAIT_PROV_LATE_SDP;
+            	   myGUI.showStatus("Status: WAIT_PROV_LATE_SDP");
+        	   }
+        	   
+        	   break;
+        	   
            }
            
            
@@ -606,7 +651,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
         Response myResponse=myMessageFactory.createResponse(180,myRequest);
         myResponse.addHeader(myContactHeader);
         //TODO:Perhaps this control is wrong. 180 Ringing doesn't need PAI, does it?
-        if (myGUI.SIPRespInfo.Resp200.getCOLP()){
+        if (myGUI.SIPRespInfo.Resp180.getCOLP()){
        	 myResponse.addHeader(myPAIHeader);
         }
         ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
@@ -774,12 +819,24 @@ switch(status){
 	  if (myStatusCode<200) {
 	      status=WAIT_FINAL_LATE_SDP;
 	      myDialog=thisClientTransaction.getDialog();
-	      myRingTool.playTone();
-	      myGUI.showStatus("Status: ALERTING");
-	      myGUI.setButtonStatusMakeCall();
+	      if (myGUI.myCallFeaturesInfo.activeFeature==Feature.ReInvite){
+	    	  myGUI.showStatus("Status: Established");
+	    	  myGUI.setButtonStatusEstablishedCall();
+	      } else {
+	    	  myRingTool.playTone();
+		      myGUI.showStatus("Status: ALERTING");
+		      myGUI.setButtonStatusMakeCall();
+	      }
+	      
+	      
 	    }
 	  else if (myStatusCode<300) {
-		  myRingTool.stopTone();
+		  if (myGUI.myCallFeaturesInfo.activeFeature==Feature.ReInvite){
+			  
+		  }else {
+			  myRingTool.stopTone();
+		  }
+		  
 	      myDialog=thisClientTransaction.getDialog();
 	      Request myAck = myDialog.createAck(numseq);
 	      //myAck.addHeader(myContactHeader);

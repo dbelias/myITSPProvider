@@ -29,6 +29,8 @@ import splibraries.Response180;
 import splibraries.Response183;
 import splibraries.Response200;
 import support.BackupSettings;
+import support.CallFeatures;
+import support.Feature;
 import support.GStreamerLocation;
 import support.SIPHeadersTxt;
 import support.SIPRequestsInfo;
@@ -74,10 +76,13 @@ import javax.swing.text.StyleContext;
 import javax.swing.text.StyledDocument;
 import javax.swing.event.ChangeEvent;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.DefaultComboBoxModel;
+import support.HoldMode;
+import support.ReInviteMode;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.10.0 ";
+	private final String Version="V1.11.0 ";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -116,6 +121,7 @@ public class myITSPmainWnd {
 	private Response200 my200Response;
 	public SIPRequestsInfo SIPReqInfo;
 	public SIPResponsesInfo SIPRespInfo;
+	public CallFeatures myCallFeaturesInfo;
 	private JTextField txtFromOAD;
 	private JCheckBox chckbxTelUri;
 	private JButton btnReInvite;
@@ -130,6 +136,8 @@ public class myITSPmainWnd {
 	static final int HOLD=3;
 	static final int UNHOLD=4;
 	private int btnSend183Status=2;
+	private JComboBox cmbBoxReInviteMode;
+	private JComboBox cmbBoxHoldMode;
 
 	/**
 	 * Launch the application.
@@ -181,9 +189,9 @@ public class myITSPmainWnd {
 		frmMyItspSimulator.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{0, 120, 80, 200, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 54, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
 		frmMyItspSimulator.getContentPane().setLayout(gridBagLayout);
 		
 		JLabel lblProtocol = new JLabel("Protocol");
@@ -412,6 +420,18 @@ public class myITSPmainWnd {
 		gbc_lblRequestLine.gridy = 4;
 		frmMyItspSimulator.getContentPane().add(lblRequestLine, gbc_lblRequestLine);
 		
+		cmbBoxHoldMode = new JComboBox();
+		cmbBoxHoldMode.setEnabled(false);
+		cmbBoxHoldMode.setEditable(false);
+		cmbBoxHoldMode.setModel(new DefaultComboBoxModel(HoldMode.values()));
+		cmbBoxHoldMode.setSelectedIndex(0);
+		GridBagConstraints gbc_cmbBoxHoldMode = new GridBagConstraints();
+		gbc_cmbBoxHoldMode.insets = new Insets(0, 0, 5, 5);
+		gbc_cmbBoxHoldMode.fill = GridBagConstraints.HORIZONTAL;
+		gbc_cmbBoxHoldMode.gridx = 4;
+		gbc_cmbBoxHoldMode.gridy = 4;
+		frmMyItspSimulator.getContentPane().add(cmbBoxHoldMode, gbc_cmbBoxHoldMode);
+		
 		textArea = new JTextPane();
 		GridBagConstraints gbc_textArea = new GridBagConstraints();
 		gbc_textArea.gridheight = 9;
@@ -427,6 +447,7 @@ public class myITSPmainWnd {
 		btnMakeCall.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				//update config (display and user part)
+				myCallFeaturesInfo.setActiveFeature(Feature.NormalCall);
 				config.setUserPart(getFromOAD());
 				list.updateFromAddress(config);
 				list.updateCodecList(getAvailableCodecs());
@@ -458,9 +479,10 @@ public class myITSPmainWnd {
 		btnSend183.setEnabled(false);
 		btnSend183.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				myCallFeaturesInfo.setHoldMode((HoldMode)cmbBoxHoldMode.getSelectedItem());
 				list.updateCodecList(getAvailableCodecs());
 				list.userInput(btnSend183Status,null);
-				if (btnSend183Status==HOLD){
+				if (btnSend183Status==HOLD){				
 					setButton183Status(UNHOLD);
 				} else if (btnSend183Status==UNHOLD){
 					setButton183Status(HOLD);
@@ -499,6 +521,8 @@ public class myITSPmainWnd {
 		btnReInvite.setEnabled(false);
 		btnReInvite.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				myCallFeaturesInfo.setActiveFeature(Feature.ReInvite);
+				myCallFeaturesInfo.setReInviteMode((ReInviteMode)cmbBoxReInviteMode.getSelectedItem());
 				list.updateCodecList(getAvailableCodecs());
 				list.userInput(0,null);
 			}
@@ -536,6 +560,18 @@ public class myITSPmainWnd {
 		gbc_txtInviteLine.gridy = 7;
 		frmMyItspSimulator.getContentPane().add(txtInviteLine, gbc_txtInviteLine);
 		txtInviteLine.setColumns(10);
+		
+		cmbBoxReInviteMode = new JComboBox();
+		cmbBoxReInviteMode.setModel(new DefaultComboBoxModel(ReInviteMode.values()));
+		cmbBoxReInviteMode.setSelectedIndex(0);
+		cmbBoxReInviteMode.setMaximumRowCount(3);
+		cmbBoxReInviteMode.setEnabled(false);
+		GridBagConstraints gbc_cmbBoxReInviteMode = new GridBagConstraints();
+		gbc_cmbBoxReInviteMode.insets = new Insets(0, 0, 5, 5);
+		gbc_cmbBoxReInviteMode.fill = GridBagConstraints.HORIZONTAL;
+		gbc_cmbBoxReInviteMode.gridx = 5;
+		gbc_cmbBoxReInviteMode.gridy = 7;
+		frmMyItspSimulator.getContentPane().add(cmbBoxReInviteMode, gbc_cmbBoxReInviteMode);
 		
 		JLabel lblFrom = new JLabel("From:");
 		lblFrom.setHorizontalTextPosition(SwingConstants.LEFT);
@@ -881,6 +917,7 @@ public class myITSPmainWnd {
 		my183Response= new Response183();
 		my180Response=new Response180();
 		my200Response=new Response200();
+		myCallFeaturesInfo=new CallFeatures();
 		SIPRespInfo.Resp183=my183Response;
 		SIPRespInfo.Resp180=my180Response;
 		SIPRespInfo.Resp200=my200Response;
@@ -897,6 +934,8 @@ public class myITSPmainWnd {
 		btnReleaseCall.setEnabled(false);
 		btnSend183.setEnabled(false);
 		btnReInvite.setEnabled(false);
+		cmbBoxHoldMode.setEnabled(false);
+		cmbBoxReInviteMode.setEnabled(false);
 		showCodec("Codec:N.A");
 		chckbxLateSdp.setEnabled(false);
 		hasDtmfFirstOrder=false;
@@ -919,6 +958,8 @@ public class myITSPmainWnd {
 		showCodec("");
 		
 		comboBoxMyIPs.setEnabled(false);
+		cmbBoxHoldMode.setEnabled(false);
+		cmbBoxReInviteMode.setEnabled(false);
 		setTxtLine(SIPHeadersTxt.ResetLines,"");
 	}
 	private void setGUIoff(){
@@ -938,6 +979,8 @@ public class myITSPmainWnd {
 		btnReInvite.setEnabled(false);
 		comboBoxMyIPs.setEnabled(true);
 		chckbxLateSdp.setEnabled(false);
+		cmbBoxHoldMode.setEnabled(false);
+		cmbBoxReInviteMode.setEnabled(false);
 		showCodec("Codec:N.A");
 	}
 	public void showStatus(String s){
@@ -1027,6 +1070,8 @@ public class myITSPmainWnd {
 		setButton183Status(SEND183);
 		btnReInvite.setEnabled(false);
 		chckbxLateSdp.setEnabled(true);
+		cmbBoxHoldMode.setEnabled(false);
+		cmbBoxReInviteMode.setEnabled(false);
 	}
 	public void setButtonStatusMakeCall(){
 		btnMakeCall.setEnabled(false);
@@ -1044,6 +1089,8 @@ public class myITSPmainWnd {
 		btnReleaseCall.setText("Release");
 		btnReInvite.setEnabled(true);
 		chckbxLateSdp.setEnabled(false);
+		cmbBoxHoldMode.setEnabled(true);
+		cmbBoxReInviteMode.setEnabled(true);
 	}
 	public void setButtonStatusAnswerCall(){
 		btnMakeCall.setEnabled(true);
