@@ -25,6 +25,7 @@ import javax.swing.JMenu;
 import core.ITSPListener;
 
 import splibraries.Configuration;
+import splibraries.RequestInvite;
 import splibraries.Response180;
 import splibraries.Response183;
 import splibraries.Response200;
@@ -82,7 +83,7 @@ import support.ReInviteMode;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.11.0 ";
+	private final String Version="V1.12.0 ";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -119,6 +120,7 @@ public class myITSPmainWnd {
 	private Response183 my183Response;
 	private Response180 my180Response;
 	private Response200 my200Response;
+	private RequestInvite myInviteRequest;
 	public SIPRequestsInfo SIPReqInfo;
 	public SIPResponsesInfo SIPRespInfo;
 	public CallFeatures myCallFeaturesInfo;
@@ -801,6 +803,9 @@ public class myITSPmainWnd {
 		JMenuItem mntmSipRequestHeaders = new JMenuItem("SIP Request Headers");
 		mntmSipRequestHeaders.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
+				SIPRequestSettingsDialog dialog=new SIPRequestSettingsDialog(SIPReqInfo);
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);
 			}
 		});
 		mnImportHeaders.add(mntmSipRequestHeaders);
@@ -917,10 +922,12 @@ public class myITSPmainWnd {
 		my183Response= new Response183();
 		my180Response=new Response180();
 		my200Response=new Response200();
+		myInviteRequest=new RequestInvite();
 		myCallFeaturesInfo=new CallFeatures();
 		SIPRespInfo.Resp183=my183Response;
 		SIPRespInfo.Resp180=my180Response;
 		SIPRespInfo.Resp200=my200Response;
+		SIPReqInfo.ReqInvite=myInviteRequest;
 		
 		btnOnOff.setText("ON");
 		btnOnOff.setBackground(Color.RED);

@@ -72,8 +72,7 @@ public class ITSPListener implements SipListener{
 	private Properties myProperties;
 	private myITSPmainWnd myGUI;
 	private ContactHeader myContactHeader;
-	private UserAgentHeader myUserAgentHeader;
-	private Header myExtensionHeader;
+	private Header myUserAgentHeader;
 	private Header myAdditionalHeader;
 	private Header myPAIHeader;
 	private ViaHeader myViaHeader;
@@ -215,7 +214,7 @@ public class ITSPListener implements SipListener{
 
 	      Address contactAddress = myAddressFactory.createAddress("sip:"+myIP+":"+myPort);
 	      myContactHeader = myHeaderFactory.createContactHeader(contactAddress);
-	      myExtensionHeader = myHeaderFactory.createHeader("User-Agent",
+	      myUserAgentHeader = myHeaderFactory.createHeader("User-Agent",
 	              "myITSP tool V1");
 	      myPAIHeader=myHeaderFactory.createHeader("P-Asserted-Identity", " <sip:"+conf.userID+"@"+myIP+">");
 	      if (myGUI.getTelURI()){
@@ -317,7 +316,11 @@ public class ITSPListener implements SipListener{
                  myCallIDHeader, myCSeqHeader, myFromHeader, myToHeader,
                  myViaHeaders, myMaxForwardsHeader);
              myRequest.addHeader(myContactHeader);
-             myRequest.addHeader(myExtensionHeader);
+             if (myGUI.SIPReqInfo.ReqInvite.getHasUserAgent()){
+            	 myRequest.addHeader(myUserAgentHeader);
+             }
+             setAdditionalHeaderRequest(myRequest,myGUI.SIPReqInfo.ReqInvite.getHeaderValuesList());
+             
              if (myGUI.getLateSDP()){
             	 logger.trace("Send Invite w/o SDP");
             	//TODO:Send Invite w/o SDP 
