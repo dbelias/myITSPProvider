@@ -83,7 +83,7 @@ import support.ReInviteMode;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.12.0 ";
+	private final String Version="V1.13.0 beta";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -893,6 +893,16 @@ public class myITSPmainWnd {
 	}
 	private String getDestination(){
 		return  lblRequestLine.getText();
+	}
+	
+	public String getRemoteIP(){
+		return txtRemoteIp.getText();
+	}
+	public String getRemotePort(){
+		return textFieldRemotePort.getText();
+	}
+	public String getRemotePartyNumber(){
+		return txtCalledPartyNumber.getText();
 	}
 	private void setSystemIPToComboBox(){
 		SystemIPs myIPObject=new SystemIPs();

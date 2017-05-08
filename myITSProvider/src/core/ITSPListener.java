@@ -2,6 +2,7 @@ package core;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
@@ -25,14 +26,18 @@ import javax.sip.SipProvider;
 import javax.sip.SipStack;
 import javax.sip.TimeoutEvent;
 import javax.sip.TransactionTerminatedEvent;
+import javax.sip.TransactionUnavailableException;
 import javax.sip.address.Address;
 import javax.sip.address.AddressFactory;
+import javax.sip.address.URI;
 import javax.sip.header.CSeqHeader;
 import javax.sip.header.CallIdHeader;
 import javax.sip.header.ContactHeader;
 import javax.sip.header.ContentTypeHeader;
+import javax.sip.header.ExpiresHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.Header;
+import javax.sip.header.HeaderAddress;
 import javax.sip.header.HeaderFactory;
 import javax.sip.header.MaxForwardsHeader;
 import javax.sip.header.ToHeader;
@@ -42,8 +47,13 @@ import javax.sip.message.MessageFactory;
 import javax.sip.message.Request;
 import javax.sip.message.Response;
 
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import gov.nist.javax.sip.address.SipUri;
+import gov.nist.javax.sip.header.CallID;
+import gov.nist.javax.sip.header.From;
 import splibraries.Configuration;
 import splibraries.GStreamerToneTool;
 import splibraries.GstreamerTool;
@@ -54,8 +64,10 @@ import splibraries.VideoTool;
 import support.Feature;
 import support.HeadersValuesGeneric;
 import support.HoldMode;
+import support.LegTransaction;
 import support.ReInviteMode;
 import support.SIPHeadersTxt;
+import support.UserData;
 //import splibraries.VoiceTool;
 import window.myITSPmainWnd;
 
@@ -79,7 +91,9 @@ public class ITSPListener implements SipListener{
 	private Address fromAddress;
 	private Dialog myDialog;
 	private ClientTransaction myClientTransaction;
+	//private ClientTransaction myClientProxyTransaction;
 	private ServerTransaction myServerTransaction;
+	//private ServerTransaction myServerProxyTransaction;
 	private int status;
 	private String myIP;
 	private String toTag;
@@ -112,6 +126,17 @@ public class ITSPListener implements SipListener{
 	private int remoteOldVideoCodec;
 	private ArrayList<Integer> myCodecsList;
 	
+	//Additional parameters for new implementation 
+	HashMap<String, UserData> myRegisteredUsers= new HashMap<String,UserData>();
+	HashMap<String, LegTransaction> myTransactionMap=new HashMap<String, LegTransaction>();
+	static final int expireTime=120;
+	static final int PROXY_NOTUSED=-1;
+	static final int PROXY_IDLE=0;
+	static final int PROXY_WAIT=1;
+	static final int PROXY_ESTABLISHED=2;
+	static final int INITIAL_VARIABLE=66666;
+	static final int INITIAL_BASE_VALUE=1000;
+	//End of additional parameters
 
 	static final int YES=0;
 	static final int NO=1;
@@ -204,7 +229,17 @@ public class ITSPListener implements SipListener{
 	      mySipFactory.setPathName("gov.nist");
 	      myProperties = new Properties();
 	      myProperties.setProperty("javax.sip.STACK_NAME", "myStack");
+	      if (LogManager.getRootLogger().getLevel()==Level.TRACE){
+	    	  myProperties.setProperty("gov.nist.javax.sip.TRACE_LEVEL", "LOG4J");
+		      myProperties.setProperty("gov.nist.javax.sip.DEBUG_LOG",
+						"shootmedebug.txt");
+		      myProperties.setProperty("gov.nist.javax.sip.SERVER_LOG",
+						"shootmelog.txt");
+	      }
+	      
 	      mySipStack = mySipFactory.createSipStack(myProperties);
+	      
+
 	      myMessageFactory = mySipFactory.createMessageFactory();
 	      myHeaderFactory = mySipFactory.createHeaderFactory();
 	      myAddressFactory = mySipFactory.createAddressFactory();
@@ -599,208 +634,675 @@ public class ITSPListener implements SipListener{
 	}
 
 
+@SuppressWarnings("unused")
 public void processRequest(RequestEvent requestReceivedEvent) {
   Request myRequest=requestReceivedEvent.getRequest();
   String method=myRequest.getMethod();
   myGUI.display("<<<<<<<<<< "+myRequest.toString());
-  if (!method.equals("CANCEL")) {
-  myServerTransaction=requestReceivedEvent.getServerTransaction();
-  }
-
-  try{
-	  logger.info("processRequest: Status="+status+" Method="+method);
-  switch (status) {
-
-    case IDLE:
-      if (method.equals("INVITE")) {
-        if (myServerTransaction == null) {
-                myServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
-        }
-
-        myAlertTool.playTone();
-        
-
-        byte[] cont=(byte[]) myRequest.getContent();
-        offerInfo=mySdpManager.getSdp(cont);
-
-        answerInfo.IpAddress=myIP;
-        answerInfo.aport=myAudioPort;
-        myOldAudioPort=myAudioPort;
-        myAudioPort=myAudioPort+2; //next call will use different ports
-        //answerInfo.findProperCodec(offerInfo,true);
-        //TODO: special handle in case codec is not existing =999
-        //myAudioCodec=answerInfo.aformat;
-        //myOldAudioCodec=answerInfo.aformat;
-        //remoteOldAudioCodec=myOldAudioCodec;
-        /*
-        if (offerInfo.isAudioCodecAvailable(myAudioCodec)){
-        	logger.info("myAudioCodec="+myAudioCodec+" exists in the list of requested INVITE");
-        } else {
-        	logger.warn("myAudioCodec="+myAudioCodec+" NOT exist in the list of requested INVITE");
-        }
-        */
-        if (offerInfo.vport==-1) {
-          answerInfo.vport=-1;
-        }
-        else if (myVideoPort==-1) {
-          answerInfo.vport=0;
-          answerInfo.vformat=offerInfo.vformat;
-        }
-        else {
-          answerInfo.vport=myVideoPort;
-          answerInfo.vformat=offerInfo.vformat;
-        }
-
-        Response myResponse=myMessageFactory.createResponse(180,myRequest);
-        myResponse.addHeader(myContactHeader);
-        //TODO:Perhaps this control is wrong. 180 Ringing doesn't need PAI, does it?
-        if (myGUI.SIPRespInfo.Resp180.getCOLP()){
-       	 myResponse.addHeader(myPAIHeader);
-        }
-        ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
+  if (method.equals("REGISTER")){
+	  //TODO: Handle REGISTER method
+	  
+	  ContactHeader myRegisterContactHeader=(ContactHeader)myRequest.getHeader(ContactHeader.NAME);
+	  SipUri uriContact= (SipUri)myRegisterContactHeader.getAddress().getURI();
+	  String userPartContact=uriContact.getUser();
+	  UserData myUserData =new UserData(uriContact);
+	  myRegisteredUsers.put(userPartContact, myUserData);	  
+	  ViaHeader viaHeader=(ViaHeader)myRequest.getHeader(ViaHeader.NAME);
+	  logger.info("REGISTER from user: "+userPartContact+" from Host:"+viaHeader.getHost()+ " Port:"+ viaHeader.getPort());
+	  String receivedIP=viaHeader.getHost();
+	  try {
+		ServerTransaction myRegisterServerTransaction=mySipProvider.getNewServerTransaction(myRequest);
+		Response myRegisterResponse=myMessageFactory.createResponse(200, myRequest);
+		logger.info("Response 200OK for REGISTER from User with Contact Header: "+uriContact.toString());
+		((ViaHeader)myRegisterResponse.getHeader(ViaHeader.NAME)).setReceived(receivedIP);
+		//((ContactHeader)myRegisterResponse.getHeader(ContactHeader.NAME)).setExpires(expireTime);
+		ExpiresHeader myExpireHeader=myHeaderFactory.createExpiresHeader(expireTime);
+		myRegisterResponse.addHeader(myExpireHeader);
+		ToHeader myToHeader = (ToHeader) myRegisterResponse.getHeader("To");
         myToHeader.setTag("454326");
-        setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());
-        myServerTransaction.sendResponse(myResponse);
-        myDialog=myServerTransaction.getDialog();
-        myGUI.display(">>> "+myResponse.toString());
-        status=RINGING;
-        myGUI.showStatus("Status: RINGING");
-        myGUI.setButtonStatusAnswerCall();
-        myGUI.setButtonStatusSend183();
-        setTxtLines(myRequest);
+        ContactHeader myRegisterReplyContactHeader=myRegisterContactHeader;
+        myRegisterReplyContactHeader.setExpires(expireTime);
+        myRegisterResponse.addHeader(myRegisterReplyContactHeader);
+		myRegisterServerTransaction.sendResponse(myRegisterResponse);
+		myGUI.display(">>> "+myRegisterResponse.toString());
+		
+		
+	} catch (ParseException | InvalidArgumentException | SipException e) {
+		// TODO Auto-generated catch block
+		logger.error("Exception in REGISTER", e);
+		e.printStackTrace();
+	}
+	  return; 
+	  
+  }
+  String myCallID=((CallIdHeader)myRequest.getHeader(CallIdHeader.NAME)).getCallId();
+  
+  if (myCallIDExists(myCallID)){
+	//TODO:handle as Proxy existing Transaction (Re-Invite, CANCEL, BYE, ACK)
+	  logger.info("Request:"+method+" for existing CallID:"+myCallID);
+	  try{
+	  if (method.equals("INVITE")){ //Re-INVITE
+		  sendProxyReInvite(requestReceivedEvent,myCallID);
+		
+		  
+	  } else if (method.equals("BYE")|| method.equals("INFO") || method.equals("UPDATE") || method.equals("MESSAGE")){		  
+		  sendProxyBye(requestReceivedEvent,myCallID);
+		      
+	  } else if (method.equals("CANCEL")){
+		  sendProxyCancel(requestReceivedEvent,myCallID);
+		
+	  } else if (method.equals("ACK")) {
+		  sendProxyACK(requestReceivedEvent,myCallID);
+		
+		  
+	  }else {//Unimplemented Process Request
+		  logger.warn("Unimplemented Request" );
+	  }
+	  } catch (SipException | ParseException | InvalidArgumentException e) {
+			logger.error("Exception in Request:"+method+" for existing CallID:"+myCallID, e);
+			e.printStackTrace();
+		}
+	  	  
+  }else {//Handle for Not existing CallId in TransactionMap
+	  logger.info("Request:"+method+" for CallID:"+myCallID+" is not existing in TransactionMap");
+	  String userPartForSearch=null;
+	  FromHeader fromHeader=(FromHeader)myRequest.getHeader(FromHeader.NAME);
+	  Address fromAddress=fromHeader.getAddress();
+	  SipUri uriFrom= (SipUri)fromHeader.getAddress().getURI();
+	  String userPartFrom=uriFrom.getUser();
+	  userPartForSearch=userPartFrom;
+	  ContactHeader contactHeader=(ContactHeader)myRequest.getHeader(ContactHeader.NAME);
+	  SipUri uriContact=null;
+	  String userPartContact=null;
+	  if (contactHeader!=null){//BYE and ACK message is not including Contact Header!!!!  
+		  
+		  uriContact= (SipUri)contactHeader.getAddress().getURI();
+		  userPartContact=uriContact.getUser();
+		  logger.info("Contact Header exists for CallID: "+myCallID+"   -->Contact Header:"+uriContact.toString());
+		  userPartForSearch=userPartContact;
+	  } else {
+		  logger.warn("Contact Header Not found for CallID: "+myCallID);
+	  }
+	  logger.info("Read Contact Header");
+	  ToHeader toHeader=(ToHeader)myRequest.getHeader(ToHeader.NAME);
+	  SipUri uriTo= (SipUri)toHeader.getAddress().getURI();
+	  
+	  String userPartTo=uriTo.getUser();
+	  logger.info("To Header: "+uriTo.toString()+" with User part: "+ userPartTo);
+	  //TODO: check if userPartContact is belonging to known Registered users. If not then call from OSBiz
+	  if (isRegisteredUser(userPartForSearch)){
+		  //Call comes from Registered users
+		  
+		  if (isRegisteredUser(userPartTo)){
+			  //Call goes to Registered user
+			  //TODO:handle as Proxy call towards another Reistered user
+			  logger.info("Call comes from Registered user: "+ userPartFrom+" towards other Reistered user:"+userPartTo);
+			  logger.warn("Not Implemented functionality");
+			  
+		  }else {
+			  //Call goes to OSBiz 
+			  //TODO:handle as Proxy call towards OSBiz
+			  logger.info("Call comes from Registered user: "+ userPartFrom+" towards OSBiz: "+userPartTo);
+			  if (method.equals("INVITE")){//Don't handle other Requests sent first time like OPTIONS, NOTIFY, REFER, UPDATE
+				  
+				  LegTransaction myServerLegTransaction=new LegTransaction(myCallID);
+				  myServerLegTransaction.setNumber(userPartFrom);
+				  myServerLegTransaction.setState(PROXY_IDLE);
+				  myServerLegTransaction.setIpSignaling(uriContact.getHost());			
+				  				  
+				  myTransactionMap.put(myCallID, myServerLegTransaction);
+				  
+				  LegTransaction myClientLegTransaction=new LegTransaction();
+				  myClientLegTransaction.setIpSignaling(myGUI.getRemoteIP());
+				  myClientLegTransaction.setPortSignaling(myGUI.getRemotePort());
+				  myClientLegTransaction.setNumber(userPartTo);
+				  
+				  ServerTransaction myServerProxyTransaction = requestReceivedEvent.getServerTransaction();
+				  
+				  try {
+					myServerLegTransaction.setServerTransaction(myServerProxyTransaction);
+					sendProxyInvite(requestReceivedEvent,myServerLegTransaction,myClientLegTransaction,false);
+				} catch (ParseException | InvalidArgumentException | SipException e) {
+					logger.error("Exception in Request:"+method+" for Not existing CallID in TransactionMap CallID:"+myCallID, e);
+					e.printStackTrace();
+				}
+				  
+			  }
+		  }
+	  } else {
+		  //Call comes from OSBiz
+		  if (isRegisteredUser(userPartTo)){
+			  //Call goes to Registered user
+			  //TODO:handle as Proxy call towards  Registered user
+			  logger.info("Call comes from OSBiz user: "+ userPartFrom+" towards Registered user: "+userPartTo);
+			  if (method.equals("INVITE")){
+				  LegTransaction myServerLegTransaction=new LegTransaction(myCallID);
+				  myServerLegTransaction.setNumber(userPartFrom);
+				  myServerLegTransaction.setState(PROXY_IDLE);
+				  myServerLegTransaction.setIpSignaling(uriContact.getHost());
+				  myServerLegTransaction.setServerTransaction(requestReceivedEvent.getServerTransaction());
+				  
+				  myTransactionMap.put(myCallID, myServerLegTransaction);
+				  
+				  LegTransaction myClientLegTransaction=new LegTransaction();
+				  UserData myPartner=myRegisteredUsers.get(userPartTo);
+				  myClientLegTransaction.setUserData(myPartner);
+				  try {
+					sendProxyInvite(requestReceivedEvent,myServerLegTransaction,myClientLegTransaction,false);
+				} catch (ParseException | InvalidArgumentException | SipException e) {
+					logger.error("Exception in Request:"+method+" for Not existing CallID in TransactionMap CallID:"+myCallID, e);
+					e.printStackTrace();
+				}
+				  
+			  }
+			  
+			  
+		  }else {
+			  //Call goes to myITSP tool
+			  //TODO:handle as normal call towards myITSP tool
+			  logger.info("Request for myITSP Tool: "+method);
+			  if (!method.equals("CANCEL")) {
+				  myServerTransaction=requestReceivedEvent.getServerTransaction();
+				  }
+
+				  try{
+					  logger.info("processRequest: Status="+status+" Method="+method);
+				  switch (status) {
+
+				    case IDLE:
+				      if (method.equals("INVITE")) {
+				        if (myServerTransaction == null) {
+				                myServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }
+
+				        myAlertTool.playTone();
+				        
+
+				        byte[] cont=(byte[]) myRequest.getContent();
+				        offerInfo=mySdpManager.getSdp(cont);
+
+				        answerInfo.IpAddress=myIP;
+				        answerInfo.aport=myAudioPort;
+				        myOldAudioPort=myAudioPort;
+				        myAudioPort=myAudioPort+2; //next call will use different ports
+				        //answerInfo.findProperCodec(offerInfo,true);
+				        //TODO: special handle in case codec is not existing =999
+				        //myAudioCodec=answerInfo.aformat;
+				        //myOldAudioCodec=answerInfo.aformat;
+				        //remoteOldAudioCodec=myOldAudioCodec;
+				        /*
+				        if (offerInfo.isAudioCodecAvailable(myAudioCodec)){
+				        	logger.info("myAudioCodec="+myAudioCodec+" exists in the list of requested INVITE");
+				        } else {
+				        	logger.warn("myAudioCodec="+myAudioCodec+" NOT exist in the list of requested INVITE");
+				        }
+				        */
+				        if (offerInfo.vport==-1) {
+				          answerInfo.vport=-1;
+				        }
+				        else if (myVideoPort==-1) {
+				          answerInfo.vport=0;
+				          answerInfo.vformat=offerInfo.vformat;
+				        }
+				        else {
+				          answerInfo.vport=myVideoPort;
+				          answerInfo.vformat=offerInfo.vformat;
+				        }
+
+				        Response myResponse=myMessageFactory.createResponse(180,myRequest);
+				        myResponse.addHeader(myContactHeader);
+				        //TODO:Perhaps this control is wrong. 180 Ringing doesn't need PAI, does it?
+				        if (myGUI.SIPRespInfo.Resp180.getCOLP()){
+				       	 myResponse.addHeader(myPAIHeader);
+				        }
+				        ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
+				        myToHeader.setTag("454326");
+				        setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());
+				        myServerTransaction.sendResponse(myResponse);
+				        myDialog=myServerTransaction.getDialog();
+				        myGUI.display(">>> "+myResponse.toString());
+				        status=RINGING;
+				        myGUI.showStatus("Status: RINGING");
+				        myGUI.setButtonStatusAnswerCall();
+				        myGUI.setButtonStatusSend183();
+				        setTxtLines(myRequest);
+				        
+				      }
+				     break;
+				    case ESTABLISHED:
+				      if (method.equals("BYE")) {
+				        Response myResponse=myMessageFactory.createResponse(200,myRequest);
+				        //myResponse.addHeader(myContactHeader);
+				        myServerTransaction.sendResponse(myResponse);
+				        myGUI.display(">>> "+myResponse.toString());
+
+				       //myVoiceTool.stopMedia();
+				        if (isOnlyAnnouncment){
+				        	myGVoiceTool.stopMedia();
+				        }else {
+				        	myGAnnouncementTool.stopMedia();
+				        }
+				       
+
+				        if (answerInfo.vport>0) {
+				          myVideoTool.stopMedia();
+				        }
+
+				        status=IDLE;
+				        myGUI.showStatus("Status: IDLE");
+				        myGUI.showCodec("");
+				        myGUI.setButtonStatusIdle();
+				        myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
+				      }
+				      if (method.equals("INVITE")){ //Re-Invite handling
+				    	  // it may occur that my myServerTransaction is not created yet (e.g call is initiated by tool first)
+				    	  if (myServerTransaction == null) {
+				              myServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				    	  }
+				    	  answerToReInvite(myRequest) ;
+				    	  status=RE_INVITE_WAIT_ACK;
+				    	  myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
+				      }
+				      
+				      
+				    break;
+
+				    case RINGING:
+				      if (method.equals("CANCEL")) {
+				        ServerTransaction myCancelServerTransaction=requestReceivedEvent.getServerTransaction();
+				        Request originalRequest=myServerTransaction.getRequest();
+				        Response myResponse=myMessageFactory.createResponse(487,originalRequest);
+				        myServerTransaction.sendResponse(myResponse);
+				        Response myCancelResponse=myMessageFactory.createResponse(200,myRequest);
+				        myCancelServerTransaction.sendResponse(myCancelResponse);
+				        
+				        ///!!!!Warning!!!! The order of above messages are possibly wrong.First 200 OK (reply to CANCEL) and then 487 which is replied with ACK. 
+
+				        myAlertTool.stopTone();
+
+				        myGUI.display(">>> "+myResponse.toString());
+				        myGUI.display(">>> "+myCancelResponse.toString());
+
+				        status=IDLE;
+				        myGUI.showStatus("Status: IDLE");
+				        myGUI.setButtonStatusIdle();
+				        myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
+				      }
+				      break;
+
+				      case WAIT_ACK:
+				        if (method.equals("ACK")) {
+				        status=ESTABLISHED;
+				        myGUI.showStatus("Status: ESTABLISHED");
+				        myGUI.setButtonStatusEstablishedCall();
+				      }
+				        break;
+				      
+				      case RE_INVITE_WAIT_ACK:
+				    	if (method.equals("ACK")) { //ACK from Re-Invite sent from System Under Test
+				           status=ESTABLISHED;
+				           
+				           byte[] cont=(byte[]) myRequest.getContent(); 
+				           if (cont==null){
+				        	   logger.info("ACK w/o SDP is received");  
+				           }else {
+				        	   logger.info("ACK with SDP is received");
+				        	   answerInfo=mySdpManager.getSdp(cont);
+				        	   offerInfo.findProperCodec(answerInfo);
+				        	   /*
+				        	   if (answerInfo.isAudioCodecAvailable(myOldAudioCodec)){
+				        	        	logger.info("myAudioCodec="+myOldAudioCodec+" exists in the list of requested 200 OK");
+				        	   } else {
+				        	        	logger.warn("myAudioCodec="+myOldAudioCodec+" NOT exist in the list of requested 200 OK");
+				        	   }
+				        	   */
+				        	   if (remoteOldAudioPort==answerInfo.aport && remoteOldAudioCodec==offerInfo.aformat){
+				               	//Do nothing. It's not necessary to re-initiate RTP stream
+				               			logger.trace("Same remote Audio Port and Audio codec for response to 200 OK. Not necessary to restart RTP");
+				               }
+				               else{
+				               			logger.trace("Different remote Audio Port OR  Audio codec for response to 200 OK. Necessary to restart RTP");
+				               			//Stop old RTP media
+				               			if (isOnlyAnnouncment){
+				               					myGVoiceTool.stopMedia();
+				               			}else {
+				               					myGAnnouncementTool.stopMedia();
+				               			}
+				               			myGUI.showCodec("");
+				               			myAudioPort=myAudioPort+2;
+				               			remoteOldAudioPort=answerInfo.aport;
+				               			remoteOldAudioCodec=offerInfo.aformat;
+				               			myOldAudioPort=answerInfo.aport;
+				               			//Start new RTP media
+				               			//handle the best codec to use 
+				               			Thread.sleep(1000);//needed because the previous gstreamer threads are not terminated properly
+				               			if (isOnlyAnnouncment){
+				               					myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aport );
+				               			} else {
+				               					myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aport );
+				               			}     
+
+				               			if (answerInfo.vport>0) {
+				               					myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
+				               			}
+				               			myGUI.showCodec(offerInfo.getAudioCodecString());
+				               	
+				               }
+				         	  } 
+				           myGUI.showStatus("Status: ESTABLISHED"); 
+				           
+				          
+				              
+				        }  
+
+				  }
+
+				  }catch (Exception e) {
+					  logger.warn("Exception: my ITSP tool handle of method: "+method+" for CallID: "+myCallID, e);
+				    e.printStackTrace();
+				  }
+		  }
+		  
+	  }
+	  
+  }
+  
+}
+
+
+private void sendProxyCancel(RequestEvent requestReceivedEvent, String myCallID) throws ParseException, SipException, InvalidArgumentException {
+	Request myProxyServerRequest = requestReceivedEvent.getRequest();
+	ServerTransaction myServerProxyTransaction = requestReceivedEvent.getServerTransaction();   
+	SipProvider sipProxyProvider = (SipProvider) requestReceivedEvent.getSource();
+	Dialog myServerProxyDialog = requestReceivedEvent.getDialog();  
+		  
+	LegTransaction myServerLegTransaction=myTransactionMap.get(myCallID);
+	
+	FromHeader fromHeader=(FromHeader)myProxyServerRequest.getHeader(FromHeader.NAME);
+	  SipUri uriFrom= (SipUri)fromHeader.getAddress().getURI();
+	  String userPartFrom=uriFrom.getUser();
+	  String senderOfBye=userPartFrom;
+	  if (isRegisteredUser(senderOfBye)){
+		  //CANCEL is send by Registered User
+		  logger.info(myProxyServerRequest.getMethod()+" is sent by Registred User: "+senderOfBye+" towards OSBiz user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  } else {
+		  //CANCEL is sent by OSBiz
+		  logger.info(myProxyServerRequest.getMethod()+" is sent by OSBiz User: "+senderOfBye+" towards Registered user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  }
+	  Response myProxyServerResponse=myMessageFactory.createResponse(200,myProxyServerRequest);
+	  myServerProxyTransaction.sendResponse(myProxyServerResponse);
+	  myGUI.display(">>> "+myProxyServerResponse.toString());
+	  
+	  Dialog myClientProxyDialog = (Dialog) myServerProxyDialog.getApplicationData();
+	  Request myClientProxyRequest = myClientProxyDialog.createRequest(myProxyServerRequest.getMethod());
+	  ClientTransaction myClientProxyTransaction = sipProxyProvider.getNewClientTransaction(myClientProxyRequest);
+	  myClientProxyTransaction.setApplicationData(myServerProxyTransaction);
+	  myServerProxyTransaction.setApplicationData(myClientProxyTransaction);
+	  myClientProxyDialog.sendRequest(myClientProxyTransaction);
+	  myGUI.display(">>> " + myClientProxyRequest.toString());
+	  
+	  ServerTransaction originalServerTransaction=myServerLegTransaction.getServerTransaction();
+	  Request originalServerProxyRequest=originalServerTransaction.getRequest();
+	  Response my487Response=myMessageFactory.createResponse(487,originalServerProxyRequest);
+      originalServerTransaction.sendResponse(my487Response);
+      myGUI.display(">>> "+my487Response.toString());
+	  myServerLegTransaction.setState(PROXY_IDLE);
+      myTransactionMap.remove(myCallID);
+	  
+	  LegTransaction myPartnerLegTransaction=myServerLegTransaction.getPartnerLeg();
+	  
+      
+      myServerLegTransaction.setServerTransaction(myServerProxyTransaction);
+      //Don't remove PartnerLegTransaction, because 200OK is expected. 
+      //But set the state to a correct value=PROXY_IDLE
+      myPartnerLegTransaction.setState(PROXY_IDLE);
+      myPartnerLegTransaction.setClientTransaction(myClientProxyTransaction);
+	  
+	  
+	
+}
+
+
+private void sendProxyReInvite(RequestEvent requestReceivedEvent, String myCallID) throws SipException, ParseException, InvalidArgumentException {
+	  Request myProxyServerRequest=requestReceivedEvent.getRequest();
+	  LegTransaction myServerLegTransaction=myTransactionMap.get(myCallID);
+	  LegTransaction myPartnerLegTransaction=myServerLegTransaction.getPartnerLeg();
+	  
+	  ContactHeader contactHeader=(ContactHeader)myProxyServerRequest.getHeader(ContactHeader.NAME);
+	  SipUri uriContact= (SipUri)contactHeader.getAddress().getURI();
+	  String userPartContact=uriContact.getUser();
+	  String senderOfReInvite=userPartContact;
+	  if (isRegisteredUser(senderOfReInvite)){
+		  //ReInvite is send by Registered User
+		  logger.info("ReInvite is sent by Registred User: "+senderOfReInvite+" towards OSBiz user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  } else {
+		  //ReInvite is sent by OSBiz
+		  logger.info("ReInvite is sent by OSBiz User: "+senderOfReInvite+" towards Registered user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  }
+	  
+	  sendProxyInvite(requestReceivedEvent,myServerLegTransaction,myPartnerLegTransaction, true);
+	  
+	
+}
+
+
+private void sendProxyACK(RequestEvent requestReceivedEvent, String myCallID) throws InvalidArgumentException, SipException, ParseException {
+	ServerTransaction myServerProxyTransaction = requestReceivedEvent.getServerTransaction();  
+	Request myProxyServerRequest=requestReceivedEvent.getRequest();
+	LegTransaction myServerLegTransaction=myTransactionMap.get(myCallID);
+	  /*Contact Header is not existing in ACK
+	  ContactHeader contactHeader=(ContactHeader)myProxyServerRequest.getHeader(ContactHeader.NAME);
+	  
+	  SipUri uriContact= (SipUri) contactHeader.getAddress().getURI();
+	  String userPartContact=uriContact.getUser();
+	  */
+	Dialog myServerProxyDialog = myServerProxyTransaction.getDialog();
+	Dialog myClientProxyDialog = (Dialog) myServerProxyDialog.getApplicationData();
+	//Warning: Dialog keeps the original CSeq (from the Original Invite)
+	//In case of Re-Invite, the CSeq is changed but getLocalSeqNumber() returns always the original Cseq
+	//Its better to use th Partner's Leg and for this one to get the CSeq.
+	 
+	/*
+	 * Long myCSeq=myClientProxyDialog.getLocalSeqNumber();
+	
+    */
+	long myCSeq=myServerLegTransaction.getPartnerLeg().getNumSeq();
+	 Request myClientProxyRequest = myClientProxyDialog.createAck(myCSeq);
+	
+	byte[] requestSDP=(byte[]) (requestReceivedEvent.getRequest()).getContent();
+	  if (requestSDP==null){
+		  //ACK w/o SDP
+	  }else {
+		  //ACK with SDP
+		  ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");;
+		  myClientProxyRequest.setContent(requestSDP,contentTypeHeader);
+	  }
+	myClientProxyDialog.sendAck(myClientProxyRequest);
+	myGUI.display(">>> "+myClientProxyRequest.toString()); 
+	  FromHeader fromHeader=(FromHeader)myProxyServerRequest.getHeader(FromHeader.NAME);
+	  SipUri uriFrom= (SipUri) fromHeader.getAddress().getURI();
+	  String userPartFrom=uriFrom.getUser();
+	  String senderOfAck=userPartFrom;
+	  if (isRegisteredUser(senderOfAck)){
+		  //ACK is send by Registered User
+		  logger.info("ACK is sent by Registred User: "+senderOfAck+" towards OSBiz user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  } else {
+		  //ACK is sent by OSBiz
+		  logger.info("ACK is sent by OSBiz User: "+senderOfAck+" towards Registered user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  }
+
+      
+	
+}
+
+
+private void sendProxyBye(RequestEvent requestReceivedEvent, String myCallID) throws ParseException, SipException, InvalidArgumentException {
+	Request myProxyServerRequest = requestReceivedEvent.getRequest();
+	ServerTransaction myServerProxyTransaction = requestReceivedEvent.getServerTransaction();   
+	SipProvider sipProxyProvider = (SipProvider) requestReceivedEvent.getSource();
+	Dialog myServerProxyDialog = requestReceivedEvent.getDialog();  
+		  
+	LegTransaction myServerLegTransaction=myTransactionMap.get(myCallID);
+	  //ContactHeader is not existing in BYE. Look for From Header, although quite unsafe If OSbiz uses From with Registered user content (e.g Forward
+	  
+	  
+	  FromHeader fromHeader=(FromHeader)myProxyServerRequest.getHeader(FromHeader.NAME);
+	  SipUri uriFrom= (SipUri)fromHeader.getAddress().getURI();
+	  String userPartFrom=uriFrom.getUser();
+	  String senderOfBye=userPartFrom;
+	  if (isRegisteredUser(senderOfBye)){
+		  //BYE is send by Registered User
+		  logger.info(myProxyServerRequest.getMethod()+" is sent by Registred User: "+senderOfBye+" towards OSBiz user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  } else {
+		  //BYE is sent by OSBiz
+		  logger.info(myProxyServerRequest.getMethod()+" is sent by OSBiz User: "+senderOfBye+" towards Registered user: "+myServerLegTransaction.getPartnerLeg().getNumber());
+	  }
+	  Response myProxyServerResponse=myMessageFactory.createResponse(200,myProxyServerRequest);
+	  myServerProxyTransaction.sendResponse(myProxyServerResponse);
+	  myGUI.display(">>> "+myProxyServerResponse.toString());
+	  
+	  Dialog myClientProxyDialog = (Dialog) myServerProxyDialog.getApplicationData();
+	  Request myClientProxyRequest = myClientProxyDialog.createRequest(myProxyServerRequest.getMethod());
+	  ClientTransaction myClientProxyTransaction = sipProxyProvider.getNewClientTransaction(myClientProxyRequest);
+	  myClientProxyTransaction.setApplicationData(myServerProxyTransaction);
+	  myServerProxyTransaction.setApplicationData(myClientProxyTransaction);
+	  myClientProxyDialog.sendRequest(myClientProxyTransaction);
+	  
+	  
+	  LegTransaction myPartnerLegTransaction=myServerLegTransaction.getPartnerLeg();
+	  
+      myGUI.display(">>> " + myClientProxyRequest.toString());
+      myServerLegTransaction.setServerTransaction(myServerProxyTransaction);
+      myServerLegTransaction.setState(PROXY_IDLE);
+      myTransactionMap.remove(myCallID);
+      //Don't remove PartnerLegTransaction, because 200OK is expected. 
+      //But set the state to a correct value=PROXY_IDLE
+      myPartnerLegTransaction.setState(PROXY_IDLE);
+      myPartnerLegTransaction.setClientTransaction(myClientProxyTransaction);
+      
+	
+}
+
+
+private void sendProxyInvite(RequestEvent requestReceivedEvent, LegTransaction myServerLegTransaction,
+		LegTransaction myClientLegTransaction, boolean isReInvite) throws ParseException, InvalidArgumentException, SipException {
+	// TODO Auto-generated method stub
+	Request myProxyRequest=requestReceivedEvent.getRequest();
+	
+	/*
+	ServerTransaction myInviteServerTransaction=requestReceivedEvent.getServerTransaction();
+	Response myInviteResponse=myMessageFactory.createResponse(100, myProxyRequest);
+	myInviteServerTransaction.sendResponse(myInviteResponse);
+	myGUI.display(">>> "+myInviteResponse.toString());
+	
+	logger.info("Response 100 Trying for INVITE from User : "+myServerLegTransaction.getNumber());
+	*/
+	SipProvider sipProxyProvider=(SipProvider) requestReceivedEvent.getSource();
+	ServerTransaction myProxyServerTransaction=requestReceivedEvent.getServerTransaction();
+	if (myProxyServerTransaction==null){
+		logger.info("New Server Transaction is created by sipProxyProvider");
+		myProxyServerTransaction=sipProxyProvider.getNewServerTransaction(myProxyRequest);
+		
+	}
+	Dialog myProxyServerDialog=myProxyServerTransaction.getDialog();
+	
+	byte[] requestSDP=(byte[]) (requestReceivedEvent.getRequest()).getContent();
+	String partnerUri=null;
+	if (isRegisteredUser(myClientLegTransaction.getNumber())){
+		//Called User is one of the Registered. So get its data from UserData class
+		UserData myPartner=myRegisteredUsers.get(myClientLegTransaction.getNumber());
+		 partnerUri=myPartner.getUri().toString();
+	}else {
+		partnerUri="sip"+":"+myClientLegTransaction.getUserHostPort();
+	}
+	
+	Address toAddress = myAddressFactory.createAddress(partnerUri);
+	String toTag=null;
+	if (isReInvite){
+		Dialog partnerProxyDialog=(Dialog) myProxyServerDialog.getApplicationData();
+		toTag=partnerProxyDialog.getRemoteTag();
+		
+	}
+    ToHeader myToHeader = myHeaderFactory.createToHeader(toAddress, toTag);
+    
+
+    Address fromAddress=((FromHeader)myProxyRequest.getHeader(FromHeader.NAME)).getAddress();
+    String fromTag= String.valueOf(INITIAL_VARIABLE+myClientLegTransaction.getID());
+    FromHeader myFromHeader = myHeaderFactory.createFromHeader(
+        fromAddress, fromTag);
+
+    myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,"udp", null);
+    ArrayList<ViaHeader> myViaHeaders = new ArrayList<ViaHeader>();
+    myViaHeaders.add(myViaHeader);
+    MaxForwardsHeader myMaxForwardsHeader = myHeaderFactory.
+        createMaxForwardsHeader(70);
+    long cseq=INITIAL_BASE_VALUE+myClientLegTransaction.getID()+myClientLegTransaction.getSeq();
+    CSeqHeader myCSeqHeader = myHeaderFactory.createCSeqHeader(cseq,
+        "INVITE");
+    CallIdHeader myCallIDHeader;
+    if (isReInvite){
+		myCallIDHeader=myClientLegTransaction.getCallIdHeader();
+	} else {
+		myCallIDHeader= mySipProvider.getNewCallId();
+	}
+     
+    String clientTransactionCallID=myCallIDHeader.getCallId();
+    
+    myClientLegTransaction.setCallIdHeader(myCallIDHeader);
+    myClientLegTransaction.setOwnCallID(clientTransactionCallID);
+    myClientLegTransaction.setNumSeq(cseq);
+    myClientLegTransaction.setPartnerLeg(myServerLegTransaction);
+    myServerLegTransaction.setPartnerLeg(myClientLegTransaction); 
+    
+    myTransactionMap.put(clientTransactionCallID, myClientLegTransaction);
+    
+    javax.sip.address.URI myRequestURI = toAddress.getURI();
+    
+    Request myClientRequest = myMessageFactory.createRequest(myRequestURI,
+        "INVITE",
+        myCallIDHeader, myCSeqHeader, myFromHeader, myToHeader,
+        myViaHeaders, myMaxForwardsHeader);
+    if (requestSDP==null){//in case of Late SDP from originator, SDP should not be sent
+    	
+    }else {
+    	ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+    	myClientRequest.setContent(requestSDP, contentTypeHeader);
+    }
+    Address contactAddress = myAddressFactory.createAddress("sip:"+myServerLegTransaction.getNumber()+"@"+myIP+":"+myPort);
+    ContactHeader myClientContactHeader = myHeaderFactory.createContactHeader(contactAddress);
+    myClientRequest.addHeader(myClientContactHeader);
+    if (myGUI.SIPReqInfo.ReqInvite.getHasUserAgent()){
+    	myClientRequest.addHeader(myUserAgentHeader);
+    }
         
-      }
-     break;
-    case ESTABLISHED:
-      if (method.equals("BYE")) {
-        Response myResponse=myMessageFactory.createResponse(200,myRequest);
-        //myResponse.addHeader(myContactHeader);
-        myServerTransaction.sendResponse(myResponse);
-        myGUI.display(">>> "+myResponse.toString());
+    ClientTransaction myClientProxyTransaction = mySipProvider.getNewClientTransaction(myClientRequest);
+    myClientLegTransaction.setClientTransaction(myClientProxyTransaction);
+    myServerLegTransaction.setServerTransaction(myProxyServerTransaction);
+    myServerLegTransaction.setCallIdHeader((CallIdHeader) myProxyRequest.getHeader(CallIdHeader.NAME));
+    myClientProxyTransaction.sendRequest();
+    myServerLegTransaction.setState(PROXY_WAIT);
+    myClientLegTransaction.setState(PROXY_WAIT);
+    myGUI.display(">>> " + myClientRequest.toString());	
+    myClientProxyTransaction.setApplicationData(myProxyServerTransaction);
+    myProxyServerTransaction.setApplicationData(myClientProxyTransaction);
+    myProxyServerDialog.setApplicationData(myClientProxyTransaction.getDialog());
+    myClientProxyTransaction.getDialog().setApplicationData(myProxyServerDialog);
+	
+}
 
-       //myVoiceTool.stopMedia();
-        if (isOnlyAnnouncment){
-        	myGVoiceTool.stopMedia();
-        }else {
-        	myGAnnouncementTool.stopMedia();
-        }
-       
 
-        if (answerInfo.vport>0) {
-          myVideoTool.stopMedia();
-        }
+private boolean isRegisteredUser(String userPart) {
+	// TODO Auto-generated method stub
+	if (myRegisteredUsers.isEmpty()) return false;
+	return myRegisteredUsers.containsKey(userPart);
+	
+}
 
-        status=IDLE;
-        myGUI.showStatus("Status: IDLE");
-        myGUI.showCodec("");
-        myGUI.setButtonStatusIdle();
-        myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
-      }
-      if (method.equals("INVITE")){ //Re-Invite handling
-    	  // it may occur that my myServerTransaction is not created yet (e.g call is initiated by tool first)
-    	  if (myServerTransaction == null) {
-              myServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
-    	  }
-    	  answerToReInvite(myRequest) ;
-    	  status=RE_INVITE_WAIT_ACK;
-    	  myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
-      }
-      
-      
-    break;
 
-    case RINGING:
-      if (method.equals("CANCEL")) {
-        ServerTransaction myCancelServerTransaction=requestReceivedEvent.getServerTransaction();
-        Request originalRequest=myServerTransaction.getRequest();
-        Response myResponse=myMessageFactory.createResponse(487,originalRequest);
-        myServerTransaction.sendResponse(myResponse);
-        Response myCancelResponse=myMessageFactory.createResponse(200,myRequest);
-        myCancelServerTransaction.sendResponse(myCancelResponse);
-
-        myAlertTool.stopTone();
-
-        myGUI.display(">>> "+myResponse.toString());
-        myGUI.display(">>> "+myCancelResponse.toString());
-
-        status=IDLE;
-        myGUI.showStatus("Status: IDLE");
-        myGUI.setButtonStatusIdle();
-        myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
-      }
-      break;
-
-      case WAIT_ACK:
-        if (method.equals("ACK")) {
-        status=ESTABLISHED;
-        myGUI.showStatus("Status: ESTABLISHED");
-        myGUI.setButtonStatusEstablishedCall();
-      }
-        break;
-      
-      case RE_INVITE_WAIT_ACK:
-    	if (method.equals("ACK")) { //ACK from Re-Invite sent from System Under Test
-           status=ESTABLISHED;
-           
-           byte[] cont=(byte[]) myRequest.getContent(); 
-           if (cont==null){
-        	   logger.info("ACK w/o SDP is received");  
-           }else {
-        	   logger.info("ACK with SDP is received");
-        	   answerInfo=mySdpManager.getSdp(cont);
-        	   offerInfo.findProperCodec(answerInfo);
-        	   /*
-        	   if (answerInfo.isAudioCodecAvailable(myOldAudioCodec)){
-        	        	logger.info("myAudioCodec="+myOldAudioCodec+" exists in the list of requested 200 OK");
-        	   } else {
-        	        	logger.warn("myAudioCodec="+myOldAudioCodec+" NOT exist in the list of requested 200 OK");
-        	   }
-        	   */
-        	   if (remoteOldAudioPort==answerInfo.aport && remoteOldAudioCodec==offerInfo.aformat){
-               	//Do nothing. It's not necessary to re-initiate RTP stream
-               			logger.trace("Same remote Audio Port and Audio codec for response to 200 OK. Not necessary to restart RTP");
-               }
-               else{
-               			logger.trace("Different remote Audio Port OR  Audio codec for response to 200 OK. Necessary to restart RTP");
-               			//Stop old RTP media
-               			if (isOnlyAnnouncment){
-               					myGVoiceTool.stopMedia();
-               			}else {
-               					myGAnnouncementTool.stopMedia();
-               			}
-               			myGUI.showCodec("");
-               			myAudioPort=myAudioPort+2;
-               			remoteOldAudioPort=answerInfo.aport;
-               			remoteOldAudioCodec=offerInfo.aformat;
-               			myOldAudioPort=answerInfo.aport;
-               			//Start new RTP media
-               			//handle the best codec to use 
-               			Thread.sleep(1000);//needed because the previous gstreamer threads are not terminated properly
-               			if (isOnlyAnnouncment){
-               					myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aport );
-               			} else {
-               					myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aport );
-               			}     
-
-               			if (answerInfo.vport>0) {
-               					myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
-               			}
-               			myGUI.showCodec(offerInfo.getAudioCodecString());
-               	
-               }
-         	  } 
-           myGUI.showStatus("Status: ESTABLISHED"); 
-           
-          
-              
-        }  
-
-  }
-
-  }catch (Exception e) {
-	  logger.warn("Exception", e);
-    e.printStackTrace();
-  }
+private boolean myCallIDExists(String myCallID) {
+	// TODO Auto-generated method stub
+	if (myTransactionMap.isEmpty()) return false;
+	return myTransactionMap.containsKey(myCallID);
 }
 
 
@@ -808,76 +1310,137 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
   try{
   Response myResponse=responseReceivedEvent.getResponse();
   myGUI.display("<<<<<<<<<< "+myResponse.toString());
-  ClientTransaction thisClientTransaction=responseReceivedEvent.getClientTransaction();
-  if (!thisClientTransaction.equals(myClientTransaction)) {
-	  logger.warn("Not similar Client Transactions");
-	  return;}
+  String myCallID=((CallIdHeader)myResponse.getHeader(CallIdHeader.NAME)).getCallId();
   int myStatusCode=myResponse.getStatusCode();
-  CSeqHeader originalCSeq=(CSeqHeader) myClientTransaction.getRequest().getHeader(CSeqHeader.NAME);
-  long numseq=originalCSeq.getSeqNumber();
-  logger.info("processResponse: Status="+status+" Response="+myStatusCode);
-switch(status){
+  
+  if (myCallIDExists(myCallID)){
+	  logger.info("Response from existing CallId: "+myCallID);
+	  handleProxyResponse(responseReceivedEvent,myCallID);
+	  
+  } else {//Call is handled by myITSP tool
+	  CSeqHeader originalCSeq=(CSeqHeader) myClientTransaction.getRequest().getHeader(CSeqHeader.NAME);
+	  long numseq=originalCSeq.getSeqNumber();
+	  ClientTransaction thisClientTransaction=responseReceivedEvent.getClientTransaction();
+	  if (!thisClientTransaction.equals(myClientTransaction)) {
+		  logger.warn("Not similar Client Transactions");
+		  return;}
+	  
+	  logger.info("processResponse: Status="+status+" Response="+myStatusCode);
+	switch(status){
 
-  case WAIT_PROV_LATE_SDP:
-	  if (myStatusCode<200) {
-	      status=WAIT_FINAL_LATE_SDP;
-	      myDialog=thisClientTransaction.getDialog();
-	      if (myGUI.myCallFeaturesInfo.activeFeature==Feature.ReInvite){
-	    	  myGUI.showStatus("Status: Established");
-	    	  myGUI.setButtonStatusEstablishedCall();
-	      } else {
-	    	  myRingTool.playTone();
-		      myGUI.showStatus("Status: ALERTING");
-		      myGUI.setButtonStatusMakeCall();
-	      }
-	      
-	      
-	    }
-	  else if (myStatusCode<300) {
-		  if (myGUI.myCallFeaturesInfo.activeFeature==Feature.ReInvite){
+	  case WAIT_PROV_LATE_SDP:
+		  if (myStatusCode<200) {
+		      status=WAIT_FINAL_LATE_SDP;
+		      myDialog=thisClientTransaction.getDialog();
+		      if (myGUI.myCallFeaturesInfo.activeFeature==Feature.ReInvite){
+		    	  myGUI.showStatus("Status: Established");
+		    	  myGUI.setButtonStatusEstablishedCall();
+		      } else {
+		    	  myRingTool.playTone();
+			      myGUI.showStatus("Status: ALERTING");
+			      myGUI.setButtonStatusMakeCall();
+		      }
+		      
+		      
+		    }
+		  else if (myStatusCode<300) {
+			  if (myGUI.myCallFeaturesInfo.activeFeature==Feature.ReInvite){
+				  
+			  }else {
+				  myRingTool.stopTone();
+			  }
 			  
-		  }else {
-			  myRingTool.stopTone();
-		  }
-		  
+		      myDialog=thisClientTransaction.getDialog();
+		      Request myAck = myDialog.createAck(numseq);
+		      //myAck.addHeader(myContactHeader);
+		      byte[] cont=(byte[]) myResponse.getContent();
+		      offerInfo=mySdpManager.getSdp(cont);
+		      
+		      answerInfo=new SdpInfo();
+		      answerInfo.IpAddress=myIP;
+		      answerInfo.aport=myAudioPort;
+	          myOldAudioPort=myAudioPort;
+	          myAudioPort=myAudioPort+2;
+	          answerInfo.vport=myVideoPort;
+	          answerInfo.vformat=myVideoCodec;
+		      answerInfo.setAudioFormatList(myCodecsList);
+		      answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
+		      //handle what is the best codec to use
+		      answerInfo.findProperCodec(offerInfo, true);
+		      myOldAudioCodec=answerInfo.aformat;
+		      remoteOldAudioCodec=myOldAudioCodec;
+		      remoteOldAudioPort=offerInfo.aport;
+		      byte[] content=mySdpManager.createSdp(answerInfo,true);//answer only to the matched codec
+		      ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+		      myAck.setContent(content,contentTypeHeader);
+		      if (isOnlyAnnouncment){
+			     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+			      } else {
+			     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+			      }
+			      if (answerInfo.vport>0) {
+			      myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
+			      }
+			  myGUI.showCodec(answerInfo.getAudioCodecString());
+		      
+		      myDialog.sendAck(myAck);
+		      myGUI.display(">>> "+myAck.toString());     
+		      status=ESTABLISHED;
+		      myGUI.showStatus("Status: ESTABLISHED");
+		      myGUI.setButtonStatusEstablishedCall();
+
+		    }
+		    else {
+
+		      status=IDLE;
+		      Request myAck = myDialog.createAck(numseq);
+		      //myAck.addHeader(myContactHeader);
+		      myDialog.sendAck(myAck);
+		      myRingTool.stopTone();
+		      myGUI.display(">>> "+myAck.toString());
+		      myGUI.showStatus("Status: IDLE");
+		      myGUI.setButtonStatusIdle();
+
+		    }
+		    break;
+	  
+	  case WAIT_PROV:
+	    if (myStatusCode<200) {
+	      status=WAIT_FINAL;
+	      myDialog=thisClientTransaction.getDialog();
+	      myRingTool.playTone();
+	      myGUI.showStatus("Status: ALERTING");
+	      myGUI.setButtonStatusMakeCall();
+	    }
+	    else if (myStatusCode<300) {
 	      myDialog=thisClientTransaction.getDialog();
 	      Request myAck = myDialog.createAck(numseq);
 	      //myAck.addHeader(myContactHeader);
-	      byte[] cont=(byte[]) myResponse.getContent();
-	      offerInfo=mySdpManager.getSdp(cont);
-	      
-	      answerInfo=new SdpInfo();
-	      answerInfo.IpAddress=myIP;
-	      answerInfo.aport=myAudioPort;
-          myOldAudioPort=myAudioPort;
-          myAudioPort=myAudioPort+2;
-          answerInfo.vport=myVideoPort;
-          answerInfo.vformat=myVideoCodec;
-	      answerInfo.setAudioFormatList(myCodecsList);
-	      answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
-	      //handle what is the best codec to use
-	      answerInfo.findProperCodec(offerInfo, true);
-	      myOldAudioCodec=answerInfo.aformat;
-	      remoteOldAudioCodec=myOldAudioCodec;
-	      remoteOldAudioPort=offerInfo.aport;
-	      byte[] content=mySdpManager.createSdp(answerInfo,true);//answer only to the matched codec
-	      ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
-	      myAck.setContent(content,contentTypeHeader);
-	      if (isOnlyAnnouncment){
-		     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
-		      } else {
-		     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
-		      }
-		      if (answerInfo.vport>0) {
-		      myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
-		      }
-		  myGUI.showCodec(answerInfo.getAudioCodecString());
-	      
 	      myDialog.sendAck(myAck);
-	      myGUI.display(">>> "+myAck.toString());     
+	      myGUI.display(">>> "+myAck.toString());
+	      myRingTool.stopTone();
 	      status=ESTABLISHED;
 	      myGUI.showStatus("Status: ESTABLISHED");
 	      myGUI.setButtonStatusEstablishedCall();
+
+	      byte[] cont=(byte[]) myResponse.getContent();
+	      answerInfo=mySdpManager.getSdp(cont);
+	      remoteOldAudioPort=answerInfo.aport;
+	      //handle what is the best codec to use
+	      offerInfo.findProperCodec(answerInfo); 
+	      myOldAudioCodec=answerInfo.aformat;
+	      remoteOldAudioCodec=myOldAudioCodec;
+
+	      //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
+	      if (isOnlyAnnouncment){
+	     	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
+	      } else {
+	     	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
+	      }
+	      if (answerInfo.vport>0) {
+	      myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
+	      }
+	      myGUI.showCodec(offerInfo.getAudioCodecString());
 
 	    }
 	    else {
@@ -893,106 +1456,104 @@ switch(status){
 
 	    }
 	    break;
-  
-  case WAIT_PROV:
-    if (myStatusCode<200) {
-      status=WAIT_FINAL;
-      myDialog=thisClientTransaction.getDialog();
-      myRingTool.playTone();
-      myGUI.showStatus("Status: ALERTING");
-      myGUI.setButtonStatusMakeCall();
-    }
-    else if (myStatusCode<300) {
-      myDialog=thisClientTransaction.getDialog();
-      Request myAck = myDialog.createAck(numseq);
-      //myAck.addHeader(myContactHeader);
-      myDialog.sendAck(myAck);
-      myGUI.display(">>> "+myAck.toString());
-      myRingTool.stopTone();
-      status=ESTABLISHED;
-      myGUI.showStatus("Status: ESTABLISHED");
-      myGUI.setButtonStatusEstablishedCall();
+	  case WAIT_FINAL_LATE_SDP:
+		  if (myStatusCode<200) {
+		      status=WAIT_FINAL_LATE_SDP;
+		      myDialog=thisClientTransaction.getDialog();
+		      myRingTool.playTone();
+		      myGUI.showStatus("Status: ALERTING");
+		      myGUI.setButtonStatusMakeCall();
+		    }
+		  else if (myStatusCode<300) {
+			  myRingTool.stopTone();
+		      myDialog=thisClientTransaction.getDialog();
+		      Request myAck = myDialog.createAck(numseq);
+		      //myAck.addHeader(myContactHeader);
+		      byte[] cont=(byte[]) myResponse.getContent();
+		      offerInfo=mySdpManager.getSdp(cont);
+		      answerInfo=new SdpInfo();
+		      answerInfo.IpAddress=myIP;
+		      answerInfo.aport=myAudioPort;
+	          myOldAudioPort=myAudioPort;
+	          myAudioPort=myAudioPort+2;
+	          answerInfo.vport=myVideoPort;
+	          answerInfo.vformat=myVideoCodec;
+		      answerInfo.setAudioFormatList(myCodecsList);
+		      answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
+		      //handle what is the best codec to use
+		      answerInfo.findProperCodec(offerInfo, true);
+		      myOldAudioCodec=answerInfo.aformat;
+		      remoteOldAudioCodec=myOldAudioCodec;
+		      remoteOldAudioPort=offerInfo.aport;
+		      byte[] content=mySdpManager.createSdp(answerInfo,true);//answer only to the matched codec
+		      ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+		      myAck.setContent(content,contentTypeHeader);
+		      if (isOnlyAnnouncment){
+			     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+			      } else {
+			     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
+			      }
+			      if (answerInfo.vport>0) {
+			      myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
+			      }
+			  myGUI.showCodec(answerInfo.getAudioCodecString());
+		      
+		      myDialog.sendAck(myAck);
+		      myGUI.display(">>> "+myAck.toString());     
+		      status=ESTABLISHED;
+		      myGUI.showStatus("Status: ESTABLISHED");
+		      myGUI.setButtonStatusEstablishedCall();
 
-      byte[] cont=(byte[]) myResponse.getContent();
-      answerInfo=mySdpManager.getSdp(cont);
-      remoteOldAudioPort=answerInfo.aport;
-      //handle what is the best codec to use
-      offerInfo.findProperCodec(answerInfo); 
-      myOldAudioCodec=answerInfo.aformat;
-      remoteOldAudioCodec=myOldAudioCodec;
+		    }
+		    else {
 
-      //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
-      if (isOnlyAnnouncment){
-     	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
-      } else {
-     	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
-      }
-      if (answerInfo.vport>0) {
-      myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
-      }
-      myGUI.showCodec(offerInfo.getAudioCodecString());
-
-    }
-    else {
-
-      status=IDLE;
-      Request myAck = myDialog.createAck(numseq);
-      //myAck.addHeader(myContactHeader);
-      myDialog.sendAck(myAck);
-      myRingTool.stopTone();
-      myGUI.display(">>> "+myAck.toString());
-      myGUI.showStatus("Status: IDLE");
-      myGUI.setButtonStatusIdle();
-
-    }
-    break;
-  case WAIT_FINAL_LATE_SDP:
-	  if (myStatusCode<200) {
-	      status=WAIT_FINAL_LATE_SDP;
+		      myRingTool.stopTone();
+		      status=IDLE;
+		      myGUI.showStatus("Status: IDLE");
+		      myGUI.setButtonStatusIdle();
+		    }
+		    break;
+		  
+	  case WAIT_FINAL:
+	    if (myStatusCode<200) {
+	      status=WAIT_FINAL;
 	      myDialog=thisClientTransaction.getDialog();
 	      myRingTool.playTone();
 	      myGUI.showStatus("Status: ALERTING");
 	      myGUI.setButtonStatusMakeCall();
 	    }
-	  else if (myStatusCode<300) {
-		  myRingTool.stopTone();
+	    else if (myStatusCode<300) {
+	      status=ESTABLISHED;
 	      myDialog=thisClientTransaction.getDialog();
 	      Request myAck = myDialog.createAck(numseq);
 	      //myAck.addHeader(myContactHeader);
-	      byte[] cont=(byte[]) myResponse.getContent();
-	      offerInfo=mySdpManager.getSdp(cont);
-	      answerInfo=new SdpInfo();
-	      answerInfo.IpAddress=myIP;
-	      answerInfo.aport=myAudioPort;
-          myOldAudioPort=myAudioPort;
-          myAudioPort=myAudioPort+2;
-          answerInfo.vport=myVideoPort;
-          answerInfo.vformat=myVideoCodec;
-	      answerInfo.setAudioFormatList(myCodecsList);
-	      answerInfo.isDtmfFirst=myGUI.getDtmfFirstOrder();
-	      //handle what is the best codec to use
-	      answerInfo.findProperCodec(offerInfo, true);
-	      myOldAudioCodec=answerInfo.aformat;
-	      remoteOldAudioCodec=myOldAudioCodec;
-	      remoteOldAudioPort=offerInfo.aport;
-	      byte[] content=mySdpManager.createSdp(answerInfo,true);//answer only to the matched codec
-	      ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
-	      myAck.setContent(content,contentTypeHeader);
-	      if (isOnlyAnnouncment){
-		     	 myGVoiceTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
-		      } else {
-		     	 myGAnnouncementTool.startMedia(offerInfo.IpAddress, offerInfo.aport, answerInfo.aport,answerInfo.aformat );
-		      }
-		      if (answerInfo.vport>0) {
-		      myVideoTool.startMedia(offerInfo.IpAddress,offerInfo.vport,answerInfo.vport,myVideoCodec);
-		      }
-		  myGUI.showCodec(answerInfo.getAudioCodecString());
-	      
 	      myDialog.sendAck(myAck);
-	      myGUI.display(">>> "+myAck.toString());     
-	      status=ESTABLISHED;
+	      myGUI.display(">>> "+myAck.toString());
+	      myRingTool.stopTone();
 	      myGUI.showStatus("Status: ESTABLISHED");
 	      myGUI.setButtonStatusEstablishedCall();
+
+
+	      byte[] cont=(byte[]) myResponse.getContent();
+	      answerInfo=mySdpManager.getSdp(cont);
+	      offerInfo.findProperCodec(answerInfo);  
+	      
+	      remoteOldAudioPort=answerInfo.aport;
+	      //handle the best codec to use
+	      myOldAudioCodec=answerInfo.aformat;
+	      remoteOldAudioCodec=myOldAudioCodec;
+	        //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
+	      if (isOnlyAnnouncment){
+	     	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
+	      } else {
+	     	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
+	      }
+	        logger.debug("Listen RTP at port:"+offerInfo.aport);
+
+	        if (answerInfo.vport>0) {
+	          myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
+	        }
+	        myGUI.showCodec(offerInfo.getAudioCodecString());
 
 	    }
 	    else {
@@ -1003,103 +1564,133 @@ switch(status){
 	      myGUI.setButtonStatusIdle();
 	    }
 	    break;
+	  case RE_INVITE_WAIT_ACK:
+		  if (myStatusCode<200) {
+		      myDialog=thisClientTransaction.getDialog();
+		    }else if (myStatusCode<300) {
+			  status=ESTABLISHED;
+			  myDialog=thisClientTransaction.getDialog();
+		      Request myAck = myDialog.createAck(numseq);
+		      //myAck.addHeader(myContactHeader);
+		      
+		      myGUI.showStatus("Status: ESTABLISHED");
+		      byte[] cont=(byte[]) myResponse.getContent();
+		      answerInfo=mySdpManager.getSdp(cont);
+		      offerInfo.findProperCodec(answerInfo);        
+		      remoteOldAudioPort=answerInfo.aport;
+		      //handle the best codec to use
+		      myOldAudioCodec=answerInfo.aformat;
+		      remoteOldAudioCodec=myOldAudioCodec;
+		      if (isOnlyAnnouncment){
+	          	myGVoiceTool.stopMedia();
+	          }else {
+	          	myGAnnouncementTool.stopMedia();
+	          }
+		      myGUI.showCodec("");
+		      Thread.sleep(1000);
+		      if (isOnlyAnnouncment){
+		      	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
+		       } else {
+		      	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
+		       }
+		         logger.debug("Listen RTP at port:"+offerInfo.aport);
+
+		         if (answerInfo.vport>0) {
+		           myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
+		         }
+		         myDialog.sendAck(myAck);
+			     myGUI.display(">>> "+myAck.toString());
+			     myGUI.showCodec(offerInfo.getAudioCodecString());
+			  break;   
+		  }
+		  
+	}
 	  
-  case WAIT_FINAL:
-    if (myStatusCode<200) {
-      status=WAIT_FINAL;
-      myDialog=thisClientTransaction.getDialog();
-      myRingTool.playTone();
-      myGUI.showStatus("Status: ALERTING");
-      myGUI.setButtonStatusMakeCall();
-    }
-    else if (myStatusCode<300) {
-      status=ESTABLISHED;
-      myDialog=thisClientTransaction.getDialog();
-      Request myAck = myDialog.createAck(numseq);
-      //myAck.addHeader(myContactHeader);
-      myDialog.sendAck(myAck);
-      myGUI.display(">>> "+myAck.toString());
-      myRingTool.stopTone();
-      myGUI.showStatus("Status: ESTABLISHED");
-      myGUI.setButtonStatusEstablishedCall();
-
-
-      byte[] cont=(byte[]) myResponse.getContent();
-      answerInfo=mySdpManager.getSdp(cont);
-      offerInfo.findProperCodec(answerInfo);  
-      
-      remoteOldAudioPort=answerInfo.aport;
-      //handle the best codec to use
-      myOldAudioCodec=answerInfo.aformat;
-      remoteOldAudioCodec=myOldAudioCodec;
-        //myVoiceTool.startMedia(answerInfo.IpAddress,answerInfo.aport,offerInfo.aport,answerInfo.aformat);
-      if (isOnlyAnnouncment){
-     	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
-      } else {
-     	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
-      }
-        logger.debug("Listen RTP at port:"+offerInfo.aport);
-
-        if (answerInfo.vport>0) {
-          myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
-        }
-        myGUI.showCodec(offerInfo.getAudioCodecString());
-
-    }
-    else {
-
-      myRingTool.stopTone();
-      status=IDLE;
-      myGUI.showStatus("Status: IDLE");
-      myGUI.setButtonStatusIdle();
-    }
-    break;
-  case RE_INVITE_WAIT_ACK:
-	  if (myStatusCode<200) {
-	      myDialog=thisClientTransaction.getDialog();
-	    }else if (myStatusCode<300) {
-		  status=ESTABLISHED;
-		  myDialog=thisClientTransaction.getDialog();
-	      Request myAck = myDialog.createAck(numseq);
-	      //myAck.addHeader(myContactHeader);
-	      
-	      myGUI.showStatus("Status: ESTABLISHED");
-	      byte[] cont=(byte[]) myResponse.getContent();
-	      answerInfo=mySdpManager.getSdp(cont);
-	      offerInfo.findProperCodec(answerInfo);        
-	      remoteOldAudioPort=answerInfo.aport;
-	      //handle the best codec to use
-	      myOldAudioCodec=answerInfo.aformat;
-	      remoteOldAudioCodec=myOldAudioCodec;
-	      if (isOnlyAnnouncment){
-          	myGVoiceTool.stopMedia();
-          }else {
-          	myGAnnouncementTool.stopMedia();
-          }
-	      myGUI.showCodec("");
-	      Thread.sleep(1000);
-	      if (isOnlyAnnouncment){
-	      	 myGVoiceTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
-	       } else {
-	      	 myGAnnouncementTool.startMedia(answerInfo.IpAddress, answerInfo.aport, offerInfo.aport,offerInfo.aformat );
-	       }
-	         logger.debug("Listen RTP at port:"+offerInfo.aport);
-
-	         if (answerInfo.vport>0) {
-	           myVideoTool.startMedia(answerInfo.IpAddress,answerInfo.vport,offerInfo.vport,myVideoCodec);
-	         }
-	         myDialog.sendAck(myAck);
-		     myGUI.display(">>> "+myAck.toString());
-		     myGUI.showCodec(offerInfo.getAudioCodecString());
-		  break;   
-	  }
-	  
-}
+  }
   }catch(Exception excep){
 	  logger.error("Exception", excep);
     excep.printStackTrace();
   }
+  
 }
+
+private void handleProxyResponse(ResponseEvent responseReceivedEvent, String myCallID) throws SipException, InvalidArgumentException, ParseException {
+		Response myProxyClientResponse=responseReceivedEvent.getResponse();
+		int myProxyClientStatusCode=myProxyClientResponse.getStatusCode();
+		ClientTransaction myClientProxyTransaction = responseReceivedEvent.getClientTransaction();
+		logger.info("Handle Proxy Response: "+myProxyClientStatusCode+" for CallId: "+myCallID);
+		LegTransaction myProxyClientLegTransaction=myTransactionMap.get(myCallID);
+		byte[] mySDPResponse=(byte[]) myProxyClientResponse.getContent();
+		CSeqHeader myCseqHeaderResponse=(CSeqHeader)myProxyClientResponse.getHeader(CSeqHeader.NAME);
+		
+		String myCseqMethodResponse=myCseqHeaderResponse.getMethod();
+		
+		
+		LegTransaction myProxyServerLegTransaction=myProxyClientLegTransaction.getPartnerLeg();
+		if (myProxyClientLegTransaction.getState()==PROXY_IDLE){
+			logger.info("Response Message: "+myProxyClientStatusCode+" from ProxyClientLegTransaction with number "+myProxyClientLegTransaction.getNumber()+" CallID: "+myCallID);
+			if (myProxyServerLegTransaction.getState()==PROXY_IDLE || myProxyServerLegTransaction==null){
+				//Don't need to re-direct the response to other side. Used when BYE has sent before, or Cancel, or...?
+				logger.info("Response Message: "+myProxyClientStatusCode+" ...don't need to re-direct to "+myProxyServerLegTransaction.getNumber());
+				
+			}
+			myTransactionMap.remove(myCallID);
+			return;
+		}
+		
+		ServerTransaction myProxyServerTransaction=(ServerTransaction) myClientProxyTransaction.getApplicationData();
+		Request originalProxyRequest = myProxyServerTransaction.getRequest();
+		Response myProxyServerResponse=null;;
+		Address contactAddress = myAddressFactory.createAddress("sip:"+myProxyClientLegTransaction.getNumber()+"@"+myIP+":"+myPort);
+	    ContactHeader myServerContactHeader = myHeaderFactory.createContactHeader(contactAddress);
+		
+		if (myProxyClientStatusCode<200){//1XX response is handled
+			logger.info("Response Message: "+myProxyClientStatusCode+" from ProxyClientLegTransaction with number "+myProxyClientLegTransaction.getNumber()+" CallID: "+myCallID);
+			myProxyServerResponse = myMessageFactory.createResponse(myProxyClientStatusCode,
+					originalProxyRequest);
+			if (myProxyClientStatusCode!=100){//100 Trying is not including Contact Header
+				
+				myProxyServerResponse.addHeader(myServerContactHeader);
+				setAdditionalHeadersResponse(myProxyServerResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());
+			logger.info(".....addd proper Contact Header");	
+				//Need to add my ToTag
+			}
+		}
+		else if (myProxyClientStatusCode<300){//2XX response is handled
+			logger.info("Response Message: "+myProxyClientStatusCode+" from ProxyClientLegTransaction with number "+myProxyClientLegTransaction.getNumber()+" CallID: "+myCallID);
+			myProxyServerResponse = myMessageFactory.createResponse(myProxyClientStatusCode,
+					originalProxyRequest);
+			myProxyServerResponse.addHeader(myServerContactHeader);
+			myProxyClientLegTransaction.setState(PROXY_ESTABLISHED);
+			myProxyServerLegTransaction.setState(PROXY_ESTABLISHED);
+		}
+		else if (myProxyClientStatusCode<400){//3XX response is handled
+			logger.warn("Not implemented handle for Response: "+myProxyClientStatusCode);
+			return;
+		}
+		else { //(myProxyClientStatusCode>=400)
+			logger.error("Unexpected Response: "+myProxyClientStatusCode);
+			return;
+		}		
+        
+        ToHeader myToHeader = (ToHeader) myProxyServerResponse.getHeader("To");
+        String toTag= String.valueOf(INITIAL_VARIABLE+myProxyServerLegTransaction.getID());
+        myToHeader.setTag(toTag);
+        
+        if (mySDPResponse!=null){
+        	ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","sdp");
+        	myProxyServerResponse.setContent(mySDPResponse,contentTypeHeader);
+        }
+        logger.info("Send Proxy Response:");
+        logger.info(myProxyServerResponse.toString());
+		 
+        myProxyServerTransaction.sendResponse(myProxyServerResponse);
+        myGUI.display(">>> " + myProxyServerResponse.toString());
+        
+		
+	
+}
+
 
 	public void processTimeout(TimeoutEvent arg0) {
 		// TODO Auto-generated method stub
@@ -1107,10 +1698,14 @@ switch(status){
 		
 	}
 
-	public void processTransactionTerminated(TransactionTerminatedEvent arg0) {
+public void processTransactionTerminated(TransactionTerminatedEvent arg0) {
 		// TODO Auto-generated method stub
-		logger.warn("processTransactionTerminated --> no handling");
 		
+		CallIdHeader callIDHeader=(CallIdHeader) arg0.getClientTransaction().getRequest().getHeader(CallIdHeader.NAME);
+		String myCallID=callIDHeader.getCallId();
+		logger.warn("processTransactionTerminated for CallId: "+myCallID+" --> no perfect handling");
+				
+				
 	}
 	
 	private void setTxtLines(Request r){
@@ -1130,7 +1725,7 @@ switch(status){
 		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.DiversionLine, h.toString());
 		
 	}
-	private void setAdditionalHeadersResponse(Response r, LinkedList<HeadersValuesGeneric> ll){
+private void setAdditionalHeadersResponse(Response r, LinkedList<HeadersValuesGeneric> ll){
 		ListIterator<HeadersValuesGeneric> listIterator = ll.listIterator();
 		while (listIterator.hasNext()) {
 			Object obj=listIterator.next();
