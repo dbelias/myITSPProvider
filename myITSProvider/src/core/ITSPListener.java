@@ -1389,7 +1389,23 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 		      myGUI.showStatus("Status: ESTABLISHED");
 		      myGUI.setButtonStatusEstablishedCall();
 
+		    } else if (myStatusCode==488){
+		    	logger.info("Response: "+myStatusCode+". Re-INVITE w/o SDP will not take place. RTP negotiation remains as it was before");
+				status=ESTABLISHED;
+				myDialog=thisClientTransaction.getDialog();
+			    Request myAckto488 = myDialog.createAck(numseq);
+			    myGUI.display(">>> "+myAckto488.toString());		      
+			    myGUI.showStatus("Status: ESTABLISHED");
+		    } else if (myStatusCode==302){
+		    	logger.info("Response: "+myStatusCode+". Moved Temporarily");
+		    	status=IDLE;
+		    	myRingTool.stopTone();
+		    	setTxtLines(myResponse);
+		    	myGUI.showStatus("Status: IDLE");
+		    	myGUI.setButtonStatusIdle();
 		    }
+		  
+		  
 		    else {
 
 		      status=IDLE;
@@ -1442,6 +1458,13 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 	      }
 	      myGUI.showCodec(offerInfo.getAudioCodecString());
 
+	    } else if (myStatusCode==302){
+	    	logger.info("Response: "+myStatusCode+". Moved Temporarily");
+	    	status=IDLE;
+	    	myRingTool.stopTone();
+	    	setTxtLines(myResponse);
+	    	myGUI.showStatus("Status: IDLE");
+	    	myGUI.setButtonStatusIdle();
 	    }
 	    else {
 
@@ -1601,9 +1624,23 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 		         myDialog.sendAck(myAck);
 			     myGUI.display(">>> "+myAck.toString());
 			     myGUI.showCodec(offerInfo.getAudioCodecString());
-			  break;   
+			   
+		  } else if (myStatusCode==488){
+			  logger.info("Response: "+myStatusCode+". Re-INVITE with SDP will not take place. RTP negotiation remains as it was before");
+			  status=ESTABLISHED;
+			  myDialog=thisClientTransaction.getDialog();
+		      Request myAckto488 = myDialog.createAck(numseq);
+		      myGUI.display(">>> "+myAckto488.toString());		      
+		      myGUI.showStatus("Status: ESTABLISHED");
+		  } else {
+			  logger.info("Response: "+myStatusCode+" is  handled by myITSP Tool like response for 488");
+			  status=ESTABLISHED;
+			  myDialog=thisClientTransaction.getDialog();
+		      Request myAckto488 = myDialog.createAck(numseq);
+		      myGUI.display(">>> "+myAckto488.toString());		      
+		      myGUI.showStatus("Status: ESTABLISHED");
 		  }
-		  
+		  break;
 	}
 	  
   }
@@ -1725,6 +1762,26 @@ public void processTransactionTerminated(TransactionTerminatedEvent arg0) {
 		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.DiversionLine, h.toString());
 		
 	}
+	
+	private void setTxtLines(Response r){
+		Header h;
+		myGUI.setTxtLine(SIPHeadersTxt.RequestLine, String.valueOf(r.getStatusCode()));
+		h=r.getHeader("From");
+		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.FromLine, h.toString());
+		h=r.getHeader("To");
+		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.ToLine, h.toString());
+		h=r.getHeader("Contact");
+		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.ContactLine, h.toString());
+		h=r.getHeader("P-Asserted-Identity");
+		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.PAILine, h.toString());
+		h=r.getHeader("P-Preferred-Identity");
+		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.PPILine, h.toString());
+		h=r.getHeader("Diversion");
+		if (h!=null) myGUI.setTxtLine(SIPHeadersTxt.DiversionLine, h.toString());
+		
+	}
+	
+	
 private void setAdditionalHeadersResponse(Response r, LinkedList<HeadersValuesGeneric> ll){
 		ListIterator<HeadersValuesGeneric> listIterator = ll.listIterator();
 		while (listIterator.hasNext()) {
