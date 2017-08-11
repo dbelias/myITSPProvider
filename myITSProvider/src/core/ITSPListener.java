@@ -143,6 +143,7 @@ public class ITSPListener implements SipListener{
 	static final int SEND183=2;
 	static final int HOLD=3;
 	static final int UNHOLD=4;
+	static final int SEND_OPTIONS=5;
 
 	static final int IDLE=0;
 	static final int WAIT_PROV=1;
@@ -153,6 +154,7 @@ public class ITSPListener implements SipListener{
 	static final int RE_INVITE_WAIT_ACK=7;
 	static final int WAIT_PROV_LATE_SDP=8;
 	static final int WAIT_FINAL_LATE_SDP=9;
+	static final int WAIT_OPTIONS_PROV=10;
 
 	class MyTimerTask extends TimerTask {
         ITSPListener myListener;
@@ -400,6 +402,11 @@ public class ITSPListener implements SipListener{
              }
              myGUI.setButtonStatusMakeCall();
              break;
+           } else if (type==SEND_OPTIONS){
+        	   //TODO:Implementation for Send OPTIONS (similar to Invite w/o SDP
+        	   status=WAIT_OPTIONS_PROV;
+        	   myGUI.showStatus("Status: WAIT_OPTIONS_PROV");
+        	  break; 
            }
 
          case WAIT_FINAL:
@@ -1639,6 +1646,13 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 		      Request myAckto488 = myDialog.createAck(numseq);
 		      myGUI.display(">>> "+myAckto488.toString());		      
 		      myGUI.showStatus("Status: ESTABLISHED");
+		  }
+		  break;
+	  case WAIT_OPTIONS_PROV:
+		  if (myStatusCode<300) {
+			  logger.info("OPTIONS Response: "+myStatusCode);
+			  status=IDLE;
+			  myGUI.showStatus("Status: IDLE");
 		  }
 		  break;
 	}

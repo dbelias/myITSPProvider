@@ -83,7 +83,7 @@ import support.ReInviteMode;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.13.1 beta for 488 Response";
+	private final String Version="V1.14.0 OPTIONS handling";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtDomain;
@@ -101,6 +101,7 @@ public class myITSPmainWnd {
 	private JButton btnReleaseCall;
 	private JLabel lblCallStatus;
 	private JButton btnOnOff;
+	private JButton btnOptions;
 	private int state;
 	private GStreamerLocation gStreamer;
 	private WAVLocation wav;
@@ -140,6 +141,7 @@ public class myITSPmainWnd {
 	private int btnSend183Status=2;
 	private JComboBox cmbBoxReInviteMode;
 	private JComboBox cmbBoxHoldMode;
+	
 
 	/**
 	 * Launch the application.
@@ -434,6 +436,22 @@ public class myITSPmainWnd {
 		gbc_cmbBoxHoldMode.gridy = 4;
 		frmMyItspSimulator.getContentPane().add(cmbBoxHoldMode, gbc_cmbBoxHoldMode);
 		
+		btnOptions = new JButton("OPTIONS");
+		btnOptions.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				config.setUserPart(getFromOAD());
+				list.updateFromAddress(config);
+				list.updateCodecList(getAvailableCodecs());
+				list.userInput(5,getDestination());
+			}
+		});
+		btnOptions.setEnabled(false);
+		GridBagConstraints gbc_btnOptions = new GridBagConstraints();
+		gbc_btnOptions.insets = new Insets(0, 0, 5, 5);
+		gbc_btnOptions.gridx = 5;
+		gbc_btnOptions.gridy = 4;
+		frmMyItspSimulator.getContentPane().add(btnOptions, gbc_btnOptions);
+		
 		textArea = new JTextPane();
 		GridBagConstraints gbc_textArea = new GridBagConstraints();
 		gbc_textArea.gridheight = 9;
@@ -449,7 +467,7 @@ public class myITSPmainWnd {
 		btnMakeCall.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				//update config (display and user part)
-				myCallFeaturesInfo.setActiveFeature(Feature.NormalCall);
+				myCallFeaturesInfo.setActiveFeature(Feature.Options);
 				config.setUserPart(getFromOAD());
 				list.updateFromAddress(config);
 				list.updateCodecList(getAvailableCodecs());
@@ -953,6 +971,7 @@ public class myITSPmainWnd {
 		btnReInvite.setEnabled(false);
 		cmbBoxHoldMode.setEnabled(false);
 		cmbBoxReInviteMode.setEnabled(false);
+		btnOptions.setEnabled(false);
 		showCodec("Codec:N.A");
 		chckbxLateSdp.setEnabled(false);
 		hasDtmfFirstOrder=false;
@@ -994,6 +1013,7 @@ public class myITSPmainWnd {
 		btnSend183.setEnabled(false);
 		setButton183Status(SEND183);
 		btnReInvite.setEnabled(false);
+		btnOptions.setEnabled(false);
 		comboBoxMyIPs.setEnabled(true);
 		chckbxLateSdp.setEnabled(false);
 		cmbBoxHoldMode.setEnabled(false);
@@ -1086,6 +1106,7 @@ public class myITSPmainWnd {
 		btnSend183.setEnabled(false);
 		setButton183Status(SEND183);
 		btnReInvite.setEnabled(false);
+		btnOptions.setEnabled(true);
 		chckbxLateSdp.setEnabled(true);
 		cmbBoxHoldMode.setEnabled(false);
 		cmbBoxReInviteMode.setEnabled(false);
@@ -1096,6 +1117,7 @@ public class myITSPmainWnd {
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Release");
 		chckbxLateSdp.setEnabled(false);
+		btnOptions.setEnabled(false);
 	}
 	public void setButtonStatusEstablishedCall(){
 		btnMakeCall.setEnabled(false);
@@ -1108,6 +1130,7 @@ public class myITSPmainWnd {
 		chckbxLateSdp.setEnabled(false);
 		cmbBoxHoldMode.setEnabled(true);
 		cmbBoxReInviteMode.setEnabled(true);
+		btnOptions.setEnabled(false);
 	}
 	public void setButtonStatusAnswerCall(){
 		btnMakeCall.setEnabled(true);
@@ -1115,6 +1138,7 @@ public class myITSPmainWnd {
 		btnReleaseCall.setEnabled(true);
 		btnReleaseCall.setText("Reject");
 		chckbxLateSdp.setEnabled(false);
+		btnOptions.setEnabled(false);
 	}
 	public void setButtonStatusSend183(){
 		btnSend183.setEnabled(true);

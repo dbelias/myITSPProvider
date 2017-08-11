@@ -4,7 +4,8 @@ public enum Feature {
 	NormalCall (0,"Normal Call"),
 	NormalCallLateSDP (1,"Late SDP Call"),
 	ReInvite (3,"ReInvite"),
-	Hold (4,"Hold");
+	Hold (4,"Hold"),
+	Options(5,"OPTIONS");
 	private int index;
 	private String description;
 	private Feature(int i, String s){
