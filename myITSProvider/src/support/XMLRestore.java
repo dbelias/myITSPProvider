@@ -50,6 +50,25 @@ public class XMLRestore {
 		logger.debug("OAD set with:"+e.getChildText("caller"));
 		b.setCalledSettings(e.getChildText("called"), e.getChildText("calledIPAddress"), e.getChildText("calledIPPort"));
 		logger.debug("DAD set with "+e.getChildText("called")+"@"+e.getChildText("calledIPAddress")+":"+e.getChildText("calledIPPort"));
+		String transport=null;
+		transport=e.getChildText("transport");
+		if (transport!=null){
+			b.setTransport(transport);
+			logger.debug("Transport protocol set with:"+transport);
+		} else {
+			logger.debug("Transport protocol Not Found!. Default value(UDP) is set.");
+		}
+		String pswd=null;
+		pswd=e.getChildText("password");
+		if (pswd!=null){
+			b.setPassword(pswd);
+			logger.debug("Registration Password set with:"+pswd);
+		} else {
+			pswd="a11111111!";
+			b.setPassword(pswd);
+			logger.debug("Registration Password set with default value:"+pswd);
+		}
+		
 		
 	}
 	

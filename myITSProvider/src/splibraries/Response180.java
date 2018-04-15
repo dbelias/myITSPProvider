@@ -7,6 +7,7 @@ import support.HeadersValuesGeneric;
 
 public class Response180 {
 	private boolean sendSDP;
+	private boolean isAvoided;
 	private LinkedList<HeadersValuesGeneric> my180HeadersList;
 	private boolean COLPSupport;
 	
@@ -14,6 +15,7 @@ public class Response180 {
 	public Response180(){
 		this.sendSDP=false;
 		this.COLPSupport=false;
+		this.isAvoided=false;
 		this.my180HeadersList=new LinkedList<HeadersValuesGeneric>();
 		
 	}
@@ -58,10 +60,19 @@ public class Response180 {
 		return COLPSupport;
 	}
 	
+	public void setIsAvoided(boolean b){
+		isAvoided=b;
+	}
+	
+	public boolean getIsAvoided(){
+		return isAvoided;
+	}
+	
 	public Response180 copyData(){
 		Response180 copyObject=new Response180();
 		copyObject.sendSDP=sendSDP;
 		copyObject.COLPSupport=COLPSupport;
+		copyObject.isAvoided=isAvoided;
 		copyObject.my180HeadersList=new LinkedList<HeadersValuesGeneric>();
 		copyObject.my180HeadersList.addAll(my180HeadersList);
 		return copyObject;

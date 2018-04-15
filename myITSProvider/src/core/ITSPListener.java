@@ -1,12 +1,16 @@
 package core;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -25,11 +29,14 @@ import javax.sip.SipListener;
 import javax.sip.SipProvider;
 import javax.sip.SipStack;
 import javax.sip.TimeoutEvent;
+import javax.sip.TransactionAlreadyExistsException;
 import javax.sip.TransactionTerminatedEvent;
 import javax.sip.TransactionUnavailableException;
 import javax.sip.address.Address;
 import javax.sip.address.AddressFactory;
+import javax.sip.address.SipURI;
 import javax.sip.address.URI;
+import javax.sip.header.AuthorizationHeader;
 import javax.sip.header.CSeqHeader;
 import javax.sip.header.CallIdHeader;
 import javax.sip.header.ContactHeader;
@@ -40,6 +47,7 @@ import javax.sip.header.Header;
 import javax.sip.header.HeaderAddress;
 import javax.sip.header.HeaderFactory;
 import javax.sip.header.MaxForwardsHeader;
+import javax.sip.header.RetryAfterHeader;
 import javax.sip.header.ToHeader;
 import javax.sip.header.UserAgentHeader;
 import javax.sip.header.ViaHeader;
@@ -52,8 +60,11 @@ import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
 import gov.nist.javax.sip.address.SipUri;
+import gov.nist.javax.sip.clientauthutils.DigestServerAuthenticationHelper;
+import gov.nist.javax.sip.header.AuthenticationHeader;
 import gov.nist.javax.sip.header.CallID;
 import gov.nist.javax.sip.header.From;
+import gov.nist.javax.sip.header.WWWAuthenticate;
 import splibraries.Configuration;
 import splibraries.GStreamerToneTool;
 import splibraries.GstreamerTool;
@@ -66,6 +77,7 @@ import support.HeadersValuesGeneric;
 import support.HoldMode;
 import support.LegTransaction;
 import support.ReInviteMode;
+import support.RegisteredDevice;
 import support.SIPHeadersTxt;
 import support.UserData;
 //import splibraries.VoiceTool;
@@ -129,6 +141,12 @@ public class ITSPListener implements SipListener{
 	//Additional parameters for new implementation 
 	HashMap<String, UserData> myRegisteredUsers= new HashMap<String,UserData>();
 	HashMap<String, LegTransaction> myTransactionMap=new HashMap<String, LegTransaction>();
+
+	private String myTransport;
+
+	private String myDisplayName;
+
+	private String myUserPart;
 	static final int expireTime=120;
 	static final int PROXY_NOTUSED=-1;
 	static final int PROXY_IDLE=0;
@@ -184,6 +202,9 @@ public class ITSPListener implements SipListener{
 	      myVideoPort=conf.videoPort;
 	      myAudioCodec=conf.audioCodec;
 	      myVideoCodec=conf.videoCodec;
+	      myTransport=conf.transport;
+	      myDisplayName=conf.name;
+	      myUserPart=conf.userID;
 
 	      mySdpManager=new SdpManager();
 	      //myVoiceTool=new VoiceTool();
@@ -245,11 +266,19 @@ public class ITSPListener implements SipListener{
 	      myMessageFactory = mySipFactory.createMessageFactory();
 	      myHeaderFactory = mySipFactory.createHeaderFactory();
 	      myAddressFactory = mySipFactory.createAddressFactory();
-	      myListeningPoint = mySipStack.createListeningPoint(myIP, myPort, "udp");
+	      if (myTransport.equalsIgnoreCase("udp")){
+	    	  myListeningPoint = mySipStack.createListeningPoint(myIP, myPort, "udp");
+	      } else {
+	    	  myListeningPoint = mySipStack.createListeningPoint(myIP, myPort, "tcp"); 
+	      }
+	      //myListeningPoint = mySipStack.createListeningPoint(myIP, myPort, "udp");
 	      mySipProvider = mySipStack.createSipProvider(myListeningPoint);
 	      mySipProvider.addSipListener(this);
-
-	      Address contactAddress = myAddressFactory.createAddress("sip:"+myIP+":"+myPort);
+	      SipURI myContactURI=myAddressFactory.createSipURI(myUserPart, myIP);
+	      myContactURI.setPort(myPort);
+	      myContactURI.setTransportParam(myTransport);
+	      //Address contactAddress = myAddressFactory.createAddress("sip:"+myIP+":"+myPort);
+	      Address contactAddress = myAddressFactory.createAddress(myContactURI);
 	      myContactHeader = myHeaderFactory.createContactHeader(contactAddress);
 	      myUserAgentHeader = myHeaderFactory.createHeader("User-Agent",
 	              "myITSP tool V1");
@@ -338,7 +367,8 @@ public class ITSPListener implements SipListener{
              FromHeader myFromHeader = myHeaderFactory.createFromHeader(
                  fromAddress, "56438");
 
-             myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,"udp", null);
+             //myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,"udp", null);
+             myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,myTransport, null);
              ArrayList<ViaHeader> myViaHeaders = new ArrayList<ViaHeader>();
              myViaHeaders.add(myViaHeader);
              MaxForwardsHeader myMaxForwardsHeader = myHeaderFactory.
@@ -643,33 +673,145 @@ public class ITSPListener implements SipListener{
 
 @SuppressWarnings("unused")
 public void processRequest(RequestEvent requestReceivedEvent) {
+  if (myGUI.chckbxEnableFaileover.isSelected()){
+	  try {
+		runFailoverMode(requestReceivedEvent);
+	} catch (ParseException | SipException | InvalidArgumentException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	  return;
+  }
   Request myRequest=requestReceivedEvent.getRequest();
   String method=myRequest.getMethod();
   myGUI.display("<<<<<<<<<< "+myRequest.toString());
   if (method.equals("REGISTER")){
 	  //TODO: Handle REGISTER method
-	  
+	  boolean isOSBiz=false;
+	  boolean isOSBizAuthenticated=true;
+	  boolean isFirstRegistration=false;
 	  ContactHeader myRegisterContactHeader=(ContactHeader)myRequest.getHeader(ContactHeader.NAME);
+	  UserAgentHeader myUserAgentHeader=(UserAgentHeader)myRequest.getHeader(UserAgentHeader.NAME);
+	  
+	  ListIterator userAgentListIterator=myUserAgentHeader.getProduct();
+	  String myUserAgentData="";
+	  while (userAgentListIterator.hasNext()){
+		  boolean check1=false;
+		  boolean check2=false;
+		  Object temp=userAgentListIterator.next();
+		  String tempString=(String)temp;
+		  myUserAgentData=myUserAgentData+tempString;
+		  if (tempString.contains("OpenScape")){
+			  check1=true;
+		  }
+		  if (tempString.contains("Business")){
+			  check2=true;
+		  }
+		  if (check1 && check2){
+			  isOSBiz=true;
+		  }
+	  }
+	  logger.info("User-Agent:"+myUserAgentData);
 	  SipUri uriContact= (SipUri)myRegisterContactHeader.getAddress().getURI();
 	  String userPartContact=uriContact.getUser();
-	  UserData myUserData =new UserData(uriContact);
-	  myRegisteredUsers.put(userPartContact, myUserData);	  
+	  if (isOSBiz){//Registration comes from OSBiz
+		  try {
+			AuthorizationHeader myAuthorizationHeader=(AuthorizationHeader)myRequest.getHeader(AuthorizationHeader.NAME); 
+			if (myAuthorizationHeader==null){//First Registration w/o authentication data
+				isFirstRegistration=true;
+				
+			} else {
+				
+				if (!(isCorrectRegister(myRequest, myGUI.getMyPassword()))){
+					//TODO:Do not send 200 OK for this REGISTER request
+					isOSBizAuthenticated=false;
+					logger.warn("OSBiz is not authenticated due to wrong credentials");
+				}else {
+					isOSBizAuthenticated=true;
+					logger.info("OSBiz is authenticated due to correct credentials");
+				}
+			}
+			
+			
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		  
+	  }else {//REGISTER comes from non-OSBiz
+		  UserData myUserData =new UserData(uriContact);
+		  myRegisteredUsers.put(userPartContact, myUserData);
+		  myGUI.myRegisteredDevices.put(userPartContact, new RegisteredDevice(true,userPartContact));
+		  myGUI.refreshRegisteredDeviceWnd();
+	  }
+	  
 	  ViaHeader viaHeader=(ViaHeader)myRequest.getHeader(ViaHeader.NAME);
-	  logger.info("REGISTER from user: "+userPartContact+" from Host:"+viaHeader.getHost()+ " Port:"+ viaHeader.getPort());
 	  String receivedIP=viaHeader.getHost();
 	  try {
 		ServerTransaction myRegisterServerTransaction=mySipProvider.getNewServerTransaction(myRequest);
-		Response myRegisterResponse=myMessageFactory.createResponse(200, myRequest);
-		logger.info("Response 200OK for REGISTER from User with Contact Header: "+uriContact.toString());
-		((ViaHeader)myRegisterResponse.getHeader(ViaHeader.NAME)).setReceived(receivedIP);
-		//((ContactHeader)myRegisterResponse.getHeader(ContactHeader.NAME)).setExpires(expireTime);
+		Response myRegisterResponse;
+		ExpiresHeader myPartnerExpireHeader=(ExpiresHeader)myRequest.getHeader(ExpiresHeader.NAME);
+		int timerExpire=0;
+		if (myPartnerExpireHeader==null){
+			myRegisterContactHeader.getParameter("expires");
+			timerExpire=Integer.valueOf(myRegisterContactHeader.getParameter("expires"));
+		} else{
+			timerExpire=myPartnerExpireHeader.getExpires();
+		}
 		ExpiresHeader myExpireHeader=myHeaderFactory.createExpiresHeader(expireTime);
-		myRegisterResponse.addHeader(myExpireHeader);
+		ContactHeader myRegisterReplyContactHeader=myRegisterContactHeader;
+		if (isOSBiz){
+			 logger.info("REGISTER from OSBiz: "+userPartContact+" from Host:"+viaHeader.getHost()+ " Port:"+ viaHeader.getPort());
+			if (isFirstRegistration){
+				myRegisterResponse=myMessageFactory.createResponse(401, myRequest);
+				WWWAuthenticate myAuthHeader=new WWWAuthenticate();
+				myAuthHeader.setAlgorithm("MD5");
+				myAuthHeader.setRealm("Belias-Dimitrios");
+				myAuthHeader.setNonce(generateNonce());
+				myRegisterResponse.addHeader(myAuthHeader);
+				
+			}else {//is Not First Registration for OSBiz
+				if (isOSBizAuthenticated){
+					myRegisterResponse=myMessageFactory.createResponse(200, myRequest);
+					
+					if (timerExpire!=0){
+						myRegisterResponse.addHeader(myExpireHeader);
+						
+					    myRegisterReplyContactHeader.setExpires(expireTime);
+					    myRegisterResponse.addHeader(myRegisterReplyContactHeader);
+					    logger.info("Response 200OK for REGISTER from OSBiz with Contact Header: "+uriContact.toString());
+					} else {
+						logger.info("Response 200OK for UN-REGISTER from OSBiz with Contact Header: "+uriContact.toString());
+					}
+					
+				}else {//OSBiz is not Authenticated
+					myRegisterResponse=myMessageFactory.createResponse(403, myRequest);
+					logger.warn("Not authenticated OSBiz!!! Forbidden to continue");
+					
+				}
+			}
+		}else {
+			logger.info("REGISTER from user: "+userPartContact+" from Host:"+viaHeader.getHost()+ " Port:"+ viaHeader.getPort());
+			
+			myRegisterResponse=myMessageFactory.createResponse(200, myRequest);
+			if (timerExpire!=0){				
+				myRegisterResponse.addHeader(myExpireHeader);
+			    myRegisterReplyContactHeader.setExpires(expireTime);
+			    myRegisterResponse.addHeader(myRegisterReplyContactHeader);
+			    logger.info("Response 200OK for REGISTER from User with Contact Header: "+uriContact.toString());
+			} else {
+				logger.info("Response 200OK for UN-REGISTER from User with Contact Header: "+uriContact.toString());
+				myRegisteredUsers.remove(userPartContact);
+				myGUI.myRegisteredDevices.remove(userPartContact);
+				myGUI.refreshRegisteredDeviceWnd();
+			}
+			
+		}				
+		((ViaHeader)myRegisterResponse.getHeader(ViaHeader.NAME)).setReceived(receivedIP);
+		
 		ToHeader myToHeader = (ToHeader) myRegisterResponse.getHeader("To");
         myToHeader.setTag("454326");
-        ContactHeader myRegisterReplyContactHeader=myRegisterContactHeader;
-        myRegisterReplyContactHeader.setExpires(expireTime);
-        myRegisterResponse.addHeader(myRegisterReplyContactHeader);
+       
 		myRegisterServerTransaction.sendResponse(myRegisterResponse);
 		myGUI.display(">>> "+myRegisterResponse.toString());
 		
@@ -680,6 +822,27 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 		e.printStackTrace();
 	}
 	  return; 
+	  
+  }
+  
+  if (method.equals("OPTIONS")){
+	  ViaHeader viaHeader=(ViaHeader)myRequest.getHeader(ViaHeader.NAME);
+	  String receivedIP=viaHeader.getHost();
+	  try {
+		ServerTransaction myOptionsServerTransaction=mySipProvider.getNewServerTransaction(myRequest);
+		Response myOptionsResponse=myMessageFactory.createResponse(200, myRequest);
+		((ViaHeader)myOptionsResponse.getHeader(ViaHeader.NAME)).setReceived(receivedIP);
+		ToHeader myToHeader = (ToHeader) myOptionsResponse.getHeader("To");
+        myToHeader.setTag("454326");
+		myOptionsServerTransaction.sendResponse(myOptionsResponse);
+		
+		myGUI.display(">>> "+myOptionsResponse.toString());
+		
+	} catch (SipException | InvalidArgumentException| ParseException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	  return;
 	  
   }
   String myCallID=((CallIdHeader)myRequest.getHeader(CallIdHeader.NAME)).getCallId();
@@ -739,7 +902,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 	  //TODO: check if userPartContact is belonging to known Registered users. If not then call from OSBiz
 	  if (isRegisteredUser(userPartForSearch)){
 		  //Call comes from Registered users
-		  
+		  		  
 		  if (isRegisteredUser(userPartTo)){
 			  //Call goes to Registered user
 			  //TODO:handle as Proxy call towards another Reistered user
@@ -751,7 +914,11 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 			  //TODO:handle as Proxy call towards OSBiz
 			  logger.info("Call comes from Registered user: "+ userPartFrom+" towards OSBiz: "+userPartTo);
 			  if (method.equals("INVITE")){//Don't handle other Requests sent first time like OPTIONS, NOTIFY, REFER, UPDATE
-				  
+				  Object myObj=myGUI.myRegisteredDevices.get(userPartForSearch);
+				  if (myObj!=null){
+					  ((RegisteredDevice) myObj).setUsedStatus(true);
+					  myGUI.refreshRegisteredDeviceWnd();
+				  }
 				  LegTransaction myServerLegTransaction=new LegTransaction(myCallID);
 				  myServerLegTransaction.setNumber(userPartFrom);
 				  myServerLegTransaction.setState(PROXY_IDLE);
@@ -783,6 +950,11 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 			  //TODO:handle as Proxy call towards  Registered user
 			  logger.info("Call comes from OSBiz user: "+ userPartFrom+" towards Registered user: "+userPartTo);
 			  if (method.equals("INVITE")){
+				  Object myObj=myGUI.myRegisteredDevices.get(userPartTo);
+				  if (myObj!=null){
+					  ((RegisteredDevice) myObj).setUsedStatus(true);
+					  myGUI.refreshRegisteredDeviceWnd();
+				  }
 				  LegTransaction myServerLegTransaction=new LegTransaction(myCallID);
 				  myServerLegTransaction.setNumber(userPartFrom);
 				  myServerLegTransaction.setState(PROXY_IDLE);
@@ -820,11 +992,10 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				      if (method.equals("INVITE")) {
 				        if (myServerTransaction == null) {
 				                myServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
-				        }
-
-				        myAlertTool.playTone();
+				        }				        
 				        
-
+				        myAlertTool.playTone();				        
+				        isSendSDP183=false;
 				        byte[] cont=(byte[]) myRequest.getContent();
 				        offerInfo=mySdpManager.getSdp(cont);
 
@@ -855,19 +1026,35 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				          answerInfo.vport=myVideoPort;
 				          answerInfo.vformat=offerInfo.vformat;
 				        }
-
-				        Response myResponse=myMessageFactory.createResponse(180,myRequest);
-				        myResponse.addHeader(myContactHeader);
-				        //TODO:Perhaps this control is wrong. 180 Ringing doesn't need PAI, does it?
-				        if (myGUI.SIPRespInfo.Resp180.getCOLP()){
-				       	 myResponse.addHeader(myPAIHeader);
-				        }
-				        ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
-				        myToHeader.setTag("454326");
-				        setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());
-				        myServerTransaction.sendResponse(myResponse);
-				        myDialog=myServerTransaction.getDialog();
-				        myGUI.display(">>> "+myResponse.toString());
+				        
+				        Response myResponse;
+				        if (!(myGUI.SIPRespInfo.Resp180.getIsAvoided())){ //Send 180=yes
+				        	myResponse=myMessageFactory.createResponse(180,myRequest);
+				        	setAdditionalHeadersResponse(myResponse, myGUI.SIPRespInfo.Resp180.getHeaderValuesList());				        	
+				        	if (myGUI.SIPRespInfo.Resp180.getSendSDP()){
+				        		myAlertTool.stopTone();
+					        	//createSDPResponse(myResponse);
+					        	isSendSDP183=true;
+					        	logger.info("Send 180 with SDP");
+					        } else {
+					        	
+					        }logger.info("Send 180 without SDP");
+					        myResponse.addHeader(myContactHeader);
+					        //TODO:Perhaps this control is wrong. 180 Ringing doesn't need PAI, does it?
+					        if (myGUI.SIPRespInfo.Resp180.getCOLP()){
+					       	 myResponse.addHeader(myPAIHeader);
+					        }
+					        ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
+					        myToHeader.setTag("454326");
+					        if (isSendSDP183){
+					        	createSDPResponse(myResponse);
+					        }
+					        myServerTransaction.sendResponse(myResponse);
+					        myDialog=myServerTransaction.getDialog();
+					        myGUI.display(">>> "+myResponse.toString());
+				        	
+				        } 
+				        
 				        status=RINGING;
 				        myGUI.showStatus("Status: RINGING");
 				        myGUI.setButtonStatusAnswerCall();
@@ -925,7 +1112,13 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        
 				        ///!!!!Warning!!!! The order of above messages are possibly wrong.First 200 OK (reply to CANCEL) and then 487 which is replied with ACK. 
 
-				        myAlertTool.stopTone();
+				        //myAlertTool.stopTone();
+				        if (isSendSDP183){
+				           	  myGAnnouncementTool.stopMedia(); 
+				           	  myGUI.showCodec("");
+				        } else {
+				        	myAlertTool.stopTone();
+				        }
 
 				        myGUI.display(">>> "+myResponse.toString());
 				        myGUI.display(">>> "+myCancelResponse.toString());
@@ -1017,6 +1210,29 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 }
 
 
+private void runFailoverMode(RequestEvent requestReceivedEvent) throws ParseException, SipException, InvalidArgumentException {
+	// TODO Auto-generated method stub
+	Request myRequest=requestReceivedEvent.getRequest();
+	myGUI.display("<<<<<<<<<< "+myRequest.toString());
+	ViaHeader viaHeader=(ViaHeader)myRequest.getHeader(ViaHeader.NAME);
+	 String receivedIP=viaHeader.getHost();
+	 ServerTransaction myFailoverServerTransaction=mySipProvider.getNewServerTransaction(myRequest);
+	Response myFailoverResponse=myMessageFactory.createResponse(myGUI.myFailoverMode.failoverHeader, myRequest);
+	RetryAfterHeader myRetryAfterHeader=myHeaderFactory.createRetryAfterHeader(Integer.parseInt(myGUI.myFailoverMode.retryAfter));
+	if (myGUI.myFailoverMode.hasRetryAfter){
+		myFailoverResponse.addHeader(myRetryAfterHeader);
+	}
+	((ViaHeader)myFailoverResponse.getHeader(ViaHeader.NAME)).setReceived(receivedIP);
+	
+	ToHeader myToHeader = (ToHeader) myFailoverResponse.getHeader("To");
+    myToHeader.setTag("454326");
+   
+    myFailoverServerTransaction.sendResponse(myFailoverResponse);
+	myGUI.display(">>> "+myFailoverResponse.toString());
+	
+}
+
+
 private void sendProxyCancel(RequestEvent requestReceivedEvent, String myCallID) throws ParseException, SipException, InvalidArgumentException {
 	Request myProxyServerRequest = requestReceivedEvent.getRequest();
 	ServerTransaction myServerProxyTransaction = requestReceivedEvent.getServerTransaction();   
@@ -1041,7 +1257,10 @@ private void sendProxyCancel(RequestEvent requestReceivedEvent, String myCallID)
 	  myGUI.display(">>> "+myProxyServerResponse.toString());
 	  
 	  Dialog myClientProxyDialog = (Dialog) myServerProxyDialog.getApplicationData();
-	  Request myClientProxyRequest = myClientProxyDialog.createRequest(myProxyServerRequest.getMethod());
+	  //Request myClientProxyRequest = myClientProxyDialog.createRequest(myProxyServerRequest.getMethod());
+	  //When myProxyServerRequest.getMethod() is called, its most probably null because the dialog is finalized 
+	  // due to previous Transaction Response
+	  Request myClientProxyRequest = myClientProxyDialog.createRequest("CANCEL");
 	  ClientTransaction myClientProxyTransaction = sipProxyProvider.getNewClientTransaction(myClientProxyRequest);
 	  myClientProxyTransaction.setApplicationData(myServerProxyTransaction);
 	  myServerProxyTransaction.setApplicationData(myClientProxyTransaction);
@@ -1238,7 +1457,8 @@ private void sendProxyInvite(RequestEvent requestReceivedEvent, LegTransaction m
     FromHeader myFromHeader = myHeaderFactory.createFromHeader(
         fromAddress, fromTag);
 
-    myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,"udp", null);
+    //myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,"udp", null);
+    myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,myTransport, null);
     ArrayList<ViaHeader> myViaHeaders = new ArrayList<ViaHeader>();
     myViaHeaders.add(myViaHeader);
     MaxForwardsHeader myMaxForwardsHeader = myHeaderFactory.
@@ -1964,6 +2184,79 @@ private String getDirectionAttribute(SdpInfo s){
 		break;
 	}
 	return result;
+}
+
+private String generateNonce() {
+
+	MessageDigest messageDigest;
+	try {
+	messageDigest = MessageDigest.getInstance("MD5");
+	
+
+    Date date = new Date();
+    long time = date.getTime();
+    Random rand = new Random();
+    long myRand = rand.nextLong();
+    String nonceString = (new Long(time)).toString()+ (new Long(myRand)).toString();
+    byte mdbytes[] = messageDigest.digest(nonceString.getBytes());
+
+    // Convert the mdbytes array into a hex string.
+
+    return toHexString(mdbytes);
+	} catch (NoSuchAlgorithmException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+		return "e721ca0e1832deca0106f99747c2f221a7471aaeC123FFEC707C";
+	}
+
+}
+private static String toHexString(byte b[]) {
+	final char[] toHex = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+    int pos = 0;
+    char[] c = new char[b.length * 2];
+    for (int i = 0; i < b.length; i++) {
+        c[pos++] = toHex[(b[i] >> 4) & 0x0F];
+        c[pos++] = toHex[b[i] & 0x0f];
+    }
+    return new String(c);
+
+}
+
+private boolean isCorrectRegister(Request r, String pass) throws NoSuchAlgorithmException{
+	boolean verdict=false;
+	AuthorizationHeader myAythHeader=(AuthorizationHeader) r.getHeader(AuthorizationHeader.NAME);
+	if ( myAythHeader == null ) return false;
+    String realm = myAythHeader.getRealm();
+    String username = myAythHeader.getUsername(); 
+    if ( username == null || realm == null ) {
+        return false;
+    }
+    String nonce = myAythHeader.getNonce();
+    URI uri = myAythHeader.getURI();
+    if (uri == null) {
+       return false;
+    }
+    String A1 = username + ":" + realm + ":" + pass;
+    String A2 = r.getMethod().toUpperCase() + ":" + uri.toString();
+    MessageDigest messageDigest;
+	messageDigest = MessageDigest.getInstance(myAythHeader.getAlgorithm());
+	
+    byte mdbytes[] = messageDigest.digest(A1.getBytes());
+    String HA1 = toHexString(mdbytes);  
+    mdbytes = messageDigest.digest(A2.getBytes());
+    String HA2 = toHexString(mdbytes); 
+    String cnonce = myAythHeader.getCNonce();
+    String KD = HA1 + ":" + nonce;
+    if (cnonce != null) {
+        KD += ":" + cnonce;
+    }
+    KD += ":" + HA2;
+    mdbytes = messageDigest.digest(KD.getBytes());
+    String mdString = toHexString(mdbytes);
+    String response = myAythHeader.getResponse();
+    verdict=mdString.equals(response);
+	
+	return verdict;
 }
 
 }

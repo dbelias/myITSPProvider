@@ -7,11 +7,13 @@ import support.HeadersValuesGeneric;
 
 public class Response183 {
 	private boolean sendSDP;
+	private boolean isAvoided;
 	private LinkedList<HeadersValuesGeneric> my183HeadersList;
 	
 	
 	public Response183(){
 		this.sendSDP=false;
+		this.isAvoided=true;
 		this.my183HeadersList=new LinkedList<HeadersValuesGeneric>();
 		
 	}
@@ -21,6 +23,15 @@ public class Response183 {
 	public boolean getSendSDP(){
 		return sendSDP;
 	}
+	
+	public void setIsAvoided(boolean b){
+		isAvoided=b;
+	}
+	
+	public boolean getIsAvoided(){
+		return isAvoided;
+	}
+	
 	public void addHeader(String h, String v){
 		HeadersValuesGeneric temp=new HeadersValuesGeneric(h,v);
 		my183HeadersList.add(temp);
@@ -51,6 +62,7 @@ public class Response183 {
 	public Response183 copyData(){
 		Response183 copyObject=new Response183();
 		copyObject.sendSDP=sendSDP;
+		copyObject.isAvoided=isAvoided;
 		copyObject.my183HeadersList=new LinkedList<HeadersValuesGeneric>();
 		copyObject.my183HeadersList.addAll(my183HeadersList);
 		return copyObject;

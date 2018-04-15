@@ -1,6 +1,7 @@
 package window;
 
 import java.awt.EventQueue;
+import java.awt.Font;
 
 import javax.swing.JFrame;
 import java.awt.GridBagLayout;
@@ -9,6 +10,7 @@ import javax.swing.JLabel;
 import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.Insets;
+import java.awt.Rectangle;
 
 import javax.swing.JDialog;
 import javax.swing.JScrollPane;
@@ -20,6 +22,7 @@ import javax.swing.JComboBox;
 import javax.swing.JTextArea;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JMenu;
 
 import core.ITSPListener;
@@ -31,6 +34,7 @@ import splibraries.Response183;
 import splibraries.Response200;
 import support.BackupSettings;
 import support.CallFeatures;
+import support.FailoverMode;
 import support.Feature;
 import support.GStreamerLocation;
 import support.SIPHeadersTxt;
@@ -46,6 +50,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
@@ -80,13 +85,22 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.DefaultComboBoxModel;
 import support.HoldMode;
 import support.ReInviteMode;
+import support.RegisteredDevice;
+
+import javax.swing.JToggleButton;
+import java.awt.event.ItemListener;
+import java.awt.event.ItemEvent;
+import java.awt.SystemColor;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JFormattedTextField;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.14.0 OPTIONS handling";
+	private final String Version="V1.18.2 Registration & Failover Enhancements";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
-	private JTextField txtDomain;
+	private JTextField txtPassword;
 	private JTextField txtMyIp;
 	private JTextField txtCalledPartyNumber;
 	private JTextField txtRemoteIp;
@@ -141,6 +155,17 @@ public class myITSPmainWnd {
 	private int btnSend183Status=2;
 	private JComboBox cmbBoxReInviteMode;
 	private JComboBox cmbBoxHoldMode;
+	private JComboBox comboBoxUdpTcp;
+	private JToggleButton tglbtnShowRegDevices;
+	
+	public RegisteredDevicesWnd myRegDevicesWnd;
+	public HashMap<String,RegisteredDevice> myRegisteredDevices;
+	private JButton btnFailoverMode;
+	public JCheckBox chckbxEnableFaileover;
+	public FailoverMode myFailoverMode;
+	private JTextField panelScroll;
+	
+
 	
 
 	/**
@@ -176,6 +201,7 @@ public class myITSPmainWnd {
 	 */
 	private void initialize() {
 		frmMyItspSimulator = new JFrame();
+		frmMyItspSimulator.getContentPane().setBackground(SystemColor.menu);
 		/*
 		frmMyItspSimulator.addComponentListener(new ComponentAdapter() {
 			@Override
@@ -189,14 +215,15 @@ public class myITSPmainWnd {
 		frmMyItspSimulator.setPreferredSize(new Dimension(900, 550));
 		frmMyItspSimulator.setMinimumSize(new Dimension(800, 400));
 		frmMyItspSimulator.setTitle("my ITSP Simulator @Powered by Belias Dimitrios "+Version);
-		frmMyItspSimulator.setBounds(100, 100, 800, 448);
+		frmMyItspSimulator.setBounds(100, 100, 800, 512);
 		frmMyItspSimulator.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{0, 120, 80, 200, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
 		frmMyItspSimulator.getContentPane().setLayout(gridBagLayout);
+		
 		
 		JLabel lblProtocol = new JLabel("Protocol");
 		GridBagConstraints gbc_lblProtocol = new GridBagConstraints();
@@ -271,18 +298,18 @@ public class myITSPmainWnd {
 		gbc_chckbxTelUri.gridy = 1;
 		frmMyItspSimulator.getContentPane().add(chckbxTelUri, gbc_chckbxTelUri);
 		
-		txtDomain = new JTextField();
-		txtDomain.setText("domain");
-		GridBagConstraints gbc_txtDomain = new GridBagConstraints();
-		gbc_txtDomain.gridwidth = 3;
-		gbc_txtDomain.insets = new Insets(0, 0, 5, 5);
-		gbc_txtDomain.fill = GridBagConstraints.HORIZONTAL;
-		gbc_txtDomain.gridx = 8;
-		gbc_txtDomain.gridy = 1;
-		frmMyItspSimulator.getContentPane().add(txtDomain, gbc_txtDomain);
-		txtDomain.setColumns(10);
+		txtPassword = new JTextField();
+		txtPassword.setText("a11111111!");
+		GridBagConstraints gbc_txtPassword = new GridBagConstraints();
+		gbc_txtPassword.gridwidth = 3;
+		gbc_txtPassword.insets = new Insets(0, 0, 5, 5);
+		gbc_txtPassword.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtPassword.gridx = 8;
+		gbc_txtPassword.gridy = 1;
+		frmMyItspSimulator.getContentPane().add(txtPassword, gbc_txtPassword);
+		txtPassword.setColumns(10);
 		
-		JLabel lblDomain = new JLabel("domain");
+		JLabel lblDomain = new JLabel("Password");
 		GridBagConstraints gbc_lblDomain = new GridBagConstraints();
 		gbc_lblDomain.insets = new Insets(0, 0, 5, 5);
 		gbc_lblDomain.gridx = 11;
@@ -390,6 +417,26 @@ public class myITSPmainWnd {
 		gbc_textFieldRemotePort.gridy = 3;
 		frmMyItspSimulator.getContentPane().add(textFieldRemotePort, gbc_textFieldRemotePort);
 		textFieldRemotePort.setColumns(10);
+		
+		comboBoxUdpTcp = new JComboBox();
+		comboBoxUdpTcp.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent arg0) {
+				if (comboBoxUdpTcp.getSelectedIndex()==0){
+					config.setTransportUDP();
+				} else {
+					config.setTransportTCP();
+				}
+			}
+		});
+		comboBoxUdpTcp.setModel(new DefaultComboBoxModel(new String[] {"UDP", "TCP"}));
+		comboBoxUdpTcp.setSelectedIndex(0);//Index=0 equals to UDP, Index=1 equals to TCP
+		comboBoxUdpTcp.setEnabled(true);
+		GridBagConstraints gbc_comboBoxUdpTcp = new GridBagConstraints();
+		gbc_comboBoxUdpTcp.insets = new Insets(0, 0, 5, 5);
+		gbc_comboBoxUdpTcp.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboBoxUdpTcp.gridx = 4;
+		gbc_comboBoxUdpTcp.gridy = 3;
+		frmMyItspSimulator.getContentPane().add(comboBoxUdpTcp, gbc_comboBoxUdpTcp);
 		
 		txtFromOAD = new JTextField();
 		GridBagConstraints gbc_txtFromOAD = new GridBagConstraints();
@@ -721,11 +768,87 @@ public class myITSPmainWnd {
 				textArea.setText(null);
 			}
 		});
+		
+		tglbtnShowRegDevices = new JToggleButton("Show Reg. Devices");
+		tglbtnShowRegDevices.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				if (tglbtnShowRegDevices.isSelected()){
+					//TODO: create new Registered Device Window
+					tglbtnShowRegDevices.setText("Hide Reg. Devices");
+					Rectangle originalFrm= frmMyItspSimulator.getBounds();
+					myRegDevicesWnd=new RegisteredDevicesWnd(originalFrm);
+					updateRegisteredDeviceDialogGUI();
+					myRegDevicesWnd.setVisible(true);
+				} else {
+					
+					tglbtnShowRegDevices.setText("Show Reg. Devices");
+					myRegDevicesWnd.setVisible(false);
+				}
+			}
+		});
+		GridBagConstraints gbc_tglbtnShowRegDevices = new GridBagConstraints();
+		gbc_tglbtnShowRegDevices.insets = new Insets(0, 0, 5, 5);
+		gbc_tglbtnShowRegDevices.gridx = 7;
+		gbc_tglbtnShowRegDevices.gridy = 13;
+		frmMyItspSimulator.getContentPane().add(tglbtnShowRegDevices, gbc_tglbtnShowRegDevices);
 		GridBagConstraints gbc_btnClearText = new GridBagConstraints();
 		gbc_btnClearText.insets = new Insets(0, 0, 5, 5);
 		gbc_btnClearText.gridx = 11;
 		gbc_btnClearText.gridy = 13;
 		frmMyItspSimulator.getContentPane().add(btnClearText, gbc_btnClearText);
+		
+		btnFailoverMode = new JButton("Failover Mode Selection");
+		btnFailoverMode.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				FailoverWnd myFailoverWnd=new FailoverWnd(myFailoverMode);
+				myFailoverWnd.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				myFailoverWnd.setVisible(true);
+			}
+		});
+		
+		chckbxEnableFaileover = new JCheckBox("Enable Faileover");
+		chckbxEnableFaileover.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				if (chckbxEnableFaileover.isSelected()){//Failover Mode is enabled
+					panelScroll.setText("!!!Warning --Failover Mode Enabled:"+myFailoverMode.failoverHeader+"-- Warning!!!");
+					panelScroll.setBackground(Color.RED);
+					Font myFont=new Font("Courier", Font.BOLD,12);
+					panelScroll.setFont(myFont);
+					
+				}else {//Failover Mode is disabled
+					panelScroll.setText("Normal Mode Running");
+					Font myFont=new Font("Tahoma", Font.PLAIN,11);
+					panelScroll.setFont(myFont);
+					panelScroll.setBackground(Color.GREEN);
+				}
+			}
+		});
+		
+		GridBagConstraints gbc_chckbxEnableFaileover = new GridBagConstraints();
+		gbc_chckbxEnableFaileover.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxEnableFaileover.gridx = 5;
+		gbc_chckbxEnableFaileover.gridy = 14;
+		frmMyItspSimulator.getContentPane().add(chckbxEnableFaileover, gbc_chckbxEnableFaileover);
+		GridBagConstraints gbc_btnFailoverMode = new GridBagConstraints();
+		gbc_btnFailoverMode.insets = new Insets(0, 0, 5, 5);
+		gbc_btnFailoverMode.gridx = 7;
+		gbc_btnFailoverMode.gridy = 14;
+		frmMyItspSimulator.getContentPane().add(btnFailoverMode, gbc_btnFailoverMode);
+		
+		panelScroll = new JTextField();
+		panelScroll.setHorizontalAlignment(SwingConstants.CENTER);
+		panelScroll.setText("Normal Mode Running");
+		panelScroll.setBackground(Color.GREEN);
+		panelScroll.setEditable(false);
+		GridBagConstraints gbc_panelScroll = new GridBagConstraints();
+		gbc_panelScroll.gridwidth = 8;
+		gbc_panelScroll.insets = new Insets(0, 0, 0, 5);
+		gbc_panelScroll.fill = GridBagConstraints.HORIZONTAL;
+		gbc_panelScroll.gridx = 3;
+		gbc_panelScroll.gridy = 15;
+		frmMyItspSimulator.getContentPane().add(panelScroll, gbc_panelScroll);
+		panelScroll.setColumns(10);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmMyItspSimulator.setJMenuBar(menuBar);
@@ -738,6 +861,8 @@ public class myITSPmainWnd {
 			public void actionPerformed(ActionEvent arg0) {
 				myBackupSet.setCallingSettings(txtFromOAD.getText());
 				myBackupSet.setCalledSettings(txtCalledPartyNumber.getText(), txtRemoteIp.getText(), textFieldRemotePort.getText());
+				myBackupSet.setTransport(config.getTransport());
+				myBackupSet.setPassword(txtPassword.getText());
 				XMLBackup xmlb=new XMLBackup(gStreamer, wav, myBackupSet);
 			}
 		});
@@ -867,6 +992,18 @@ public class myITSPmainWnd {
 		mnTraces.add(rdbtnmntmTrace);
 		menuBar.add(mnTraces);
 	}
+	protected void updateRegisteredDeviceDialogGUI() {
+		// TODO Auto-generated method stub
+		int i=0;
+		for (HashMap.Entry<String,RegisteredDevice> entry : myRegisteredDevices.entrySet()){
+			i++;
+			myRegDevicesWnd.createNewRegisteredDevice(i,entry.getValue().getDID());
+			myRegDevicesWnd.setRegisteredStatus(i, entry.getValue().getUsedStatus());
+		}
+		
+		//myRegDevicesWnd.createNewRegisteredDevice(1,"+302108196543");
+	}
+
 	protected void setTraceLevel() {
 		// TODO Auto-generated method stub
 		if (rdbtnmntmInfo.isSelected()){
@@ -889,6 +1026,14 @@ public class myITSPmainWnd {
 		txtRemoteIp.setText(b.CalledIPAddress);
 		textFieldRemotePort.setText(b.CalledIPPort);
 		txtFromOAD.setText(b.CallingNumber);
+		if ((b.transport).equalsIgnoreCase("udp")){
+			comboBoxUdpTcp.setSelectedIndex(0);
+		} else {
+			comboBoxUdpTcp.setSelectedIndex(1);
+		}
+		txtPassword.setText(b.getPassword());
+		
+		
 		
 	}
 
@@ -956,6 +1101,8 @@ public class myITSPmainWnd {
 		SIPRespInfo.Resp180=my180Response;
 		SIPRespInfo.Resp200=my200Response;
 		SIPReqInfo.ReqInvite=myInviteRequest;
+		myRegisteredDevices=new HashMap<String,RegisteredDevice>();
+		myFailoverMode=new FailoverMode();
 		
 		btnOnOff.setText("ON");
 		btnOnOff.setBackground(Color.RED);
@@ -976,6 +1123,7 @@ public class myITSPmainWnd {
 		chckbxLateSdp.setEnabled(false);
 		hasDtmfFirstOrder=false;
 		colorSwitch=false;
+		chckbxEnableFaileover.setEnabled(false);
 		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
@@ -991,12 +1139,14 @@ public class myITSPmainWnd {
 		textArea.setEnabled(true);
 		setButtonStatusIdle();
 		chckbxLateSdp.setEnabled(true);
+		chckbxEnableFaileover.setEnabled(true);
 		showCodec("");
 		
 		comboBoxMyIPs.setEnabled(false);
 		cmbBoxHoldMode.setEnabled(false);
 		cmbBoxReInviteMode.setEnabled(false);
 		setTxtLine(SIPHeadersTxt.ResetLines,"");
+		comboBoxUdpTcp.setEnabled(false);
 	}
 	private void setGUIoff(){
 		state=STATE_OFF;
@@ -1018,6 +1168,8 @@ public class myITSPmainWnd {
 		chckbxLateSdp.setEnabled(false);
 		cmbBoxHoldMode.setEnabled(false);
 		cmbBoxReInviteMode.setEnabled(false);
+		comboBoxUdpTcp.setEnabled(true);
+		chckbxEnableFaileover.setEnabled(false);
 		showCodec("Codec:N.A");
 	}
 	public void showStatus(String s){
@@ -1055,6 +1207,7 @@ public class myITSPmainWnd {
         StyledDocument document = (StyledDocument) textArea.getDocument();
 	     try {
 			document.insertString(document.getLength(), s, aset);
+			
 		} catch (BadLocationException e) {
 			// TODO Auto-generated catch block
 			logger.error("Bad Location Exception when appending text", e);
@@ -1093,6 +1246,7 @@ public class myITSPmainWnd {
 	private void showConfiguration(){
 		displayWithStyle("Configuration Settings:"+"\n", Color.GREEN);
 		displayWithStyle("SIP Server Port:"+config.sipPort+"\n", Color.GREEN);
+		displayWithStyle("SIP Server Transport Protocol:"+config.transport+"\n", Color.GREEN);
 		displayWithStyle("Audio Base Port:"+config.audioPort+"\n", Color.GREEN);
 		displayWithStyle("Video Base Port:"+config.videoPort+"\n", Color.GREEN);
 		displayWithStyle("Audio Codec:"+config.audioCodec+"\n", Color.GREEN);
@@ -1110,6 +1264,7 @@ public class myITSPmainWnd {
 		chckbxLateSdp.setEnabled(true);
 		cmbBoxHoldMode.setEnabled(false);
 		cmbBoxReInviteMode.setEnabled(false);
+		
 	}
 	public void setButtonStatusMakeCall(){
 		btnMakeCall.setEnabled(false);
@@ -1268,5 +1423,24 @@ public class myITSPmainWnd {
 		}
 			
 	}
+	
+	public void refreshRegisteredDeviceWnd(){
+		//TODO:RegisteredDevicesWnd
+	}
+
+	public String getMyPassword() {
+		// TODO Auto-generated method stub
+		return txtPassword.getText();
+	}
+	private class SwingAction extends AbstractAction {
+		public SwingAction() {
+			putValue(NAME, "SwingAction");
+			putValue(SHORT_DESCRIPTION, "Some short description");
+		}
+		public void actionPerformed(ActionEvent e) {
+		}
+	}
+	
+	
 }
     

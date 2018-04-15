@@ -5,6 +5,8 @@ public class BackupSettings {
 	public String CalledIPAddress;
 	public String CalledNumber;
 	public String CallingNumber;
+	public String transport;
+	public String password;
 	private boolean isAvailable;
 	
 	public BackupSettings(){
@@ -13,6 +15,8 @@ public class BackupSettings {
 		this.CalledNumber="022129205990";
 		this.CallingNumber="2109567472";
 		this.isAvailable=false;
+		this.transport="udp";
+		this.password="a11111111!";
 	}
 	
 	public void setCalledSettings(String number, String address, String port){
@@ -28,9 +32,19 @@ public class BackupSettings {
 	public void setIsAvailable(){
 		isAvailable=true;
 	}
+	public void setTransport(String t){
+		transport=t;
+	}
 	
 	public boolean getIsAvailable(){
 		return isAvailable;
+	}
+	
+	public void setPassword(String p){
+		password=p;
+	}
+	public String getPassword(){
+		return password;
 	}
 
 }

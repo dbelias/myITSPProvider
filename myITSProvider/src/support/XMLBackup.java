@@ -44,14 +44,20 @@ public class XMLBackup {
 		Element calledNumber=new Element ("called");
 		Element calledIPAddr=new Element ("calledIPAddress");
 		Element calledIPPort=new Element ("calledIPPort");
+		Element transport=new Element ("transport");
+		Element password=new Element ("password");
 		callerNumber.setText(b.CallingNumber);
 		calledNumber.setText(b.CalledNumber);
 		calledIPAddr.setText(b.CalledIPAddress);
 		calledIPPort.setText(b.CalledIPPort);
+		transport.setText(b.transport);
+		password.setText(b.password);
 		otherSettingElement.addContent(callerNumber);
 		otherSettingElement.addContent(calledNumber);
 		otherSettingElement.addContent(calledIPAddr);
 		otherSettingElement.addContent(calledIPPort);
+		otherSettingElement.addContent(transport);
+		otherSettingElement.addContent(password);
 		return otherSettingElement;
 	}
 	

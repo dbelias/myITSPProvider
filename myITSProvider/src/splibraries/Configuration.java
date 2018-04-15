@@ -9,6 +9,7 @@ public int audioPort;
 public int videoPort;
 public int audioCodec;
 public int videoCodec;
+public String transport;
 
   public Configuration() {
     sipPort=5060;
@@ -18,6 +19,7 @@ public int videoCodec;
     videoPort=-1;
     audioCodec=8; //G711A
     videoCodec=26;
+    transport="udp";
   }
   
   public void setSIPPort(String s){
@@ -47,5 +49,14 @@ public int videoCodec;
   public void setVideoCodec(int i){
 	  videoCodec=i;
   }
+  public void setTransportUDP(){
+	  transport="udp";
+  }
+  public void setTransportTCP(){
+	  transport="tcp";
+  }
   
+  public String getTransport(){
+	  return transport;
+  }
 }

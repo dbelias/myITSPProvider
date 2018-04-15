@@ -41,6 +41,7 @@ public class SIPResponseSettingsDialog extends JDialog {
 	private LinkedList<HeadersValuesGeneric> extraHeaders183;
 	private boolean isModified183;
 	private JCheckBox chckbxSendSdp183;	
+	private JCheckBox chckbxAvoidSending183;
 	private JTextField txtHeader183;
 	private JTextField txtValue183;
 	private JComboBox<String> comboBox183;
@@ -48,6 +49,7 @@ public class SIPResponseSettingsDialog extends JDialog {
 	private LinkedList<HeadersValuesGeneric> extraHeaders180;
 	private boolean isModified180;
 	private JCheckBox chckbxSendSdp180;
+	private JCheckBox chckbxAvoidSending180;
 	private JTextField txtHeader180;
 	private JTextField txtValue180;
 	private JComboBox<String> comboBox180;
@@ -55,6 +57,8 @@ public class SIPResponseSettingsDialog extends JDialog {
 	private boolean isModified200;
 	private JCheckBox chckbxColpSupport;
 	private JCheckBox chckbxColpSupport180;
+	
+	
 	
 
 	/**
@@ -114,6 +118,18 @@ public class SIPResponseSettingsDialog extends JDialog {
 					gbc_chckbxColpSupport180.gridy = 0;
 					panel180.add(chckbxColpSupport180, gbc_chckbxColpSupport180);
 				}
+				
+				chckbxAvoidSending180 = new JCheckBox("Avoid Sending 180");
+				chckbxAvoidSending180.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						isModified180=true;
+					}
+				});
+				GridBagConstraints gbc_chckbxAvoidSending = new GridBagConstraints();
+				gbc_chckbxAvoidSending.insets = new Insets(0, 0, 5, 5);
+				gbc_chckbxAvoidSending.gridx = 1;
+				gbc_chckbxAvoidSending.gridy = 1;
+				panel180.add(chckbxAvoidSending180, gbc_chckbxAvoidSending);
 				{
 					JLabel lblAddHeadervalue = new JLabel("Add Additional Header:Value");
 					GridBagConstraints gbc_lblAddHeadervalue = new GridBagConstraints();
@@ -210,6 +226,20 @@ public class SIPResponseSettingsDialog extends JDialog {
 					gbc_chckbxSendSdp.gridx = 1;
 					gbc_chckbxSendSdp.gridy = 0;
 					panel183.add(chckbxSendSdp183, gbc_chckbxSendSdp);
+				}
+				{
+					chckbxAvoidSending183 = new JCheckBox("Avoid Sending 183");
+					chckbxAvoidSending183.setSelected(true);
+					chckbxAvoidSending183.addActionListener(new ActionListener() {
+						public void actionPerformed(ActionEvent e) {
+							isModified183=true;
+						}
+					});
+					GridBagConstraints gbc_chckbxAvoidSending_1 = new GridBagConstraints();
+					gbc_chckbxAvoidSending_1.insets = new Insets(0, 0, 5, 5);
+					gbc_chckbxAvoidSending_1.gridx = 1;
+					gbc_chckbxAvoidSending_1.gridy = 1;
+					panel183.add(chckbxAvoidSending183, gbc_chckbxAvoidSending_1);
 				}
 				{
 					JLabel lblAddAdditionalHeader = new JLabel("Add Additional Header: Value");
@@ -375,6 +405,7 @@ public class SIPResponseSettingsDialog extends JDialog {
 		
 		isModified183=false;
 		chckbxSendSdp183.setSelected(r.Resp183.getSendSDP());
+		chckbxAvoidSending183.setSelected(r.Resp183.getIsAvoided());
 		extraHeaders183=r.Resp183.getHeaderValuesList();
 		logger.trace("update 183 Tab");
 		updateComboBox(comboBox183,extraHeaders183);
@@ -384,6 +415,7 @@ private void update180Tab(SIPResponsesInfo r){
 		isModified180=false;
 		chckbxSendSdp180.setSelected(r.Resp180.getSendSDP());
 		chckbxColpSupport180.setSelected(r.Resp180.getCOLP());
+		chckbxAvoidSending180.setSelected(r.Resp180.getIsAvoided());
 		extraHeaders180=r.Resp180.getHeaderValuesList();
 		logger.trace("update 180 Tab");
 		updateComboBox(comboBox180,extraHeaders180);
@@ -437,6 +469,7 @@ private void update180Tab(SIPResponsesInfo r){
 		private void saveSettings183(){
 			if (isModified183){
 				SIPRespInf.Resp183.setSendSDP(chckbxSendSdp183.isSelected());
+				SIPRespInf.Resp183.setIsAvoided(chckbxAvoidSending183.isSelected());
 				logger.trace("Save 183 settings");
 			}else {
 				logger.trace("No changes for 183 settings to save");
@@ -446,11 +479,10 @@ private void update180Tab(SIPResponsesInfo r){
 			if (isModified180){
 				SIPRespInf.Resp180.setSendSDP(chckbxSendSdp180.isSelected());
 				SIPRespInf.Resp180.setCOLP(chckbxColpSupport180.isSelected());
+				SIPRespInf.Resp180.setIsAvoided(chckbxAvoidSending180.isSelected());
 				logger.trace("Save 180 settings");
 			}else {
 				logger.trace("No changes for 180 settings to save");
 			}
 		}
-		
-	
 }
