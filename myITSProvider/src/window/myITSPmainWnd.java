@@ -94,10 +94,15 @@ import java.awt.SystemColor;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JFormattedTextField;
+import javax.swing.JSeparator;
+
+import circuit.CSTAMessageHandler;
+import circuit.CircuitHandler;
+import circuit.CstaMessages;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.18.2 Registration & Failover Enhancements";
+	private final String Version="V1.18.3 Registration & Failover Enhancements &uaCSTA enhancements";
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtPassword;
@@ -164,6 +169,15 @@ public class myITSPmainWnd {
 	public JCheckBox chckbxEnableFaileover;
 	public FailoverMode myFailoverMode;
 	private JTextField panelScroll;
+	private JCheckBox chckbxCircuitMode;
+	private JSeparator separator;
+	private JLabel lblUser;
+	private JTextField circuitUserTxt;
+	private JButton btnNotify;
+	private JTextPane textPaneCsta;
+	private JComboBox comboBoxCstaRequest;
+	private JLabel lblMonCrossRefId;
+	private JLabel lblCallid;
 	
 
 	
@@ -215,13 +229,13 @@ public class myITSPmainWnd {
 		frmMyItspSimulator.setPreferredSize(new Dimension(900, 550));
 		frmMyItspSimulator.setMinimumSize(new Dimension(800, 400));
 		frmMyItspSimulator.setTitle("my ITSP Simulator @Powered by Belias Dimitrios "+Version);
-		frmMyItspSimulator.setBounds(100, 100, 800, 512);
+		frmMyItspSimulator.setBounds(100, 100, 800, 703);
 		frmMyItspSimulator.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{0, 120, 80, 200, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+		gridBagLayout.rowHeights = new int[]{0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 28, 0, 0, 0, 0, 0, 0, 0};
+		gridBagLayout.columnWeights = new double[]{0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
+		gridBagLayout.rowWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
 		frmMyItspSimulator.getContentPane().setLayout(gridBagLayout);
 		
 		
@@ -437,6 +451,13 @@ public class myITSPmainWnd {
 		gbc_comboBoxUdpTcp.gridx = 4;
 		gbc_comboBoxUdpTcp.gridy = 3;
 		frmMyItspSimulator.getContentPane().add(comboBoxUdpTcp, gbc_comboBoxUdpTcp);
+		
+		chckbxCircuitMode = new JCheckBox("Circuit Mode");
+		GridBagConstraints gbc_chckbxCircuitMode = new GridBagConstraints();
+		gbc_chckbxCircuitMode.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxCircuitMode.gridx = 5;
+		gbc_chckbxCircuitMode.gridy = 3;
+		frmMyItspSimulator.getContentPane().add(chckbxCircuitMode, gbc_chckbxCircuitMode);
 		
 		txtFromOAD = new JTextField();
 		GridBagConstraints gbc_txtFromOAD = new GridBagConstraints();
@@ -843,12 +864,106 @@ public class myITSPmainWnd {
 		panelScroll.setEditable(false);
 		GridBagConstraints gbc_panelScroll = new GridBagConstraints();
 		gbc_panelScroll.gridwidth = 8;
-		gbc_panelScroll.insets = new Insets(0, 0, 0, 5);
+		gbc_panelScroll.insets = new Insets(0, 0, 5, 5);
 		gbc_panelScroll.fill = GridBagConstraints.HORIZONTAL;
 		gbc_panelScroll.gridx = 3;
 		gbc_panelScroll.gridy = 15;
 		frmMyItspSimulator.getContentPane().add(panelScroll, gbc_panelScroll);
 		panelScroll.setColumns(10);
+		
+		separator = new JSeparator();
+		GridBagConstraints gbc_separator = new GridBagConstraints();
+		gbc_separator.insets = new Insets(0, 0, 5, 5);
+		gbc_separator.gridx = 0;
+		gbc_separator.gridy = 16;
+		frmMyItspSimulator.getContentPane().add(separator, gbc_separator);
+		
+		lblUser = new JLabel("User");
+		GridBagConstraints gbc_lblUser = new GridBagConstraints();
+		gbc_lblUser.insets = new Insets(0, 0, 5, 5);
+		gbc_lblUser.gridx = 1;
+		gbc_lblUser.gridy = 17;
+		frmMyItspSimulator.getContentPane().add(lblUser, gbc_lblUser);
+		
+		circuitUserTxt = new JTextField();
+		GridBagConstraints gbc_circuitUserTxt = new GridBagConstraints();
+		gbc_circuitUserTxt.insets = new Insets(0, 0, 5, 5);
+		gbc_circuitUserTxt.fill = GridBagConstraints.HORIZONTAL;
+		gbc_circuitUserTxt.gridx = 3;
+		gbc_circuitUserTxt.gridy = 17;
+		frmMyItspSimulator.getContentPane().add(circuitUserTxt, gbc_circuitUserTxt);
+		circuitUserTxt.setColumns(10);
+		
+		btnNotify = new JButton("NOTIFY");
+		btnNotify.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				CSTAMessageHandler.setDevice(circuitUserTxt.getText());
+				CSTAMessageHandler.setCstaMessageOutgoing((CstaMessages) comboBoxCstaRequest.getSelectedItem());
+				CircuitHandler.setCalledDevice(txtCalledPartyNumber.getText());
+				sendCstaNotify();
+				config.setUserPart(getFromOAD());
+				list.updateFromAddress(config);
+				list.updateCodecList(getAvailableCodecs());
+				list.userInput(6,getDestination());
+				
+				
+			}
+		});
+		GridBagConstraints gbc_btnNotify = new GridBagConstraints();
+		gbc_btnNotify.insets = new Insets(0, 0, 5, 5);
+		gbc_btnNotify.gridx = 4;
+		gbc_btnNotify.gridy = 17;
+		frmMyItspSimulator.getContentPane().add(btnNotify, gbc_btnNotify);
+		
+		textPaneCsta = new JTextPane();
+		textPaneCsta.setEditable(false);
+		GridBagConstraints gbc_textPaneCsta = new GridBagConstraints();
+		gbc_textPaneCsta.gridheight = 6;
+		gbc_textPaneCsta.gridwidth = 5;
+		gbc_textPaneCsta.insets = new Insets(0, 0, 0, 5);
+		gbc_textPaneCsta.fill = GridBagConstraints.BOTH;
+		gbc_textPaneCsta.gridx = 7;
+		gbc_textPaneCsta.gridy = 17;
+		JScrollPane scrollPane2 = new JScrollPane(textPaneCsta);
+		frmMyItspSimulator.getContentPane().add(scrollPane2, gbc_textPaneCsta);
+		//frmMyItspSimulator.getContentPane().add(textPaneCsta, gbc_textPaneCsta);
+		
+		comboBoxCstaRequest = new JComboBox();
+		comboBoxCstaRequest.setModel(new DefaultComboBoxModel(CstaMessages.values()));
+		GridBagConstraints gbc_comboBoxCstaRequest = new GridBagConstraints();
+		gbc_comboBoxCstaRequest.insets = new Insets(0, 0, 5, 5);
+		gbc_comboBoxCstaRequest.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboBoxCstaRequest.gridx = 3;
+		gbc_comboBoxCstaRequest.gridy = 18;
+		frmMyItspSimulator.getContentPane().add(comboBoxCstaRequest, gbc_comboBoxCstaRequest);
+		
+		JLabel lblMonitorcrossreferenceid = new JLabel("monitorCrossRefId");
+		GridBagConstraints gbc_lblMonitorcrossreferenceid = new GridBagConstraints();
+		gbc_lblMonitorcrossreferenceid.insets = new Insets(0, 0, 5, 5);
+		gbc_lblMonitorcrossreferenceid.gridx = 4;
+		gbc_lblMonitorcrossreferenceid.gridy = 18;
+		frmMyItspSimulator.getContentPane().add(lblMonitorcrossreferenceid, gbc_lblMonitorcrossreferenceid);
+		
+		lblMonCrossRefId = new JLabel("CrossRefId");
+		GridBagConstraints gbc_lblMonCrossRefId = new GridBagConstraints();
+		gbc_lblMonCrossRefId.insets = new Insets(0, 0, 5, 5);
+		gbc_lblMonCrossRefId.gridx = 5;
+		gbc_lblMonCrossRefId.gridy = 18;
+		frmMyItspSimulator.getContentPane().add(lblMonCrossRefId, gbc_lblMonCrossRefId);
+		
+		JLabel CallIdLabel = new JLabel("call ID");
+		GridBagConstraints gbc_CallIdLabel = new GridBagConstraints();
+		gbc_CallIdLabel.insets = new Insets(0, 0, 5, 5);
+		gbc_CallIdLabel.gridx = 4;
+		gbc_CallIdLabel.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(CallIdLabel, gbc_CallIdLabel);
+		
+		lblCallid = new JLabel("callID");
+		GridBagConstraints gbc_lblCallid = new GridBagConstraints();
+		gbc_lblCallid.insets = new Insets(0, 0, 5, 5);
+		gbc_lblCallid.gridx = 5;
+		gbc_lblCallid.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(lblCallid, gbc_lblCallid);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmMyItspSimulator.setJMenuBar(menuBar);
@@ -992,6 +1107,12 @@ public class myITSPmainWnd {
 		mnTraces.add(rdbtnmntmTrace);
 		menuBar.add(mnTraces);
 	}
+	protected void sendCstaNotify() {
+		// TODO Auto-generated method stub
+		CircuitHandler.buildNotifyContent();
+		
+	}
+
 	protected void updateRegisteredDeviceDialogGUI() {
 		// TODO Auto-generated method stub
 		int i=0;
@@ -1192,19 +1313,28 @@ public class myITSPmainWnd {
 
 	}
 	
-	public void display(String s) {
+	public void display(String s, JTextPane myJText){
 		if (colorSwitch){
-			displayWithStyle (s, Color.BLACK);
+			displayWithStyle (s, Color.BLACK, myJText);
 		} else {
-			displayWithStyle (s, Color.GRAY);
+			displayWithStyle (s, Color.GRAY, myJText);
 		}
 		colorSwitch=!colorSwitch;
 	}
+	public void display(String s) {
+		display(s,textArea);
+	}
 	
-	public void displayWithStyle (String s, Color c){
+	public void displayCsta(String s){
+		display(s,textPaneCsta);
+	}
+	
+	
+	
+	public void displayWithStyle (String s, Color c, JTextPane myJText){
 		StyleContext sc = StyleContext.getDefaultStyleContext();
         AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
-        StyledDocument document = (StyledDocument) textArea.getDocument();
+        StyledDocument document = (StyledDocument) myJText.getDocument();
 	     try {
 			document.insertString(document.getLength(), s, aset);
 			
@@ -1214,6 +1344,9 @@ public class myITSPmainWnd {
 			e.printStackTrace();
 		}
 
+	}
+	public void displayWithStyle (String s, Color c){
+		displayWithStyle(s,c,textArea);
 	}
 	public String getmyIP(){
 		String s;
@@ -1439,6 +1572,14 @@ public class myITSPmainWnd {
 		}
 		public void actionPerformed(ActionEvent e) {
 		}
+	}
+	
+	public void setMonitorCrossRefId(String s){
+		lblMonCrossRefId.setText(s);
+	}
+	
+	public void setCallId(String s){
+		lblCallid.setText(s);
 	}
 	
 	

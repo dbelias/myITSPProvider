@@ -40,7 +40,9 @@ import javax.sip.header.AuthorizationHeader;
 import javax.sip.header.CSeqHeader;
 import javax.sip.header.CallIdHeader;
 import javax.sip.header.ContactHeader;
+import javax.sip.header.ContentLengthHeader;
 import javax.sip.header.ContentTypeHeader;
+import javax.sip.header.EventHeader;
 import javax.sip.header.ExpiresHeader;
 import javax.sip.header.FromHeader;
 import javax.sip.header.Header;
@@ -59,10 +61,15 @@ import org.apache.log4j.Level;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 
+import circuit.CSTAMessageHandler;
+import circuit.CircuitGuiUpdates;
+import circuit.CircuitHandler;
+import circuit.CstaXmlManager;
 import gov.nist.javax.sip.address.SipUri;
 import gov.nist.javax.sip.clientauthutils.DigestServerAuthenticationHelper;
 import gov.nist.javax.sip.header.AuthenticationHeader;
 import gov.nist.javax.sip.header.CallID;
+import gov.nist.javax.sip.header.Event;
 import gov.nist.javax.sip.header.From;
 import gov.nist.javax.sip.header.WWWAuthenticate;
 import splibraries.Configuration;
@@ -97,19 +104,24 @@ public class ITSPListener implements SipListener{
 	private myITSPmainWnd myGUI;
 	private ContactHeader myContactHeader;
 	private Header myUserAgentHeader;
+	private Header myCircuitUserAgentHeader;
 	private Header myAdditionalHeader;
 	private Header myPAIHeader;
 	private ViaHeader myViaHeader;
 	private Address fromAddress;
 	private Dialog myDialog;
 	private ClientTransaction myClientTransaction;
+	private ClientTransaction myCircuitClientTransaction;
 	//private ClientTransaction myClientProxyTransaction;
 	private ServerTransaction myServerTransaction;
+	private ServerTransaction myCircuitServerTransaction;
 	//private ServerTransaction myServerProxyTransaction;
 	private int status;
+	private int previousStatus;
 	private String myIP;
 	private String toTag;
 	private SdpManager mySdpManager;
+	private CstaXmlManager myCstaXmlManager;
 	//private VoiceTool myVoiceTool;
 	private GstreamerTool myGVoiceTool;
 	private GstreamerTool myGAnnouncementTool;
@@ -162,6 +174,7 @@ public class ITSPListener implements SipListener{
 	static final int HOLD=3;
 	static final int UNHOLD=4;
 	static final int SEND_OPTIONS=5;
+	static final int CIRCUIT_OPTIONS=6;
 
 	static final int IDLE=0;
 	static final int WAIT_PROV=1;
@@ -173,6 +186,7 @@ public class ITSPListener implements SipListener{
 	static final int WAIT_PROV_LATE_SDP=8;
 	static final int WAIT_FINAL_LATE_SDP=9;
 	static final int WAIT_OPTIONS_PROV=10;
+	static final int WAIT_NOTIFY_PROV=11;
 
 	class MyTimerTask extends TimerTask {
         ITSPListener myListener;
@@ -282,6 +296,7 @@ public class ITSPListener implements SipListener{
 	      myContactHeader = myHeaderFactory.createContactHeader(contactAddress);
 	      myUserAgentHeader = myHeaderFactory.createHeader("User-Agent",
 	              "myITSP tool V1");
+	      myCircuitUserAgentHeader=myHeaderFactory.createHeader("User-Agent","Circuit Simulator Agent");
 	      myPAIHeader=myHeaderFactory.createHeader("P-Asserted-Identity", " <sip:"+conf.userID+"@"+myIP+">");
 	      if (myGUI.getTelURI()){
 	    	  fromAddress=myAddressFactory.createAddress(conf.name+ " <tel:"+conf.userID+">");
@@ -434,10 +449,19 @@ public class ITSPListener implements SipListener{
              break;
            } else if (type==SEND_OPTIONS){
         	   //TODO:Implementation for Send OPTIONS (similar to Invite w/o SDP
+        	   previousStatus=status;
         	   status=WAIT_OPTIONS_PROV;
         	   myGUI.showStatus("Status: WAIT_OPTIONS_PROV");
         	  break; 
+           } else if (type==CIRCUIT_OPTIONS){
+        	 //TODO:Implementation for Send CIRCUIT OPTIONS 
+        	   sendCircuitNotifyRequest(destination);
+        	   previousStatus=status;
+        	   status=WAIT_NOTIFY_PROV;
+        	   myGUI.showStatus("Status: WAIT_NOTIFY_PROV");
+        	  break; 
            }
+           
 
          case WAIT_FINAL:
          case WAIT_FINAL_LATE_SDP:
@@ -454,6 +478,13 @@ public class ITSPListener implements SipListener{
              myGUI.setButtonStatusIdle();
              break;
 
+           }
+           else if (type==CIRCUIT_OPTIONS){
+        	   sendCircuitNotifyRequest(destination);
+        	   previousStatus=status;
+        	   status=WAIT_NOTIFY_PROV;
+        	   myGUI.showStatus("Status: WAIT_NOTIFY_PROV");
+        	  break; 
            }
 
          case ESTABLISHED:
@@ -550,6 +581,13 @@ public class ITSPListener implements SipListener{
         	   
         	   break;
         	   
+           }
+           if (type==CIRCUIT_OPTIONS){
+        	   sendCircuitNotifyRequest(destination);
+        	   previousStatus=status;
+        	   status=WAIT_NOTIFY_PROV;;
+        	   myGUI.showStatus("Status: WAIT_NOTIFY_PROV");
+        	  break; 
            }
            
            
@@ -649,6 +687,13 @@ public class ITSPListener implements SipListener{
         	   
         	   break;
            }
+           else if (type==CIRCUIT_OPTIONS){
+        	   sendCircuitNotifyRequest(destination);
+        	   previousStatus=status;
+        	   status=WAIT_NOTIFY_PROV;
+        	   myGUI.showStatus("Status: WAIT_NOTIFY_PROV");
+        	  break; 
+           }
        }
      }
      catch (Exception e){
@@ -658,6 +703,8 @@ public class ITSPListener implements SipListener{
 
    }
 	
+
+
 	public void processDialogTerminated(DialogTerminatedEvent arg0) {
 		// TODO Auto-generated method stub
 		logger.warn("Process Dialog Terminated-->No handling");
@@ -1061,6 +1108,11 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        myGUI.setButtonStatusSend183();
 				        setTxtLines(myRequest);
 				        
+				      }else if (method.equals("NOTIFY")){
+				    	  if (myCircuitServerTransaction == null) {
+				    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }	
+				    	  handleNotifyRequest(myRequest);
 				      }
 				     break;
 				    case ESTABLISHED:
@@ -1087,8 +1139,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        myGUI.showCodec("");
 				        myGUI.setButtonStatusIdle();
 				        myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
-				      }
-				      if (method.equals("INVITE")){ //Re-Invite handling
+				      }else if (method.equals("INVITE")){ //Re-Invite handling
 				    	  // it may occur that my myServerTransaction is not created yet (e.g call is initiated by tool first)
 				    	  if (myServerTransaction == null) {
 				              myServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
@@ -1096,6 +1147,11 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				    	  answerToReInvite(myRequest) ;
 				    	  status=RE_INVITE_WAIT_ACK;
 				    	  myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
+				      } else if (method.equals("NOTIFY")){
+				    	  if (myCircuitServerTransaction == null) {
+				    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }	
+				    	  handleNotifyRequest(myRequest);
 				      }
 				      
 				      
@@ -1127,6 +1183,8 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        myGUI.showStatus("Status: IDLE");
 				        myGUI.setButtonStatusIdle();
 				        myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
+				      }else if (method.equals("NOTIFY")){
+				    	  handleNotifyRequest(myRequest);
 				      }
 				      break;
 
@@ -1135,6 +1193,11 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        status=ESTABLISHED;
 				        myGUI.showStatus("Status: ESTABLISHED");
 				        myGUI.setButtonStatusEstablishedCall();
+				      }else if (method.equals("NOTIFY")){
+				    	  if (myCircuitServerTransaction == null) {
+				    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }	
+				    	  handleNotifyRequest(myRequest);
 				      }
 				        break;
 				      
@@ -1193,7 +1256,12 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				           
 				          
 				              
-				        }  
+				        }else if (method.equals("NOTIFY")){
+				        	if (myCircuitServerTransaction == null) {
+					    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+					        }	
+					    	  handleNotifyRequest(myRequest);
+					      }  
 
 				  }
 
@@ -1208,6 +1276,9 @@ public void processRequest(RequestEvent requestReceivedEvent) {
   }
   
 }
+
+
+
 
 
 private void runFailoverMode(RequestEvent requestReceivedEvent) throws ParseException, SipException, InvalidArgumentException {
@@ -1871,8 +1942,17 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 	  case WAIT_OPTIONS_PROV:
 		  if (myStatusCode<300) {
 			  logger.info("OPTIONS Response: "+myStatusCode);
-			  status=IDLE;
+			  
+			  status=previousStatus;
 			  myGUI.showStatus("Status: IDLE");
+		  }
+		  break;
+	  case WAIT_NOTIFY_PROV:
+		  if (myStatusCode<300) {
+			  logger.info("NOTIFY Response: "+myStatusCode);
+			  handleNotifyResponse(myResponse);
+			  status=previousStatus;
+			  myGUI.showStatus("Status: ?");
 		  }
 		  break;
 	}
@@ -1884,6 +1964,8 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
   }
   
 }
+
+
 
 private void handleProxyResponse(ResponseEvent responseReceivedEvent, String myCallID) throws SipException, InvalidArgumentException, ParseException {
 		Response myProxyClientResponse=responseReceivedEvent.getResponse();
@@ -2165,6 +2247,120 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
         myGUI.display(">>> " + myResponse.toString());
         //myGUI.setButtonStatusEstablishedCall(); State is already established
 	}
+
+private void sendCircuitNotifyRequest(String destination) {
+	// TODO Auto-generated method stub
+	
+	try {
+		Address toAddress;
+		toAddress = myAddressFactory.createAddress(destination);
+	
+    ToHeader myToHeader = myHeaderFactory.createToHeader(toAddress, null);
+
+    FromHeader myFromHeader = myHeaderFactory.createFromHeader(
+        fromAddress, "56438");
+
+    //myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,"udp", null);
+    myViaHeader = myHeaderFactory.createViaHeader(myIP, myPort,myTransport, null);
+    ArrayList<ViaHeader> myViaHeaders = new ArrayList<ViaHeader>();
+    myViaHeaders.add(myViaHeader);
+    MaxForwardsHeader myMaxForwardsHeader = myHeaderFactory.
+        createMaxForwardsHeader(70);
+    CSeqHeader myCSeqHeader = myHeaderFactory.createCSeqHeader(1L,
+        "NOTIFY");
+    CallIdHeader myCallIDHeader = mySipProvider.getNewCallId();
+    javax.sip.address.URI myRequestURI = toAddress.getURI();
+    
+    Request myRequest = myMessageFactory.createRequest(myRequestURI,
+        "NOTIFY",
+        myCallIDHeader, myCSeqHeader, myFromHeader, myToHeader,
+        myViaHeaders, myMaxForwardsHeader);
+    myRequest.addHeader(myContactHeader);
+    
+   	 myRequest.addHeader(myCircuitUserAgentHeader);
+    
+    setAdditionalHeaderRequest(myRequest,myGUI.SIPReqInfo.ReqInvite.getHeaderValuesList());
+    EventHeader myEventHeader=myHeaderFactory.createEventHeader("b2buaCSTA");
+    myRequest.addHeader(myEventHeader);
+    ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","csta+xml");
+    byte[] content=myCstaXmlManager.createContentRequest();
+    myGUI.displayCsta(">>> "+content.toString());
+    myRequest.setContent(content,contentTypeHeader);
+    myCircuitClientTransaction = mySipProvider.getNewClientTransaction(myRequest);
+
+    myCircuitClientTransaction.sendRequest();
+    //myDialog = myClientTransaction.getDialog();
+    myGUI.display(">>> " + myRequest.toString());
+	} catch (ParseException | InvalidArgumentException | SipException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	
+	
+}
+
+private void handleNotifyResponse(Response myResponse) {
+	// TODO Auto-generated method stub
+	try {
+		ContentTypeHeader contentTypeHeader= (ContentTypeHeader) myResponse.getHeader(ContentTypeHeader.NAME);
+		String applicationType=contentTypeHeader.getContentSubType();
+		if (applicationType.contains("csta+xml")){
+			ContentLengthHeader contentTypeLength=myResponse.getContentLength();
+			int length=contentTypeLength.getContentLength();
+			if (length>0){
+				byte[] resp=(byte[]) myResponse.getContent();
+				myGUI.displayCsta("<<< "+resp.toString());
+				myCstaXmlManager.getContentResponse(resp);
+				CircuitHandler.analyzeNotifyResponseContent();
+				for (CircuitGuiUpdates cgu: CircuitHandler.myCircuitGuiUpdate){
+					switch (cgu){
+					case MonitorCrossRefId:
+						myGUI.setMonitorCrossRefId(CircuitHandler.getMonitorCrossRefId());
+						break;
+					case CallId:
+						myGUI.setCallId(CircuitHandler.getCallId());
+						break;
+					}
+				}
+				CircuitHandler.myCircuitGuiUpdate.clear();
+				
+			}else {
+				logger.info("NOTIFY response without content");
+			}
+			
+		}else {
+			//TODO: Ignore it w/o doing anything?
+		}
+	}catch (Exception e){
+		e.printStackTrace();
+	}
+	
+	
+}
+
+private void handleNotifyRequest(Request myRequest) {
+	// TODO Auto-generated method stub
+	Response myResponse;
+	try {
+		byte[] cont=(byte[]) myRequest.getContent();
+		myGUI.displayCsta("<<< "+cont.toString());
+		myCstaXmlManager.getContentRequest(cont);
+        CircuitHandler.analyzeNotifyRequestContent();
+        
+		myResponse = myMessageFactory.createResponse(200,myRequest);
+	
+    //myResponse.addHeader(myContactHeader);
+    myCircuitServerTransaction.sendResponse(myResponse);
+    myGUI.display(">>> "+myResponse.toString());
+	} catch (ParseException | SipException | InvalidArgumentException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+	
+}
+
+
+
 private String getDirectionAttribute(SdpInfo s){
 	String temp=null;
 	String result=null;
