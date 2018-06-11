@@ -5,19 +5,28 @@ import org.apache.log4j.Logger;
 public class CstaXmlManager {
 	private static Logger logger=Logger.getLogger("CstaXmlManager");
 	byte[] myCstaXmlData;
+	private volatile CSTAMessageHandler myCstaHandler;
+	
+	
+	public CstaXmlManager(){
+		logger.info("Call CstaXmlManager constructor");
+		myCstaHandler=CSTAMessageHandler.getInstance();
+	}
+	
+	
 	
 	public byte[] createContentRequest(){
 		
-		myCstaXmlData=CSTAMessageHandler.getCstaOutgoingRequest();
+		myCstaXmlData=myCstaHandler.getCstaOutgoingRequest();
 		
-		
+		logger.trace("byte[]:"+new String(myCstaXmlData));
 		return myCstaXmlData;
 		
 	}
 	
 	public byte[] createContentResponse(){
 		
-		myCstaXmlData=CSTAMessageHandler.getCstaOutgoingResponse();
+		myCstaXmlData=myCstaHandler.getCstaOutgoingResponse();
 		
 		
 		return myCstaXmlData;
@@ -25,12 +34,12 @@ public class CstaXmlManager {
 	}
 	
 	public void getContentResponse(byte[] content){
-		CSTAMessageHandler.setIncomingResponse(content);
+		myCstaHandler.setIncomingResponse(content);
 		
 	}
 	
 	public void getContentRequest(byte[] content){
-		CSTAMessageHandler.setCstaIncomingRequest(content);
+		myCstaHandler.setCstaIncomingRequest(content);
 		
 	}
 }

@@ -50,6 +50,7 @@ import javax.sip.header.HeaderAddress;
 import javax.sip.header.HeaderFactory;
 import javax.sip.header.MaxForwardsHeader;
 import javax.sip.header.RetryAfterHeader;
+import javax.sip.header.SubscriptionStateHeader;
 import javax.sip.header.ToHeader;
 import javax.sip.header.UserAgentHeader;
 import javax.sip.header.ViaHeader;
@@ -122,6 +123,7 @@ public class ITSPListener implements SipListener{
 	private String toTag;
 	private SdpManager mySdpManager;
 	private CstaXmlManager myCstaXmlManager;
+	private CircuitHandler myCircuitHandler;
 	//private VoiceTool myVoiceTool;
 	private GstreamerTool myGVoiceTool;
 	private GstreamerTool myGAnnouncementTool;
@@ -174,7 +176,7 @@ public class ITSPListener implements SipListener{
 	static final int HOLD=3;
 	static final int UNHOLD=4;
 	static final int SEND_OPTIONS=5;
-	static final int CIRCUIT_OPTIONS=6;
+	static final int CIRCUIT_NOTIFY=6;
 
 	static final int IDLE=0;
 	static final int WAIT_PROV=1;
@@ -206,6 +208,27 @@ public class ITSPListener implements SipListener{
     }
 }
 	
+	class MyDefaultStatusTimerTask extends TimerTask{
+		 ITSPListener myListener;
+		 public MyDefaultStatusTimerTask (ITSPListener myListener){
+			 this.myListener=myListener; 
+		 }
+		@Override
+		public void run() {
+			// TODO Auto-generated method stub
+			try{
+				if (status==WAIT_NOTIFY_PROV){
+					logger.warn("Status stuck at WAIT_NOTIFY_PROV. Return to previous status");
+					status=previousStatus;
+					myGUI.showStatus("Status: ?"+status);
+				}
+			}catch (Exception ex){
+	            ex.printStackTrace();
+	        }
+			
+		}
+	}
+	
 	public ITSPListener(Configuration conf,myITSPmainWnd GUI)  {
 	    try{
 	    logger.info("Initialize ITSP Listener");
@@ -221,6 +244,8 @@ public class ITSPListener implements SipListener{
 	      myUserPart=conf.userID;
 
 	      mySdpManager=new SdpManager();
+	      myCircuitHandler=CircuitHandler.getInstance();
+	      myCstaXmlManager=new CstaXmlManager();
 	      //myVoiceTool=new VoiceTool();
 	      myGVoiceTool=new GstreamerTool();
 	      myGVoiceTool.setGstreamer(myGUI.getGStreamer());//Set the path of gStreamer gst-launch
@@ -442,6 +467,7 @@ public class ITSPListener implements SipListener{
              myGUI.display(">>> " + myRequest.toString());
              status = WAIT_PROV;
              myGUI.showStatus("Status: WAIT_PROV");
+            
              
              
              }
@@ -453,8 +479,9 @@ public class ITSPListener implements SipListener{
         	   status=WAIT_OPTIONS_PROV;
         	   myGUI.showStatus("Status: WAIT_OPTIONS_PROV");
         	  break; 
-           } else if (type==CIRCUIT_OPTIONS){
+           } else if (type==CIRCUIT_NOTIFY){
         	 //TODO:Implementation for Send CIRCUIT OPTIONS 
+        	   new Timer().schedule(new MyDefaultStatusTimerTask(this),5000);
         	   sendCircuitNotifyRequest(destination);
         	   previousStatus=status;
         	   status=WAIT_NOTIFY_PROV;
@@ -479,11 +506,13 @@ public class ITSPListener implements SipListener{
              break;
 
            }
-           else if (type==CIRCUIT_OPTIONS){
+           else if (type==CIRCUIT_NOTIFY){
+        	   new Timer().schedule(new MyDefaultStatusTimerTask(this),5000);
         	   sendCircuitNotifyRequest(destination);
         	   previousStatus=status;
         	   status=WAIT_NOTIFY_PROV;
         	   myGUI.showStatus("Status: WAIT_NOTIFY_PROV");
+        	   
         	  break; 
            }
 
@@ -582,7 +611,8 @@ public class ITSPListener implements SipListener{
         	   break;
         	   
            }
-           if (type==CIRCUIT_OPTIONS){
+           if (type==CIRCUIT_NOTIFY){
+        	   new Timer().schedule(new MyDefaultStatusTimerTask(this),5000);
         	   sendCircuitNotifyRequest(destination);
         	   previousStatus=status;
         	   status=WAIT_NOTIFY_PROV;;
@@ -687,11 +717,13 @@ public class ITSPListener implements SipListener{
         	   
         	   break;
            }
-           else if (type==CIRCUIT_OPTIONS){
+           else if (type==CIRCUIT_NOTIFY){
+        	   new Timer().schedule(new MyDefaultStatusTimerTask(this),5000);
         	   sendCircuitNotifyRequest(destination);
         	   previousStatus=status;
         	   status=WAIT_NOTIFY_PROV;
         	   myGUI.showStatus("Status: WAIT_NOTIFY_PROV");
+        	   
         	  break; 
            }
        }
@@ -1616,12 +1648,15 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 	  handleProxyResponse(responseReceivedEvent,myCallID);
 	  
   } else {//Call is handled by myITSP tool
-	  CSeqHeader originalCSeq=(CSeqHeader) myClientTransaction.getRequest().getHeader(CSeqHeader.NAME);
+	  //CSeqHeader originalCSeq=(CSeqHeader) myClientTransaction.getRequest().getHeader(CSeqHeader.NAME);
+	  CSeqHeader originalCSeq=(CSeqHeader) myResponse.getHeader(CSeqHeader.NAME);
 	  long numseq=originalCSeq.getSeqNumber();
 	  ClientTransaction thisClientTransaction=responseReceivedEvent.getClientTransaction();
-	  if (!thisClientTransaction.equals(myClientTransaction)) {
-		  logger.warn("Not similar Client Transactions");
+	  
+	  if (!thisClientTransaction.equals(myClientTransaction)|| !thisClientTransaction.equals(myCircuitClientTransaction)) {
+		  logger.warn("Not similar Client or Circuit Client Transactions");
 		  return;}
+		  
 	  
 	  logger.info("processResponse: Status="+status+" Response="+myStatusCode);
 	switch(status){
@@ -1953,6 +1988,21 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 			  handleNotifyResponse(myResponse);
 			  status=previousStatus;
 			  myGUI.showStatus("Status: ?");
+		  }else if(myStatusCode==481){
+			  logger.info("NOTIFY Response: "+myStatusCode);
+			  status=previousStatus;
+			  myDialog=thisClientTransaction.getDialog();
+		      Request myAckto481 = myDialog.createAck(numseq);
+		      myGUI.display(">>> "+myAckto481.toString());		
+			  myGUI.showStatus("Status: ?");
+			  
+		  }else {
+			  logger.info("Response: "+myStatusCode+" is  handled by myITSP Tool like response for 481");
+			  status=previousStatus;
+			  myDialog=thisClientTransaction.getDialog();
+		      Request myAckto481 = myDialog.createAck(numseq);
+		      myGUI.display(">>> "+myAckto481.toString());		
+			  myGUI.showStatus("Status: ?");
 		  }
 		  break;
 	}
@@ -2281,10 +2331,13 @@ private void sendCircuitNotifyRequest(String destination) {
     
     setAdditionalHeaderRequest(myRequest,myGUI.SIPReqInfo.ReqInvite.getHeaderValuesList());
     EventHeader myEventHeader=myHeaderFactory.createEventHeader("b2buaCSTA");
+    SubscriptionStateHeader mySubscriptionStateHeader=myHeaderFactory.createSubscriptionStateHeader("active");
+    mySubscriptionStateHeader.setExpires(120);
     myRequest.addHeader(myEventHeader);
+    myRequest.addHeader(mySubscriptionStateHeader);
     ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","csta+xml");
     byte[] content=myCstaXmlManager.createContentRequest();
-    myGUI.displayCsta(">>> "+content.toString());
+    myGUI.displayCsta(">>> "+new String(content));
     myRequest.setContent(content,contentTypeHeader);
     myCircuitClientTransaction = mySipProvider.getNewClientTransaction(myRequest);
 
@@ -2311,14 +2364,14 @@ private void handleNotifyResponse(Response myResponse) {
 				byte[] resp=(byte[]) myResponse.getContent();
 				myGUI.displayCsta("<<< "+resp.toString());
 				myCstaXmlManager.getContentResponse(resp);
-				CircuitHandler.analyzeNotifyResponseContent();
+				myCircuitHandler.analyzeNotifyResponseContent();
 				for (CircuitGuiUpdates cgu: CircuitHandler.myCircuitGuiUpdate){
 					switch (cgu){
 					case MonitorCrossRefId:
-						myGUI.setMonitorCrossRefId(CircuitHandler.getMonitorCrossRefId());
+						myGUI.setMonitorCrossRefId(myCircuitHandler.getMonitorCrossRefId());
 						break;
 					case CallId:
-						myGUI.setCallId(CircuitHandler.getCallId());
+						myGUI.setCallId(myCircuitHandler.getCallId());
 						break;
 					}
 				}
@@ -2345,7 +2398,7 @@ private void handleNotifyRequest(Request myRequest) {
 		byte[] cont=(byte[]) myRequest.getContent();
 		myGUI.displayCsta("<<< "+cont.toString());
 		myCstaXmlManager.getContentRequest(cont);
-        CircuitHandler.analyzeNotifyRequestContent();
+        myCircuitHandler.analyzeNotifyRequestContent();
         
 		myResponse = myMessageFactory.createResponse(200,myRequest);
 	

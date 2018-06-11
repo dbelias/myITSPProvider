@@ -27,41 +27,52 @@ public class CircuitHandler {
 	private static Logger logger=Logger.getLogger("CircuitHandler");
 	private static String calledDevice;
 	public static List<CircuitGuiUpdates> myCircuitGuiUpdate;
+	private static volatile CircuitHandler myCircuitHandler;
+	private static volatile CSTAMessageHandler myCstaHandler;
 	
 	public CircuitHandler(){
+		logger.info("Call CircuitHandler constructor");
 		myCircuitGuiUpdate=new ArrayList<CircuitGuiUpdates>();
+		myCstaHandler=CSTAMessageHandler.getInstance();
 	}
-	public static String getCalledDevice() {
+	
+	public static synchronized CircuitHandler getInstance(){
+		if (myCircuitHandler==null){
+			myCircuitHandler=new CircuitHandler();
+		}
+		return myCircuitHandler;
+	}
+	public String getCalledDevice() {
 		return calledDevice;
 	}
-	public static void setCalledDevice(String calledDevice) {
+	public  void setCalledDevice(String calledDevice) {
 		CircuitHandler.calledDevice = calledDevice;
 	}
-	public static void buildNotifyContent(){
+	public  void buildNotifyContent(){
 		boolean isImplemented=false;
 		AbstractRequest message=null;
-		switch (CSTAMessageHandler.getCstaMessageOutgoing()){
+		switch (myCstaHandler.getCstaMessageOutgoing()){
 		case GetConfigurationData:
-			message=new GetConfigurationData(CSTAMessageHandler.getDevice());
+			message=new GetConfigurationData(myCstaHandler.getDevice());
 			isImplemented=true;
 			break;
 		case GetDoNotDisturb:
-			message=new GetDoNotDistrub(CSTAMessageHandler.getDevice());
+			message=new GetDoNotDistrub(myCstaHandler.getDevice());
 			isImplemented=true;
 			break;
 		case GetForwarding:
-			message=new GetForwarding(CSTAMessageHandler.getDevice());
+			message=new GetForwarding(myCstaHandler.getDevice());
 			break;
 		case GetLogicalDeviceInformation:
-			message=new GetLogicalDeviceInformation(CSTAMessageHandler.getDevice());
+			message=new GetLogicalDeviceInformation(myCstaHandler.getDevice());
 			isImplemented=true;			
 			break;
 		case MonitorStart:
-			message=new MonitorStart(CSTAMessageHandler.getDevice());
+			message=new MonitorStart(myCstaHandler.getDevice());
 			isImplemented=true;	
 			break;
 		case MonitorStop:
-			message=new MonitorStop(CSTAMessageHandler.getDevice());
+			message=new MonitorStop(myCstaHandler.getDevice());
 			isImplemented=true;
 			break;
 		case RequestSystemStatus:
@@ -73,19 +84,19 @@ public class CircuitHandler {
 			isImplemented=true;
 			break;
 		case SnapshotDevice:
-			message=new SnapshotDevice(CSTAMessageHandler.getDevice());
+			message=new SnapshotDevice(myCstaHandler.getDevice());
 			isImplemented=true;
 			break;
 		case MakeCall:
-			message=new MakeCall(CSTAMessageHandler.getDevice(),calledDevice);
+			message=new MakeCall(myCstaHandler.getDevice(),calledDevice);
 			isImplemented=true;
 			break;
 		case AnswerCall:
-			message=new AnswerCall(CSTAMessageHandler.getCallID(),CSTAMessageHandler.getDevice());
+			message=new AnswerCall(myCstaHandler.getCallID(),myCstaHandler.getDevice());
 			isImplemented=true;
 			break;
 		case ClearConnection:
-			message=new ClearConnection(CSTAMessageHandler.getCallID(),CSTAMessageHandler.getDevice());
+			message=new ClearConnection(myCstaHandler.getCallID(),myCstaHandler.getDevice());
 			isImplemented=true;
 			break;
 		default:
@@ -93,19 +104,22 @@ public class CircuitHandler {
 			
 		}
 		if (isImplemented){
-			CSTAMessageHandler.setOutgoingRequest(message.getBytes());
+			logger.trace("NOTIFY message:"+myCstaHandler.getCstaMessageOutgoing().getDescription());
+			myCstaHandler.setOutgoingRequest(message.getBytes());
+		}else {
+			logger.warn("NOTIFY message:"+myCstaHandler.getCstaMessageOutgoing().getDescription()+" is not implemented to be sent as Request");
 		}
 		
 	}
 	
-	public static void analyzeNotifyRequestContent(){
-		byte[] data=CSTAMessageHandler.getCstaIncomingRequest();
+	public void analyzeNotifyRequestContent(){
+		byte[] data=myCstaHandler.getCstaIncomingRequest();
 		XmlDecoder myXmlDecoder=new XmlDecoder(data);
 		CstaMessages myCstaMessage=myXmlDecoder.getCstaMessage();
 		switch(myCstaMessage){
 		case DeliveredEvent:
 			DeliveredEvent de= (DeliveredEvent) myXmlDecoder.myObject;
-			CSTAMessageHandler.setCallID(de.getCallId());
+			myCstaHandler.setCallID(de.getCallId());
 			myCircuitGuiUpdate.add(CircuitGuiUpdates.CallId);
 		default:
 			break;	
@@ -115,19 +129,19 @@ public class CircuitHandler {
 		//TODO:further actions to analyze the data (e.g:save callRefId)
 	}
 	
-	public static void analyzeNotifyResponseContent(){
-		byte[] data=CSTAMessageHandler.getCstaOutgoingResponse();
+	public void analyzeNotifyResponseContent(){
+		byte[] data=myCstaHandler.getCstaOutgoingResponse();
 		XmlDecoder myXmlDecoder=new XmlDecoder(data);
 		CstaMessages myCstaMessage=myXmlDecoder.getCstaMessage();
 		switch(myCstaMessage){
 		case MonitorStartResponse:
 			MonitorStartResponse msr=(MonitorStartResponse) myXmlDecoder.myObject;
-			CSTAMessageHandler.setMonitorCrossRefID(msr.getMonitorCrossRefID());
+			myCstaHandler.setMonitorCrossRefID(msr.getMonitorCrossRefID());
 			myCircuitGuiUpdate.add(CircuitGuiUpdates.MonitorCrossRefId);
 			break;
 		case MakeCallResponse:
 			MakeCallResponse mcr=(MakeCallResponse) myXmlDecoder.myObject;
-			CSTAMessageHandler.setCallID(mcr.getCallID());
+			myCstaHandler.setCallID(mcr.getCallID());
 			myCircuitGuiUpdate.add(CircuitGuiUpdates.CallId);
 			break;
 		default:
@@ -136,12 +150,12 @@ public class CircuitHandler {
 		
 	}
 	
-	public static String getMonitorCrossRefId(){
-		return CSTAMessageHandler.getMonitorCrossRefID();
+	public String getMonitorCrossRefId(){
+		return myCstaHandler.getMonitorCrossRefID();
 	}
 	
-	public static String getCallId(){
-		return CSTAMessageHandler.getCallID();
+	public String getCallId(){
+		return myCstaHandler.getCallID();
 	}
 
 }

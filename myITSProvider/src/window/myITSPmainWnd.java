@@ -897,9 +897,11 @@ public class myITSPmainWnd {
 		btnNotify = new JButton("NOTIFY");
 		btnNotify.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				CSTAMessageHandler.setDevice(circuitUserTxt.getText());
-				CSTAMessageHandler.setCstaMessageOutgoing((CstaMessages) comboBoxCstaRequest.getSelectedItem());
-				CircuitHandler.setCalledDevice(txtCalledPartyNumber.getText());
+				CSTAMessageHandler myCstaXmlManager=CSTAMessageHandler.getInstance();
+				myCstaXmlManager.setDevice(circuitUserTxt.getText());
+				myCstaXmlManager.setCstaMessageOutgoing((CstaMessages) comboBoxCstaRequest.getSelectedItem());
+				CircuitHandler myCircuitHandler=CircuitHandler.getInstance();
+				myCircuitHandler.setCalledDevice(txtCalledPartyNumber.getText());
 				sendCstaNotify();
 				config.setUserPart(getFromOAD());
 				list.updateFromAddress(config);
@@ -1109,7 +1111,8 @@ public class myITSPmainWnd {
 	}
 	protected void sendCstaNotify() {
 		// TODO Auto-generated method stub
-		CircuitHandler.buildNotifyContent();
+		CircuitHandler myCircuitHandler=CircuitHandler.getInstance();
+		myCircuitHandler.buildNotifyContent();
 		
 	}
 
