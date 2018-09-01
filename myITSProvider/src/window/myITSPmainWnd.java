@@ -102,7 +102,7 @@ import circuit.CstaMessages;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.19.16 Registration & Failover Enhancements &uaCSTA enhancements";
+	private final String Version="V1.19.17 Registration & Failover Enhancements &uaCSTA enhancements";
 	private static String newLine=System.lineSeparator();
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
