@@ -48,7 +48,7 @@ public class PortSettingsDialog extends JDialog {
 		}
 		{
 			txtFieldSIPPortServer = new JTextField();
-			txtFieldSIPPortServer.setText("5060");
+			txtFieldSIPPortServer.setText(config.getListeningPort());
 			contentPanel.add(txtFieldSIPPortServer, "cell 2 0,growx");
 			txtFieldSIPPortServer.setColumns(10);
 		}

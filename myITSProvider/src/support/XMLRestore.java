@@ -68,6 +68,19 @@ public class XMLRestore {
 			b.setPassword(pswd);
 			logger.debug("Registration Password set with default value:"+pswd);
 		}
+		String listeningPort=null;
+		listeningPort=e.getChildText("listeningPort");
+		if (listeningPort!=null){
+			b.setListeningPort(listeningPort);
+			logger.debug("Listening Port set with:"+listeningPort);
+		} else {
+			listeningPort="5060!";
+			b.setListeningPort(listeningPort);
+			logger.debug("Listening Port set with default value:"+listeningPort);
+		}
+		
+		
+		
 		
 		
 	}

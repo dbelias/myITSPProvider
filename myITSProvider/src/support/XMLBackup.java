@@ -46,18 +46,21 @@ public class XMLBackup {
 		Element calledIPPort=new Element ("calledIPPort");
 		Element transport=new Element ("transport");
 		Element password=new Element ("password");
+		Element listeningPort=new Element("listeningPort");
 		callerNumber.setText(b.CallingNumber);
 		calledNumber.setText(b.CalledNumber);
 		calledIPAddr.setText(b.CalledIPAddress);
 		calledIPPort.setText(b.CalledIPPort);
 		transport.setText(b.transport);
 		password.setText(b.password);
+		listeningPort.setText(b.listeningPort);
 		otherSettingElement.addContent(callerNumber);
 		otherSettingElement.addContent(calledNumber);
 		otherSettingElement.addContent(calledIPAddr);
 		otherSettingElement.addContent(calledIPPort);
 		otherSettingElement.addContent(transport);
 		otherSettingElement.addContent(password);
+		otherSettingElement.addContent(listeningPort);
 		return otherSettingElement;
 	}
 	

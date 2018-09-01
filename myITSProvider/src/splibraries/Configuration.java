@@ -59,4 +59,8 @@ public String transport;
   public String getTransport(){
 	  return transport;
   }
+  
+  public String getListeningPort(){
+	  return Integer.toString(sipPort);
+  }
 }

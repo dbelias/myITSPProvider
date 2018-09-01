@@ -102,7 +102,8 @@ import circuit.CstaMessages;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.18.3 Registration & Failover Enhancements &uaCSTA enhancements";
+	private final String Version="V1.19.16 Registration & Failover Enhancements &uaCSTA enhancements";
+	private static String newLine=System.lineSeparator();
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
 	private JTextField txtPassword;
@@ -175,9 +176,13 @@ public class myITSPmainWnd {
 	private JTextField circuitUserTxt;
 	private JButton btnNotify;
 	private JTextPane textPaneCsta;
-	private JComboBox comboBoxCstaRequest;
+	private JComboBox<CstaMessages> comboBoxCstaRequest;
 	private JLabel lblMonCrossRefId;
 	private JLabel lblCallid;
+	private JTextField circuitDevice1Text;
+	private JTextField circuitDevice2Text;
+	private JLabel labelDevice1;
+	private JLabel labelDevice2;
 	
 
 	
@@ -206,6 +211,7 @@ public class myITSPmainWnd {
 	public myITSPmainWnd() {
 		initialize();
 		setSystemIPToComboBox();
+		setCstaREquestsToComboBox();
 		initializeGUIObjects();
 		
 	}
@@ -453,6 +459,11 @@ public class myITSPmainWnd {
 		frmMyItspSimulator.getContentPane().add(comboBoxUdpTcp, gbc_comboBoxUdpTcp);
 		
 		chckbxCircuitMode = new JCheckBox("Circuit Mode");
+		chckbxCircuitMode.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				setDestinationLbl();
+			}
+		});
 		GridBagConstraints gbc_chckbxCircuitMode = new GridBagConstraints();
 		gbc_chckbxCircuitMode.insets = new Insets(0, 0, 5, 5);
 		gbc_chckbxCircuitMode.gridx = 5;
@@ -460,6 +471,15 @@ public class myITSPmainWnd {
 		frmMyItspSimulator.getContentPane().add(chckbxCircuitMode, gbc_chckbxCircuitMode);
 		
 		txtFromOAD = new JTextField();
+		txtFromOAD.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyReleased(KeyEvent arg0) {
+				if (chckbxCircuitMode.isSelected()){
+					setDestinationLbl();
+				}
+				
+			}
+		});
 		GridBagConstraints gbc_txtFromOAD = new GridBagConstraints();
 		gbc_txtFromOAD.gridwidth = 4;
 		gbc_txtFromOAD.insets = new Insets(0, 0, 5, 5);
@@ -901,8 +921,9 @@ public class myITSPmainWnd {
 				myCstaXmlManager.setDevice(circuitUserTxt.getText());
 				myCstaXmlManager.setCstaMessageOutgoing((CstaMessages) comboBoxCstaRequest.getSelectedItem());
 				CircuitHandler myCircuitHandler=CircuitHandler.getInstance();
-				myCircuitHandler.setCalledDevice(txtCalledPartyNumber.getText());
-				sendCstaNotify();
+				myCircuitHandler.setCalledDevice(circuitDevice1Text.getText());
+				myCircuitHandler.setCircuitDevice(circuitDevice2Text.getText());
+				buildCstaNotify();
 				config.setUserPart(getFromOAD());
 				list.updateFromAddress(config);
 				list.updateCodecList(getAvailableCodecs());
@@ -928,16 +949,22 @@ public class myITSPmainWnd {
 		gbc_textPaneCsta.gridy = 17;
 		JScrollPane scrollPane2 = new JScrollPane(textPaneCsta);
 		frmMyItspSimulator.getContentPane().add(scrollPane2, gbc_textPaneCsta);
-		//frmMyItspSimulator.getContentPane().add(textPaneCsta, gbc_textPaneCsta);
 		
-		comboBoxCstaRequest = new JComboBox();
-		comboBoxCstaRequest.setModel(new DefaultComboBoxModel(CstaMessages.values()));
-		GridBagConstraints gbc_comboBoxCstaRequest = new GridBagConstraints();
-		gbc_comboBoxCstaRequest.insets = new Insets(0, 0, 5, 5);
-		gbc_comboBoxCstaRequest.fill = GridBagConstraints.HORIZONTAL;
-		gbc_comboBoxCstaRequest.gridx = 3;
-		gbc_comboBoxCstaRequest.gridy = 18;
-		frmMyItspSimulator.getContentPane().add(comboBoxCstaRequest, gbc_comboBoxCstaRequest);
+		labelDevice1 = new JLabel("Device 1");
+		GridBagConstraints gbc_labelDevice1 = new GridBagConstraints();
+		gbc_labelDevice1.insets = new Insets(0, 0, 5, 5);
+		gbc_labelDevice1.gridx = 1;
+		gbc_labelDevice1.gridy = 18;
+		frmMyItspSimulator.getContentPane().add(labelDevice1, gbc_labelDevice1);
+		
+		circuitDevice1Text = new JTextField();
+		circuitDevice1Text.setColumns(10);
+		GridBagConstraints gbc_circuitDevice1Text = new GridBagConstraints();
+		gbc_circuitDevice1Text.insets = new Insets(0, 0, 5, 5);
+		gbc_circuitDevice1Text.fill = GridBagConstraints.HORIZONTAL;
+		gbc_circuitDevice1Text.gridx = 3;
+		gbc_circuitDevice1Text.gridy = 18;
+		frmMyItspSimulator.getContentPane().add(circuitDevice1Text, gbc_circuitDevice1Text);
 		
 		JLabel lblMonitorcrossreferenceid = new JLabel("monitorCrossRefId");
 		GridBagConstraints gbc_lblMonitorcrossreferenceid = new GridBagConstraints();
@@ -953,6 +980,22 @@ public class myITSPmainWnd {
 		gbc_lblMonCrossRefId.gridy = 18;
 		frmMyItspSimulator.getContentPane().add(lblMonCrossRefId, gbc_lblMonCrossRefId);
 		
+		labelDevice2 = new JLabel("Device 2");
+		GridBagConstraints gbc_labelDevice2 = new GridBagConstraints();
+		gbc_labelDevice2.insets = new Insets(0, 0, 5, 5);
+		gbc_labelDevice2.gridx = 1;
+		gbc_labelDevice2.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(labelDevice2, gbc_labelDevice2);
+		
+		circuitDevice2Text = new JTextField();
+		circuitDevice2Text.setColumns(10);
+		GridBagConstraints gbc_circuitDevice2Text = new GridBagConstraints();
+		gbc_circuitDevice2Text.insets = new Insets(0, 0, 5, 5);
+		gbc_circuitDevice2Text.fill = GridBagConstraints.HORIZONTAL;
+		gbc_circuitDevice2Text.gridx = 3;
+		gbc_circuitDevice2Text.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(circuitDevice2Text, gbc_circuitDevice2Text);
+		
 		JLabel CallIdLabel = new JLabel("call ID");
 		GridBagConstraints gbc_CallIdLabel = new GridBagConstraints();
 		gbc_CallIdLabel.insets = new Insets(0, 0, 5, 5);
@@ -966,6 +1009,15 @@ public class myITSPmainWnd {
 		gbc_lblCallid.gridx = 5;
 		gbc_lblCallid.gridy = 19;
 		frmMyItspSimulator.getContentPane().add(lblCallid, gbc_lblCallid);
+		//frmMyItspSimulator.getContentPane().add(textPaneCsta, gbc_textPaneCsta);
+		
+		comboBoxCstaRequest = new JComboBox();
+		GridBagConstraints gbc_comboBoxCstaRequest = new GridBagConstraints();
+		gbc_comboBoxCstaRequest.insets = new Insets(0, 0, 5, 5);
+		gbc_comboBoxCstaRequest.fill = GridBagConstraints.HORIZONTAL;
+		gbc_comboBoxCstaRequest.gridx = 3;
+		gbc_comboBoxCstaRequest.gridy = 20;
+		frmMyItspSimulator.getContentPane().add(comboBoxCstaRequest, gbc_comboBoxCstaRequest);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmMyItspSimulator.setJMenuBar(menuBar);
@@ -980,6 +1032,7 @@ public class myITSPmainWnd {
 				myBackupSet.setCalledSettings(txtCalledPartyNumber.getText(), txtRemoteIp.getText(), textFieldRemotePort.getText());
 				myBackupSet.setTransport(config.getTransport());
 				myBackupSet.setPassword(txtPassword.getText());
+				myBackupSet.setListeningPort(config.getListeningPort());
 				XMLBackup xmlb=new XMLBackup(gStreamer, wav, myBackupSet);
 			}
 		});
@@ -1109,7 +1162,7 @@ public class myITSPmainWnd {
 		mnTraces.add(rdbtnmntmTrace);
 		menuBar.add(mnTraces);
 	}
-	protected void sendCstaNotify() {
+	protected void buildCstaNotify() {
 		// TODO Auto-generated method stub
 		CircuitHandler myCircuitHandler=CircuitHandler.getInstance();
 		myCircuitHandler.buildNotifyContent();
@@ -1156,6 +1209,7 @@ public class myITSPmainWnd {
 			comboBoxUdpTcp.setSelectedIndex(1);
 		}
 		txtPassword.setText(b.getPassword());
+		config.setSIPPort(b.getListeningPort());
 		
 		
 		
@@ -1167,6 +1221,8 @@ public class myITSPmainWnd {
 			//Handle Tel URI case
 			destination="tel:"+txtCalledPartyNumber.getText()+";phone-context="+txtRemoteIp.getText();
 			 
+		}else if(chckbxCircuitMode.isSelected()){
+			destination=txtSip.getText()+":"+txtFromOAD.getText()+"@"+txtRemoteIp.getText()+":"+textFieldRemotePort.getText();
 		}else {
 			destination=txtSip.getText()+":"+txtCalledPartyNumber.getText()+"@"+txtRemoteIp.getText()+":"+textFieldRemotePort.getText();
 			 
@@ -1204,6 +1260,14 @@ public class myITSPmainWnd {
 		comboBoxMyIPs.setSelectedIndex(0);
 		
 		
+	}
+	
+	private void setCstaREquestsToComboBox(){
+		for (CstaMessages cm : CstaMessages.values()){
+			if (cm.getIsRequest()){
+				comboBoxCstaRequest.addItem(cm);
+			}
+		}
 	}
 	private void initializeGUIObjects(){
 		logger.info("initialize GUI objects started");
@@ -1325,10 +1389,13 @@ public class myITSPmainWnd {
 		colorSwitch=!colorSwitch;
 	}
 	public void display(String s) {
+	
+		s=s+newLine+newLine;
 		display(s,textArea);
 	}
 	
 	public void displayCsta(String s){
+		s=s+newLine+newLine;
 		display(s,textPaneCsta);
 	}
 	

@@ -7,6 +7,7 @@ public class BackupSettings {
 	public String CallingNumber;
 	public String transport;
 	public String password;
+	public String listeningPort;
 	private boolean isAvailable;
 	
 	public BackupSettings(){
@@ -17,6 +18,7 @@ public class BackupSettings {
 		this.isAvailable=false;
 		this.transport="udp";
 		this.password="a11111111!";
+		this.listeningPort="5060";
 	}
 	
 	public void setCalledSettings(String number, String address, String port){
@@ -46,5 +48,15 @@ public class BackupSettings {
 	public String getPassword(){
 		return password;
 	}
+
+	public String getListeningPort() {
+		return listeningPort;
+	}
+
+	public void setListeningPort(String listeningPort) {
+		this.listeningPort = listeningPort;
+	}
+	
+	
 
 }

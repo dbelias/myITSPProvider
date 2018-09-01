@@ -215,7 +215,7 @@ public class ITSPListener implements SipListener{
 		 }
 		@Override
 		public void run() {
-			// TODO Auto-generated method stub
+			
 			try{
 				if (status==WAIT_NOTIFY_PROV){
 					logger.warn("Status stuck at WAIT_NOTIFY_PROV. Return to previous status");
@@ -291,6 +291,7 @@ public class ITSPListener implements SipListener{
 	      mySipFactory.setPathName("gov.nist");
 	      myProperties = new Properties();
 	      myProperties.setProperty("javax.sip.STACK_NAME", "myStack");
+	      myProperties.setProperty("javax.sip.DELIVER_UNSOLICITED_NOTIFY", "true");
 	      if (LogManager.getRootLogger().getLevel()==Level.TRACE){
 	    	  myProperties.setProperty("gov.nist.javax.sip.TRACE_LEVEL", "LOG4J");
 		      myProperties.setProperty("gov.nist.javax.sip.DEBUG_LOG",
@@ -396,7 +397,7 @@ public class ITSPListener implements SipListener{
 	
 	public void userInput(int type, String destination){
      try {
-    	 logger.info("User Input:Type="+type+" Status="+status+" Destination="+destination);
+    	 logger.info("User Input:Type="+typeDecoder(type)+" Status="+statusDecoder(status)+" Destination="+destination);
        switch (status) {
          case IDLE:
            if (type == YES) {
@@ -543,7 +544,7 @@ public class ITSPListener implements SipListener{
              break;
            }
            if (type==HOLD || type==UNHOLD){
-        	  //TODO: Send Re-Invite from ITSP
+        	  //Send Re-Invite from ITSP
         	   Request myReInvite = myDialog.createRequest("INVITE");
         	   //myReInvite.addHeader(myContactHeader);
         	   offerInfo=new SdpInfo();
@@ -578,7 +579,7 @@ public class ITSPListener implements SipListener{
            }
            
            if (type==YES){
-        	 //TODO: Send Re-Invite from ITSP
+        	 //Send Re-Invite from ITSP
         	   Request myReInvite = myDialog.createRequest("INVITE");
         	   //myReInvite.addHeader(myContactHeader);
         	   if (myGUI.myCallFeaturesInfo.reInviteMode==ReInviteMode.WithSDP){
@@ -927,7 +928,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
   String myCallID=((CallIdHeader)myRequest.getHeader(CallIdHeader.NAME)).getCallId();
   
   if (myCallIDExists(myCallID)){
-	//TODO:handle as Proxy existing Transaction (Re-Invite, CANCEL, BYE, ACK)
+	//handle as Proxy existing Transaction (Re-Invite, CANCEL, BYE, ACK)
 	  logger.info("Request:"+method+" for existing CallID:"+myCallID);
 	  try{
 	  if (method.equals("INVITE")){ //Re-INVITE
@@ -978,7 +979,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 	  
 	  String userPartTo=uriTo.getUser();
 	  logger.info("To Header: "+uriTo.toString()+" with User part: "+ userPartTo);
-	  //TODO: check if userPartContact is belonging to known Registered users. If not then call from OSBiz
+	  //check if userPartContact is belonging to known Registered users. If not then call from OSBiz
 	  if (isRegisteredUser(userPartForSearch)){
 		  //Call comes from Registered users
 		  		  
@@ -1026,7 +1027,7 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 		  //Call comes from OSBiz
 		  if (isRegisteredUser(userPartTo)){
 			  //Call goes to Registered user
-			  //TODO:handle as Proxy call towards  Registered user
+			  //handle as Proxy call towards  Registered user
 			  logger.info("Call comes from OSBiz user: "+ userPartFrom+" towards Registered user: "+userPartTo);
 			  if (method.equals("INVITE")){
 				  Object myObj=myGUI.myRegisteredDevices.get(userPartTo);
@@ -1057,14 +1058,14 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 			  
 		  }else {
 			  //Call goes to myITSP tool
-			  //TODO:handle as normal call towards myITSP tool
+			  //handle as normal call towards myITSP tool
 			  logger.info("Request for myITSP Tool: "+method);
 			  if (!method.equals("CANCEL")) {
 				  myServerTransaction=requestReceivedEvent.getServerTransaction();
 				  }
 
 				  try{
-					  logger.info("processRequest: Status="+status+" Method="+method);
+					  logger.info("processRequest: Status="+statusDecoder(status)+" Method="+method);
 				  switch (status) {
 
 				    case IDLE:
@@ -1515,7 +1516,6 @@ private void sendProxyBye(RequestEvent requestReceivedEvent, String myCallID) th
 
 private void sendProxyInvite(RequestEvent requestReceivedEvent, LegTransaction myServerLegTransaction,
 		LegTransaction myClientLegTransaction, boolean isReInvite) throws ParseException, InvalidArgumentException, SipException {
-	// TODO Auto-generated method stub
 	Request myProxyRequest=requestReceivedEvent.getRequest();
 	
 	/*
@@ -1644,7 +1644,7 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
   int myStatusCode=myResponse.getStatusCode();
   
   if (myCallIDExists(myCallID)){
-	  logger.info("Response from existing CallId: "+myCallID);
+	  logger.info("Response from existing CallId: "+myCallID+" handle it as Proxy");
 	  handleProxyResponse(responseReceivedEvent,myCallID);
 	  
   } else {//Call is handled by myITSP tool
@@ -1652,13 +1652,14 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 	  CSeqHeader originalCSeq=(CSeqHeader) myResponse.getHeader(CSeqHeader.NAME);
 	  long numseq=originalCSeq.getSeqNumber();
 	  ClientTransaction thisClientTransaction=responseReceivedEvent.getClientTransaction();
+	  logger.info("processResponse: Status="+statusDecoder(status)+" Response="+myStatusCode);
 	  
-	  if (!thisClientTransaction.equals(myClientTransaction)|| !thisClientTransaction.equals(myCircuitClientTransaction)) {
+	  if (!thisClientTransaction.equals(myClientTransaction) && !thisClientTransaction.equals(myCircuitClientTransaction)) {
 		  logger.warn("Not similar Client or Circuit Client Transactions");
 		  return;}
 		  
 	  
-	  logger.info("processResponse: Status="+status+" Response="+myStatusCode);
+	  
 	switch(status){
 
 	  case WAIT_PROV_LATE_SDP:
@@ -1987,14 +1988,14 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 			  logger.info("NOTIFY Response: "+myStatusCode);
 			  handleNotifyResponse(myResponse);
 			  status=previousStatus;
-			  myGUI.showStatus("Status: ?");
+			  myGUI.showStatus("Status: "+statusDecoder(status)+"?");
 		  }else if(myStatusCode==481){
 			  logger.info("NOTIFY Response: "+myStatusCode);
 			  status=previousStatus;
 			  myDialog=thisClientTransaction.getDialog();
 		      Request myAckto481 = myDialog.createAck(numseq);
 		      myGUI.display(">>> "+myAckto481.toString());		
-			  myGUI.showStatus("Status: ?");
+			  myGUI.showStatus("Status: "+statusDecoder(status)+"?");
 			  
 		  }else {
 			  logger.info("Response: "+myStatusCode+" is  handled by myITSP Tool like response for 481");
@@ -2002,7 +2003,7 @@ public void processResponse(ResponseEvent responseReceivedEvent) {
 			  myDialog=thisClientTransaction.getDialog();
 		      Request myAckto481 = myDialog.createAck(numseq);
 		      myGUI.display(">>> "+myAckto481.toString());		
-			  myGUI.showStatus("Status: ?");
+			  myGUI.showStatus("Status: "+statusDecoder(status)+"?");
 		  }
 		  break;
 	}
@@ -2096,17 +2097,28 @@ private void handleProxyResponse(ResponseEvent responseReceivedEvent, String myC
 
 
 	public void processTimeout(TimeoutEvent arg0) {
-		// TODO Auto-generated method stub
+		
 		logger.warn("processTimeout --> no handling");
 		
 	}
 
 public void processTransactionTerminated(TransactionTerminatedEvent arg0) {
-		// TODO Auto-generated method stub
 		
-		CallIdHeader callIDHeader=(CallIdHeader) arg0.getClientTransaction().getRequest().getHeader(CallIdHeader.NAME);
-		String myCallID=callIDHeader.getCallId();
-		logger.warn("processTransactionTerminated for CallId: "+myCallID+" --> no perfect handling");
+		try{
+			String myCallID;
+			if (arg0.getClientTransaction()==null){
+				CallIdHeader callIDHeader=(CallIdHeader) arg0.getClientTransaction().getRequest().getHeader(CallIdHeader.NAME);
+				myCallID=callIDHeader.getCallId();
+			}else {
+				CallIdHeader callIDHeader=(CallIdHeader) arg0.getServerTransaction().getRequest().getHeader(CallIdHeader.NAME);
+				myCallID=callIDHeader.getCallId();
+			}
+		
+		logger.warn("processTransactionTerminated for CallId: "+myCallID+" --> no special handling");
+		}catch(Exception excep){
+			  logger.error("processTransactionTerminated Exception", excep);
+		    excep.printStackTrace();
+		  }
 				
 				
 	}
@@ -2156,7 +2168,7 @@ private void setAdditionalHeadersResponse(Response r, LinkedList<HeadersValuesGe
 			try {
 				myAdditionalHeader=myHeaderFactory.createHeader(temp.getHeader(), temp.getValue());
 			} catch (ParseException e) {
-				// TODO Auto-generated catch block
+				
 				logger.error("ParseException", e);
 				e.printStackTrace();
 			}
@@ -2198,7 +2210,7 @@ private void setAdditionalHeadersResponse(Response r, LinkedList<HeadersValuesGe
 	}
 	
 private void answerToReInvite(Request r)  throws ParseException, InterruptedException, SipException, InvalidArgumentException{
-		// TODO handle Re-invites with or without SDP
+		
 		byte[] content;
         Response myResponse = myMessageFactory.createResponse(200,
                 r);
@@ -2299,7 +2311,7 @@ private void answerToReInvite(Request r)  throws ParseException, InterruptedExce
 	}
 
 private void sendCircuitNotifyRequest(String destination) {
-	// TODO Auto-generated method stub
+	logger.info("prepare Notify Request: sendCircuitNotifyRequest method");
 	
 	try {
 		Address toAddress;
@@ -2353,7 +2365,7 @@ private void sendCircuitNotifyRequest(String destination) {
 }
 
 private void handleNotifyResponse(Response myResponse) {
-	// TODO Auto-generated method stub
+	logger.info("handle Notify Response: handleNotifyResponse method");
 	try {
 		ContentTypeHeader contentTypeHeader= (ContentTypeHeader) myResponse.getHeader(ContentTypeHeader.NAME);
 		String applicationType=contentTypeHeader.getContentSubType();
@@ -2362,7 +2374,8 @@ private void handleNotifyResponse(Response myResponse) {
 			int length=contentTypeLength.getContentLength();
 			if (length>0){
 				byte[] resp=(byte[]) myResponse.getContent();
-				myGUI.displayCsta("<<< "+resp.toString());
+				String tempString=new String(resp);
+				myGUI.displayCsta("<<< "+tempString);
 				myCstaXmlManager.getContentResponse(resp);
 				myCircuitHandler.analyzeNotifyResponseContent();
 				for (CircuitGuiUpdates cgu: CircuitHandler.myCircuitGuiUpdate){
@@ -2378,7 +2391,7 @@ private void handleNotifyResponse(Response myResponse) {
 				CircuitHandler.myCircuitGuiUpdate.clear();
 				
 			}else {
-				logger.info("NOTIFY response without content");
+				logger.info("NOTIFY Response without csta+xml content");
 			}
 			
 		}else {
@@ -2392,7 +2405,7 @@ private void handleNotifyResponse(Response myResponse) {
 }
 
 private void handleNotifyRequest(Request myRequest) {
-	// TODO Auto-generated method stub
+	logger.info("handle Notify Request: handleNotifyRequest method");
 	Response myResponse;
 	try {
 		byte[] cont=(byte[]) myRequest.getContent();
@@ -2402,7 +2415,17 @@ private void handleNotifyRequest(Request myRequest) {
         
 		myResponse = myMessageFactory.createResponse(200,myRequest);
 	
-    //myResponse.addHeader(myContactHeader);
+    
+	if 	(myCircuitHandler.getSendOutgoingResponse()){
+		logger.info("myITSP tool has to send 200 OK with csta+xml content");
+		ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","csta+xml");
+		byte[] content=myCstaXmlManager.createContentResponse();
+		 myGUI.displayCsta(">>> "+new String(content));
+		 myResponse.setContent(content,contentTypeHeader);
+		 myCircuitHandler.resetSendOutgoingResponse();
+	}
+	//myResponse.addHeader(myContactHeader);
+	
     myCircuitServerTransaction.sendResponse(myResponse);
     myGUI.display(">>> "+myResponse.toString());
 	} catch (ParseException | SipException | InvalidArgumentException e) {
@@ -2506,6 +2529,79 @@ private boolean isCorrectRegister(Request r, String pass) throws NoSuchAlgorithm
     verdict=mdString.equals(response);
 	
 	return verdict;
+}
+
+private String statusDecoder(int status){
+	String s=null;
+	switch (status){
+	case IDLE:
+		s= "IDLE";
+		break;
+	case WAIT_PROV:
+		s= "WAIT_PROV";
+		break;
+	case WAIT_FINAL:
+		s="WAIT_FINAL";
+		break;
+	case ESTABLISHED:
+		s="ESTABLISHED";
+		break;
+	case RINGING:
+		s="RINGING";
+		break;
+	case WAIT_ACK:
+		s="WAIT_ACK";
+		break;
+	case RE_INVITE_WAIT_ACK:
+		s="RE_INVITE_WAIT_ACK";
+		break;
+	case WAIT_PROV_LATE_SDP:
+		s="WAIT_PROV_LATE_SDP";
+		break;
+	case WAIT_FINAL_LATE_SDP:
+		s="WAIT_FINAL_LATE_SDP";
+		break;
+	case WAIT_OPTIONS_PROV:
+		s="WAIT_OPTIONS_PROV";
+		break;
+	case WAIT_NOTIFY_PROV:
+		s="WAIT_NOTIFY_PROV";
+		break;
+	default:
+			s="Unknown Status";
+				
+	}
+	return s;
+}
+
+private String typeDecoder(int type){
+	String s=null;
+	switch (type){
+	case YES:
+		s="YES";
+		break;
+	case NO:
+		s="NO";
+		break;
+	case SEND183:
+		s="SEND183";
+		break;
+	case HOLD:
+		s="HOLD";
+		break;
+	case UNHOLD:
+		s="UNHOLD";
+		break;
+	case SEND_OPTIONS:
+		s="SEND_OPTIONS";
+		break;
+	case CIRCUIT_NOTIFY:
+		s="CIRCUIT_NOTIFY";
+		break;
+	default:
+		s="Unknown Type";
+	}
+	return s;
 }
 
 }
