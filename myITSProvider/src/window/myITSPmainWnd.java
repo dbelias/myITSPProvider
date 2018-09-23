@@ -40,11 +40,13 @@ import support.GStreamerLocation;
 import support.SIPHeadersTxt;
 import support.SIPRequestsInfo;
 import support.SIPResponsesInfo;
+import support.ScheduledCstaRequest;
 import support.SystemIPs;
 import support.WAVLocation;
 import support.XMLBackup;
 import support.XMLRestore;
 import support.voiceConfiguration;
+import threads.LoadThread;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -84,6 +86,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.DefaultComboBoxModel;
 import support.HoldMode;
+import support.LoadSettingsHandler;
 import support.ReInviteMode;
 import support.RegisteredDevice;
 
@@ -102,7 +105,7 @@ import circuit.CstaMessages;
 
 public class myITSPmainWnd {
 	private static Logger logger=Logger.getLogger("myITSPmainWnd");
-	private final String Version="V1.19.17 Registration & Failover Enhancements &uaCSTA enhancements";
+	private final String Version="V1.20.0 &uaCSTA & Load test enhancements";
 	private static String newLine=System.lineSeparator();
 	ITSPListener list;
 	private JFrame frmMyItspSimulator;
@@ -128,6 +131,7 @@ public class myITSPmainWnd {
 	private Configuration config;
 	private BackupSettings myBackupSet;
 	private LinkedList<voiceConfiguration> codecsList;
+	private LoadThread myLoadThread;
 	static final int STATE_ON=1;
 	static final int STATE_OFF=0;
 	private JTextField txtFromLine;
@@ -178,11 +182,22 @@ public class myITSPmainWnd {
 	private JTextPane textPaneCsta;
 	private JComboBox<CstaMessages> comboBoxCstaRequest;
 	private JLabel lblMonCrossRefId;
-	private JLabel lblCallid;
-	private JTextField circuitDevice1Text;
-	private JTextField circuitDevice2Text;
-	private JLabel labelDevice1;
-	private JLabel labelDevice2;
+	private JTextField callIdMainTxtBx;
+	private JTextField parameter1TxtBx;
+	private JTextField parameter2TxtBx;
+	private JLabel callIdSecondaryLbl;
+	private JTextField callIDSecondaryTxtBx;
+	private JLabel labelParameter1;
+	private JLabel labelParameter2;
+	private JLabel callIdMainLbl;
+	private JLabel causeLbl;
+	private JLabel causeValue;
+	private JTextArea myCstaRequestTxt;
+	private JButton btnAddToSchedule;
+	private JMenu mnLoad;
+	private JMenuItem mntmSettings;
+	private JToggleButton tglbtnStartstopLoad;
+	private JCheckBox chckbxEnableLoadMode;
 	
 
 	
@@ -232,10 +247,10 @@ public class myITSPmainWnd {
 			}
 		});
 		*/
-		frmMyItspSimulator.setPreferredSize(new Dimension(900, 550));
+		frmMyItspSimulator.setPreferredSize(new Dimension(900, 850));
 		frmMyItspSimulator.setMinimumSize(new Dimension(800, 400));
 		frmMyItspSimulator.setTitle("my ITSP Simulator @Powered by Belias Dimitrios "+Version);
-		frmMyItspSimulator.setBounds(100, 100, 800, 703);
+		frmMyItspSimulator.setBounds(100, 100, 800, 850);
 		frmMyItspSimulator.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		GridBagLayout gridBagLayout = new GridBagLayout();
 		gridBagLayout.columnWidths = new int[]{0, 120, 80, 200, 61, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -856,12 +871,14 @@ public class myITSPmainWnd {
 					panelScroll.setBackground(Color.RED);
 					Font myFont=new Font("Courier", Font.BOLD,12);
 					panelScroll.setFont(myFont);
+					chckbxEnableLoadMode.setEnabled(false);
 					
 				}else {//Failover Mode is disabled
 					panelScroll.setText("Normal Mode Running");
 					Font myFont=new Font("Tahoma", Font.PLAIN,11);
 					panelScroll.setFont(myFont);
 					panelScroll.setBackground(Color.GREEN);
+					chckbxEnableLoadMode.setEnabled(true);
 				}
 			}
 		});
@@ -898,8 +915,55 @@ public class myITSPmainWnd {
 		gbc_separator.gridy = 16;
 		frmMyItspSimulator.getContentPane().add(separator, gbc_separator);
 		
+		chckbxEnableLoadMode = new JCheckBox("Enable Load Mode");
+		chckbxEnableLoadMode.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent arg0) {
+				
+			}
+		});
+		chckbxEnableLoadMode.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				if (chckbxEnableLoadMode.isSelected()){//Enable Load Mode
+					panelScroll.setText("!!!Warning --Load Mode Enabled:"+"-- Warning!!!");
+					panelScroll.setBackground(Color.BLUE);
+					panelScroll.setForeground(Color.YELLOW);
+					Font myFont=new Font("Courier", Font.BOLD,12);
+					panelScroll.setFont(myFont);
+					tglbtnStartstopLoad.setEnabled(true);
+					tglbtnStartstopLoad.setText("Start Load");
+					tglbtnStartstopLoad.setForeground(Color.BLACK);
+					tglbtnStartstopLoad.setBackground(Color.LIGHT_GRAY);
+					btnAddToSchedule.setEnabled(true);
+					mnLoad.setEnabled(true);
+					chckbxEnableFaileover.setEnabled(false);
+					
+				}else{//Disable Load Mode
+					panelScroll.setText("Normal Mode Running");
+					Font myFont=new Font("Tahoma", Font.PLAIN,11);
+					panelScroll.setFont(myFont);
+					panelScroll.setBackground(Color.GREEN);
+					panelScroll.setForeground(Color.BLACK);
+					chckbxEnableFaileover.setEnabled(true);
+					tglbtnStartstopLoad.setEnabled(false);
+					tglbtnStartstopLoad.setText("Start/Stop Load");
+					tglbtnStartstopLoad.setForeground(Color.BLACK);
+					tglbtnStartstopLoad.setBackground(Color.LIGHT_GRAY);
+					btnAddToSchedule.setEnabled(false);
+					mnLoad.setEnabled(false);
+				}
+				
+			}
+		});
+		GridBagConstraints gbc_chckbxEnableLoadMode = new GridBagConstraints();
+		gbc_chckbxEnableLoadMode.insets = new Insets(0, 0, 5, 5);
+		gbc_chckbxEnableLoadMode.gridx = 5;
+		gbc_chckbxEnableLoadMode.gridy = 16;
+		frmMyItspSimulator.getContentPane().add(chckbxEnableLoadMode, gbc_chckbxEnableLoadMode);
+		
 		lblUser = new JLabel("User");
 		GridBagConstraints gbc_lblUser = new GridBagConstraints();
+		gbc_lblUser.anchor = GridBagConstraints.EAST;
 		gbc_lblUser.insets = new Insets(0, 0, 5, 5);
 		gbc_lblUser.gridx = 1;
 		gbc_lblUser.gridy = 17;
@@ -919,10 +983,13 @@ public class myITSPmainWnd {
 			public void actionPerformed(ActionEvent arg0) {
 				CSTAMessageHandler myCstaXmlManager=CSTAMessageHandler.getInstance();
 				myCstaXmlManager.setDevice(circuitUserTxt.getText());
+				myCstaXmlManager.setCallID(callIdMainTxtBx.getText());
+				myCstaXmlManager.setCallIDSecondary(callIDSecondaryTxtBx.getText());
+				myCstaXmlManager.setMyCstaXmlMessage(myCstaRequestTxt.getText());
 				myCstaXmlManager.setCstaMessageOutgoing((CstaMessages) comboBoxCstaRequest.getSelectedItem());
 				CircuitHandler myCircuitHandler=CircuitHandler.getInstance();
-				myCircuitHandler.setCalledDevice(circuitDevice1Text.getText());
-				myCircuitHandler.setCircuitDevice(circuitDevice2Text.getText());
+				myCircuitHandler.setParameter1(parameter1TxtBx.getText());
+				myCircuitHandler.setParameter2(parameter2TxtBx.getText());
 				buildCstaNotify();
 				config.setUserPart(getFromOAD());
 				list.updateFromAddress(config);
@@ -938,6 +1005,55 @@ public class myITSPmainWnd {
 		gbc_btnNotify.gridy = 17;
 		frmMyItspSimulator.getContentPane().add(btnNotify, gbc_btnNotify);
 		
+		tglbtnStartstopLoad = new JToggleButton("Start/Stop Load");
+		tglbtnStartstopLoad.setForeground(Color.BLACK);
+		tglbtnStartstopLoad.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (tglbtnStartstopLoad.isSelected()){//Start
+					logger.trace("Start Load Test");
+					chckbxEnableLoadMode.setEnabled(false);
+					btnAddToSchedule.setEnabled(false);
+					tglbtnStartstopLoad.setForeground(Color.RED);
+					tglbtnStartstopLoad.setText("Stop");
+					tglbtnStartstopLoad.setBackground(Color.GREEN);
+					prepareLoadTestSIPSettings();
+					if (myLoadThread==null){
+						myLoadThread=new LoadThread(list,myITSPmainWnd.this);
+						
+					}else {//in case an older thread is already running accidentally.
+						logger.warn("Older LoadThread found. Set to stop");
+						myLoadThread.setStop();
+						myLoadThread=new LoadThread(list,myITSPmainWnd.this);
+					}
+					logger.trace("New LoadThread is going to start");
+					Thread t=new Thread(myLoadThread,"LoadThread");
+					t.start();
+					
+				}else{//Stop
+					logger.trace("Stop Load Test");
+					chckbxEnableLoadMode.setEnabled(true);
+					btnAddToSchedule.setEnabled(true);
+					tglbtnStartstopLoad.setForeground(Color.GREEN);
+					tglbtnStartstopLoad.setText("Start");
+					tglbtnStartstopLoad.setBackground(Color.RED);
+					if (myLoadThread!=null){
+						myLoadThread.setStop();
+						
+					}else {
+						logger.warn("LoadThread task not found to stop. Soemthing is wrong here!");
+					}
+					myLoadThread=null;
+					
+				}
+			}
+		});
+		tglbtnStartstopLoad.setEnabled(false);
+		GridBagConstraints gbc_tglbtnStartstopLoad = new GridBagConstraints();
+		gbc_tglbtnStartstopLoad.insets = new Insets(0, 0, 5, 5);
+		gbc_tglbtnStartstopLoad.gridx = 5;
+		gbc_tglbtnStartstopLoad.gridy = 17;
+		frmMyItspSimulator.getContentPane().add(tglbtnStartstopLoad, gbc_tglbtnStartstopLoad);
+		
 		textPaneCsta = new JTextPane();
 		textPaneCsta.setEditable(false);
 		GridBagConstraints gbc_textPaneCsta = new GridBagConstraints();
@@ -950,24 +1066,28 @@ public class myITSPmainWnd {
 		JScrollPane scrollPane2 = new JScrollPane(textPaneCsta);
 		frmMyItspSimulator.getContentPane().add(scrollPane2, gbc_textPaneCsta);
 		
-		labelDevice1 = new JLabel("Device 1");
-		GridBagConstraints gbc_labelDevice1 = new GridBagConstraints();
-		gbc_labelDevice1.insets = new Insets(0, 0, 5, 5);
-		gbc_labelDevice1.gridx = 1;
-		gbc_labelDevice1.gridy = 18;
-		frmMyItspSimulator.getContentPane().add(labelDevice1, gbc_labelDevice1);
+		labelParameter1 = new JLabel("Parameter 1");
+		labelParameter1.setHorizontalTextPosition(SwingConstants.RIGHT);
+		labelParameter1.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_labelParameter1 = new GridBagConstraints();
+		gbc_labelParameter1.anchor = GridBagConstraints.EAST;
+		gbc_labelParameter1.insets = new Insets(0, 0, 5, 5);
+		gbc_labelParameter1.gridx = 1;
+		gbc_labelParameter1.gridy = 18;
+		frmMyItspSimulator.getContentPane().add(labelParameter1, gbc_labelParameter1);
 		
-		circuitDevice1Text = new JTextField();
-		circuitDevice1Text.setColumns(10);
-		GridBagConstraints gbc_circuitDevice1Text = new GridBagConstraints();
-		gbc_circuitDevice1Text.insets = new Insets(0, 0, 5, 5);
-		gbc_circuitDevice1Text.fill = GridBagConstraints.HORIZONTAL;
-		gbc_circuitDevice1Text.gridx = 3;
-		gbc_circuitDevice1Text.gridy = 18;
-		frmMyItspSimulator.getContentPane().add(circuitDevice1Text, gbc_circuitDevice1Text);
+		parameter1TxtBx = new JTextField();
+		parameter1TxtBx.setColumns(10);
+		GridBagConstraints gbc_parameter1TxtBx = new GridBagConstraints();
+		gbc_parameter1TxtBx.insets = new Insets(0, 0, 5, 5);
+		gbc_parameter1TxtBx.fill = GridBagConstraints.HORIZONTAL;
+		gbc_parameter1TxtBx.gridx = 3;
+		gbc_parameter1TxtBx.gridy = 18;
+		frmMyItspSimulator.getContentPane().add(parameter1TxtBx, gbc_parameter1TxtBx);
 		
 		JLabel lblMonitorcrossreferenceid = new JLabel("monitorCrossRefId");
 		GridBagConstraints gbc_lblMonitorcrossreferenceid = new GridBagConstraints();
+		gbc_lblMonitorcrossreferenceid.anchor = GridBagConstraints.EAST;
 		gbc_lblMonitorcrossreferenceid.insets = new Insets(0, 0, 5, 5);
 		gbc_lblMonitorcrossreferenceid.gridx = 4;
 		gbc_lblMonitorcrossreferenceid.gridy = 18;
@@ -980,44 +1100,132 @@ public class myITSPmainWnd {
 		gbc_lblMonCrossRefId.gridy = 18;
 		frmMyItspSimulator.getContentPane().add(lblMonCrossRefId, gbc_lblMonCrossRefId);
 		
-		labelDevice2 = new JLabel("Device 2");
-		GridBagConstraints gbc_labelDevice2 = new GridBagConstraints();
-		gbc_labelDevice2.insets = new Insets(0, 0, 5, 5);
-		gbc_labelDevice2.gridx = 1;
-		gbc_labelDevice2.gridy = 19;
-		frmMyItspSimulator.getContentPane().add(labelDevice2, gbc_labelDevice2);
+		labelParameter2 = new JLabel("Parameter 2");
+		labelParameter2.setHorizontalTextPosition(SwingConstants.RIGHT);
+		labelParameter2.setHorizontalAlignment(SwingConstants.RIGHT);
+		GridBagConstraints gbc_labelParameter2 = new GridBagConstraints();
+		gbc_labelParameter2.anchor = GridBagConstraints.EAST;
+		gbc_labelParameter2.insets = new Insets(0, 0, 5, 5);
+		gbc_labelParameter2.gridx = 1;
+		gbc_labelParameter2.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(labelParameter2, gbc_labelParameter2);
 		
-		circuitDevice2Text = new JTextField();
-		circuitDevice2Text.setColumns(10);
-		GridBagConstraints gbc_circuitDevice2Text = new GridBagConstraints();
-		gbc_circuitDevice2Text.insets = new Insets(0, 0, 5, 5);
-		gbc_circuitDevice2Text.fill = GridBagConstraints.HORIZONTAL;
-		gbc_circuitDevice2Text.gridx = 3;
-		gbc_circuitDevice2Text.gridy = 19;
-		frmMyItspSimulator.getContentPane().add(circuitDevice2Text, gbc_circuitDevice2Text);
+		parameter2TxtBx = new JTextField();
+		parameter2TxtBx.setColumns(10);
+		GridBagConstraints gbc_parameter2TxtBx = new GridBagConstraints();
+		gbc_parameter2TxtBx.insets = new Insets(0, 0, 5, 5);
+		gbc_parameter2TxtBx.fill = GridBagConstraints.HORIZONTAL;
+		gbc_parameter2TxtBx.gridx = 3;
+		gbc_parameter2TxtBx.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(parameter2TxtBx, gbc_parameter2TxtBx);
 		
-		JLabel CallIdLabel = new JLabel("call ID");
-		GridBagConstraints gbc_CallIdLabel = new GridBagConstraints();
-		gbc_CallIdLabel.insets = new Insets(0, 0, 5, 5);
-		gbc_CallIdLabel.gridx = 4;
-		gbc_CallIdLabel.gridy = 19;
-		frmMyItspSimulator.getContentPane().add(CallIdLabel, gbc_CallIdLabel);
+		callIdMainLbl = new JLabel("callID(main)");
+		GridBagConstraints gbc_callIdMainLbl = new GridBagConstraints();
+		gbc_callIdMainLbl.anchor = GridBagConstraints.EAST;
+		gbc_callIdMainLbl.insets = new Insets(0, 0, 5, 5);
+		gbc_callIdMainLbl.gridx = 4;
+		gbc_callIdMainLbl.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(callIdMainLbl, gbc_callIdMainLbl);
 		
-		lblCallid = new JLabel("callID");
-		GridBagConstraints gbc_lblCallid = new GridBagConstraints();
-		gbc_lblCallid.insets = new Insets(0, 0, 5, 5);
-		gbc_lblCallid.gridx = 5;
-		gbc_lblCallid.gridy = 19;
-		frmMyItspSimulator.getContentPane().add(lblCallid, gbc_lblCallid);
+		callIdMainTxtBx = new JTextField("callID");
+		GridBagConstraints gbc_callIdMainTxtBx = new GridBagConstraints();
+		gbc_callIdMainTxtBx.fill = GridBagConstraints.HORIZONTAL;
+		gbc_callIdMainTxtBx.insets = new Insets(0, 0, 5, 5);
+		gbc_callIdMainTxtBx.gridx = 5;
+		gbc_callIdMainTxtBx.gridy = 19;
+		frmMyItspSimulator.getContentPane().add(callIdMainTxtBx, gbc_callIdMainTxtBx);
 		//frmMyItspSimulator.getContentPane().add(textPaneCsta, gbc_textPaneCsta);
 		
 		comboBoxCstaRequest = new JComboBox();
+		comboBoxCstaRequest.addItemListener(new ItemListener() {
+			public void itemStateChanged(ItemEvent arg0) {
+				CstaMessages tempCstaMes=(CstaMessages) comboBoxCstaRequest.getSelectedItem();
+				if (tempCstaMes==CstaMessages.MyCSTARequest){
+					myCstaRequestTxt.setEnabled(true);
+				}else{
+					myCstaRequestTxt.setEnabled(false);
+				}
+				updateCSTAParametersLabels(tempCstaMes);
+				
+			}
+		});
+		
+		btnAddToSchedule = new JButton("Add to Schedule");
+		btnAddToSchedule.setEnabled(false);
+		btnAddToSchedule.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				logger.trace("Add new SCTA message to schedule");
+				CSTAMessageHandler myCstaXmlManager=CSTAMessageHandler.getInstance();
+				myCstaXmlManager.setDevice(circuitUserTxt.getText());
+				myCstaXmlManager.setCallID(callIdMainTxtBx.getText());
+				myCstaXmlManager.setCallIDSecondary(callIDSecondaryTxtBx.getText());
+				myCstaXmlManager.setMyCstaXmlMessage(myCstaRequestTxt.getText());
+				myCstaXmlManager.setCstaMessageOutgoing((CstaMessages) comboBoxCstaRequest.getSelectedItem());
+				CircuitHandler myCircuitHandler=CircuitHandler.getInstance();
+				myCircuitHandler.setParameter1(parameter1TxtBx.getText());
+				myCircuitHandler.setParameter2(parameter2TxtBx.getText());
+				ScheduledCstaRequest myScheduledCstaRequest=new ScheduledCstaRequest();
+				myScheduledCstaRequest.myRequest=myCircuitHandler.buildCSTAMessage();
+				myScheduledCstaRequest.myCstaMessage=(CstaMessages) comboBoxCstaRequest.getSelectedItem();
+				LoadSettingsHandler.setScheduledCstaRequest(myScheduledCstaRequest);
+				
+				
+			}
+		});
+		GridBagConstraints gbc_btnAddToSchedule = new GridBagConstraints();
+		gbc_btnAddToSchedule.insets = new Insets(0, 0, 5, 5);
+		gbc_btnAddToSchedule.gridx = 1;
+		gbc_btnAddToSchedule.gridy = 20;
+		frmMyItspSimulator.getContentPane().add(btnAddToSchedule, gbc_btnAddToSchedule);
 		GridBagConstraints gbc_comboBoxCstaRequest = new GridBagConstraints();
 		gbc_comboBoxCstaRequest.insets = new Insets(0, 0, 5, 5);
 		gbc_comboBoxCstaRequest.fill = GridBagConstraints.HORIZONTAL;
 		gbc_comboBoxCstaRequest.gridx = 3;
 		gbc_comboBoxCstaRequest.gridy = 20;
 		frmMyItspSimulator.getContentPane().add(comboBoxCstaRequest, gbc_comboBoxCstaRequest);
+		
+		callIdSecondaryLbl = new JLabel("callID(secondary)");
+		GridBagConstraints gbc_callIdSecondaryLbl = new GridBagConstraints();
+		gbc_callIdSecondaryLbl.anchor = GridBagConstraints.EAST;
+		gbc_callIdSecondaryLbl.insets = new Insets(0, 0, 5, 5);
+		gbc_callIdSecondaryLbl.gridx = 4;
+		gbc_callIdSecondaryLbl.gridy = 20;
+		frmMyItspSimulator.getContentPane().add(callIdSecondaryLbl, gbc_callIdSecondaryLbl);
+		
+		callIDSecondaryTxtBx = new JTextField("callID");
+		GridBagConstraints gbc_callIDSecondaryTxtBx = new GridBagConstraints();
+		gbc_callIDSecondaryTxtBx.insets = new Insets(0, 0, 5, 5);
+		gbc_callIDSecondaryTxtBx.fill = GridBagConstraints.HORIZONTAL;
+		gbc_callIDSecondaryTxtBx.gridx = 5;
+		gbc_callIDSecondaryTxtBx.gridy = 20;
+		frmMyItspSimulator.getContentPane().add(callIDSecondaryTxtBx, gbc_callIDSecondaryTxtBx);
+		
+		causeLbl = new JLabel("cause (cs)");
+		GridBagConstraints gbc_causeLbl = new GridBagConstraints();
+		gbc_causeLbl.insets = new Insets(0, 0, 5, 5);
+		gbc_causeLbl.gridx = 4;
+		gbc_causeLbl.gridy = 21;
+		frmMyItspSimulator.getContentPane().add(causeLbl, gbc_causeLbl);
+		
+		causeValue = new JLabel("<value>");
+		GridBagConstraints gbc_causeValue = new GridBagConstraints();
+		gbc_causeValue.insets = new Insets(0, 0, 5, 5);
+		gbc_causeValue.gridx = 5;
+		gbc_causeValue.gridy = 21;
+		frmMyItspSimulator.getContentPane().add(causeValue, gbc_causeValue);
+		
+		myCstaRequestTxt = new JTextArea();
+		myCstaRequestTxt.setToolTipText("<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" standalone=\\\"yes\\\"?> is auto completed");
+		myCstaRequestTxt.setEnabled(false);
+		myCstaRequestTxt.setText("<Tag>Build your CSTA request</Tag>");
+		myCstaRequestTxt.setRows(4);
+		GridBagConstraints gbc_myCstaRequestTxt = new GridBagConstraints();
+		gbc_myCstaRequestTxt.gridwidth = 3;
+		gbc_myCstaRequestTxt.insets = new Insets(0, 0, 0, 5);
+		gbc_myCstaRequestTxt.fill = GridBagConstraints.BOTH;
+		gbc_myCstaRequestTxt.gridx = 3;
+		gbc_myCstaRequestTxt.gridy = 22;
+		frmMyItspSimulator.getContentPane().add(myCstaRequestTxt, gbc_myCstaRequestTxt);
 		
 		JMenuBar menuBar = new JMenuBar();
 		frmMyItspSimulator.setJMenuBar(menuBar);
@@ -1161,7 +1369,147 @@ public class myITSPmainWnd {
 		mnTraces.add(rdbtnmntmDebug);
 		mnTraces.add(rdbtnmntmTrace);
 		menuBar.add(mnTraces);
+		
+		mnLoad = new JMenu("Load");
+		mnLoad.setEnabled(false);
+		menuBar.add(mnLoad);
+		
+		mntmSettings = new JMenuItem("Settings");
+		mntmSettings.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				LoadSettingsWnd myLoadSettingsWnd=new LoadSettingsWnd();
+				myLoadSettingsWnd.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				myLoadSettingsWnd.setVisible(true);
+			}
+		});
+		mnLoad.add(mntmSettings);
 	}
+	protected void updateCSTAParametersLabels(CstaMessages cm) {
+		String label1="Not Used";
+		String label2="Not Used";
+		String labelMain="User";
+		String callIdMain="cID";
+		String callIdSecondary="cID";
+		switch(cm){
+		case AnswerCall:			
+		case ClearConnection:
+		case HoldCall:
+		case RetreiveCall:
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dID)";
+			break;	
+		case MakeCall:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (caD)";
+			label1=cm.getParameter1Tag();
+			break;
+		case SetForwardingOn:
+		case SetForwardingOff:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dvc)";
+			label1=cm.getParameter1Tag();
+			break;
+		case DeflectCall:
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dID)";
+			label1=cm.getParameter1Tag();
+			break;
+		case ConsultationCall:
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dID)";
+			label1=cm.getParameter1Tag();
+			break;
+		case ReconnectCall:
+			callIdMain+=" (atC)";
+			callIdSecondary+=" (hC)";
+			labelMain+=" (dID)";
+			label1=cm.getParameter1Tag();
+			break;
+		case TransferCall:
+			callIdMain+=" (atC)";
+			callIdSecondary+=" (hC)";
+			labelMain+=" (dID)";
+			label1=cm.getParameter1Tag();
+			break;
+		case AlternateCall:
+			callIdMain+=" (atC)";
+			callIdSecondary+=" (hC)";
+			labelMain+=" (dID)";
+			break;
+		case SingleStepTransferCall:
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dID)";
+			label1=cm.getParameter1Tag();
+			break;
+		case GenerateDigits:
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dID)";
+			label1=cm.getParameter1Tag();
+			break;
+		case MonitorStop:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (Not Used)";
+			label1=cm.getParameter1Tag();
+			break;
+		case GetConfigurationData:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (zcDG)";
+			break;
+		case GetDoNotDisturb:
+		case GetForwarding:
+		case GetLogicalDeviceInformation:
+		case SetDoNotDisturbOn:
+		case SetDoNotDisturbOff:
+		case GetBusy:
+		case SetBusyOn:
+		case SetBusyOff:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dvc)";
+			break;
+		case MonitorStart:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dO)";
+			break;
+		case RequestSystemStatus:
+		case SystemStatus:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (Not Used)";
+			break;
+		case SnapshotDevice:
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (sO)";
+			break;
+		case SnapshotCall:
+			callIdSecondary+=" (Not Used)";
+			labelMain+=" (dID)";
+			break;
+		case MyCSTARequest:
+			labelMain+=" (Not Used)";
+			callIdMain+=" (Not Used)";
+			callIdSecondary+=" (Not Used)";
+			break;
+			
+		default:
+			label1="Not Used";
+			label2="Not Used";
+		}
+		labelParameter1.setText(label1);
+		labelParameter2.setText(label2);
+		lblUser.setText(labelMain);
+		callIdMainLbl.setText(callIdMain);
+		callIdSecondaryLbl.setText(callIdSecondary);
+		
+		
+	}
+
 	protected void buildCstaNotify() {
 		// TODO Auto-generated method stub
 		CircuitHandler myCircuitHandler=CircuitHandler.getInstance();
@@ -1234,7 +1582,7 @@ public class myITSPmainWnd {
 	private void setTelUriDestinationLbl(){
 		setDestinationLbl();
 	}
-	private String getDestination(){
+	public String getDestination(){
 		return  lblRequestLine.getText();
 	}
 	
@@ -1291,6 +1639,7 @@ public class myITSPmainWnd {
 		SIPReqInfo.ReqInvite=myInviteRequest;
 		myRegisteredDevices=new HashMap<String,RegisteredDevice>();
 		myFailoverMode=new FailoverMode();
+		myLoadThread=null;
 		
 		btnOnOff.setText("ON");
 		btnOnOff.setBackground(Color.RED);
@@ -1312,6 +1661,7 @@ public class myITSPmainWnd {
 		hasDtmfFirstOrder=false;
 		colorSwitch=false;
 		chckbxEnableFaileover.setEnabled(false);
+		chckbxEnableLoadMode.setEnabled(false);
 		logger.info("initialize GUI objects finished");
 	}
 	private void setGUIon(){
@@ -1328,6 +1678,7 @@ public class myITSPmainWnd {
 		setButtonStatusIdle();
 		chckbxLateSdp.setEnabled(true);
 		chckbxEnableFaileover.setEnabled(true);
+		chckbxEnableLoadMode.setEnabled(true);
 		showCodec("");
 		
 		comboBoxMyIPs.setEnabled(false);
@@ -1335,6 +1686,7 @@ public class myITSPmainWnd {
 		cmbBoxReInviteMode.setEnabled(false);
 		setTxtLine(SIPHeadersTxt.ResetLines,"");
 		comboBoxUdpTcp.setEnabled(false);
+		//myLoadThread=null;
 	}
 	private void setGUIoff(){
 		state=STATE_OFF;
@@ -1358,7 +1710,10 @@ public class myITSPmainWnd {
 		cmbBoxReInviteMode.setEnabled(false);
 		comboBoxUdpTcp.setEnabled(true);
 		chckbxEnableFaileover.setEnabled(false);
+		chckbxEnableLoadMode.setEnabled(false);
+		btnAddToSchedule.setEnabled(false);
 		showCodec("Codec:N.A");
+		
 	}
 	public void showStatus(String s){
 		lblCallStatus.setText(s);
@@ -1649,7 +2004,24 @@ public class myITSPmainWnd {
 	}
 	
 	public void setCallId(String s){
-		lblCallid.setText(s);
+		callIdMainTxtBx.setText(s);
+	}
+
+	public void setDeviceId(String s) {
+		circuitUserTxt.setText(s);
+		
+	}
+
+	public void setFreeParameter(String s) {
+		causeValue.setText(s);
+		
+	}
+	
+	public void prepareLoadTestSIPSettings(){
+		config.setUserPart(getFromOAD());
+		list.updateFromAddress(config);
+		list.updateCodecList(getAvailableCodecs());
+		//list.userInput(6,getDestination());
 	}
 	
 	

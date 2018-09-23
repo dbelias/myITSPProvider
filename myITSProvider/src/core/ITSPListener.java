@@ -1143,8 +1143,17 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        
 				      }else if (method.equals("NOTIFY")){
 				    	  if (myCircuitServerTransaction == null) {
+				    		  logger.info("myCircuitServerTransaction was null. Request for creating new one");
 				    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
-				        }	
+				    		  if (myCircuitServerTransaction==null){
+				    			  logger.error("New myCircuitServerTransaction is not created" );
+				    		  }else{
+				    			  logger.info("A new one myCircuitServerTransaction was created");
+				    		  }
+				        }else{
+				        	logger.info("myCircuitServerTransaction was already existing but request for new one");
+				        	 myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }
 				    	  handleNotifyRequest(myRequest);
 				      }
 				     break;
@@ -1182,8 +1191,17 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				    	  myGUI.showStatus("Status: RE_INVITE_WAIT_ACK");
 				      } else if (method.equals("NOTIFY")){
 				    	  if (myCircuitServerTransaction == null) {
+				    		  logger.info("myCircuitServerTransaction was null. Request for creating new one");
 				    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
-				        }	
+				    		  if (myCircuitServerTransaction==null){
+				    			  logger.error("New myCircuitServerTransaction is not created" );
+				    		  }else{
+				    			  logger.info("A new one myCircuitServerTransaction was created");
+				    		  }
+				        }else{
+				        	logger.info("myCircuitServerTransaction was already existing but request for new one");
+				        	myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }
 				    	  handleNotifyRequest(myRequest);
 				      }
 				      
@@ -1217,6 +1235,18 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        myGUI.setButtonStatusIdle();
 				        myGUI.setTxtLine(SIPHeadersTxt.ResetLines, "");
 				      }else if (method.equals("NOTIFY")){
+				    	  if (myCircuitServerTransaction == null) {
+				    		  logger.info("myCircuitServerTransaction was null. Request for creating new one");
+				    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				    		  if (myCircuitServerTransaction==null){
+				    			  logger.error("New myCircuitServerTransaction is not created" );
+				    		  }else{
+				    			  logger.info("A new one myCircuitServerTransaction was created");
+				    		  }
+				        }else{
+				        	logger.info("myCircuitServerTransaction was already existing but request for new one");
+				        	myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }
 				    	  handleNotifyRequest(myRequest);
 				      }
 				      break;
@@ -1228,8 +1258,17 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				        myGUI.setButtonStatusEstablishedCall();
 				      }else if (method.equals("NOTIFY")){
 				    	  if (myCircuitServerTransaction == null) {
+				    		  logger.info("myCircuitServerTransaction was null. Request for creating new one");
 				    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
-				        }	
+				    		  if (myCircuitServerTransaction==null){
+				    			  logger.error("New myCircuitServerTransaction is not created" );
+				    		  }else{
+				    			  logger.info("A new one myCircuitServerTransaction was created");
+				    		  }
+				        }else{
+				        	logger.info("myCircuitServerTransaction was already existing but request for new one");
+				        	myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+				        }
 				    	  handleNotifyRequest(myRequest);
 				      }
 				        break;
@@ -1291,8 +1330,17 @@ public void processRequest(RequestEvent requestReceivedEvent) {
 				              
 				        }else if (method.equals("NOTIFY")){
 				        	if (myCircuitServerTransaction == null) {
+					    		  logger.info("myCircuitServerTransaction was null. Request for creating new one");
 					    		  myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
-					        }	
+					    		  if (myCircuitServerTransaction==null){
+					    			  logger.error("New myCircuitServerTransaction is not created" );
+					    		  }else{
+					    			  logger.info("A new one myCircuitServerTransaction was created");
+					    		  }
+					        }else{
+					        	logger.info("myCircuitServerTransaction was already existing but request for new one");
+					        	myCircuitServerTransaction = mySipProvider.getNewServerTransaction(myRequest);
+					        }
 					    	  handleNotifyRequest(myRequest);
 					      }  
 
@@ -2391,13 +2439,14 @@ private void handleNotifyResponse(Response myResponse) {
 				CircuitHandler.myCircuitGuiUpdate.clear();
 				
 			}else {
-				logger.info("NOTIFY Response without csta+xml content");
+				logger.warn("NOTIFY Response with csta+xml content null (size=zero)");
 			}
 			
 		}else {
-			//TODO: Ignore it w/o doing anything?
+			logger.info("NOTIFY Response without csta+xml content");
 		}
 	}catch (Exception e){
+		logger.error("Exeption in handleNotifyResponse with exxeption: ",e );
 		e.printStackTrace();
 	}
 	
@@ -2409,20 +2458,39 @@ private void handleNotifyRequest(Request myRequest) {
 	Response myResponse;
 	try {
 		byte[] cont=(byte[]) myRequest.getContent();
-		myGUI.displayCsta("<<< "+cont.toString());
+		myGUI.displayCsta("<<< "+new String(cont));
 		myCstaXmlManager.getContentRequest(cont);
         myCircuitHandler.analyzeNotifyRequestContent();
+        for (CircuitGuiUpdates cgu: CircuitHandler.myCircuitGuiUpdate){
+			switch (cgu){
+			case Cause:
+				myGUI.setFreeParameter(myCircuitHandler.getFreeParamter());
+			case DeviceID:
+				myGUI.setDeviceId(myCircuitHandler.getDeviceId());
+			case MonitorCrossRefId:
+				myGUI.setMonitorCrossRefId(myCircuitHandler.getMonitorCrossRefId());
+				break;
+			case CallId:
+				myGUI.setCallId(myCircuitHandler.getCallId());
+				break;
+			}
+		}
+		CircuitHandler.myCircuitGuiUpdate.clear();
         
 		myResponse = myMessageFactory.createResponse(200,myRequest);
+		ToHeader myToHeader = (ToHeader) myResponse.getHeader("To");
+        myToHeader.setTag(generateToTag("0123456789-"));
 	
     
-	if 	(myCircuitHandler.getSendOutgoingResponse()){
+	if 	(myCircuitHandler.getSendOutgoingResponseWithXml()){
 		logger.info("myITSP tool has to send 200 OK with csta+xml content");
 		ContentTypeHeader contentTypeHeader=myHeaderFactory.createContentTypeHeader("application","csta+xml");
 		byte[] content=myCstaXmlManager.createContentResponse();
 		 myGUI.displayCsta(">>> "+new String(content));
 		 myResponse.setContent(content,contentTypeHeader);
-		 myCircuitHandler.resetSendOutgoingResponse();
+		 myCircuitHandler.resetSendOutgoingResponseWithXml();
+	}else{
+		logger.info("myITSP tool has to send 200 OK without csta+xml content");
 	}
 	//myResponse.addHeader(myContactHeader);
 	
@@ -2482,6 +2550,17 @@ private String generateNonce() {
 	}
 
 }
+private String generateToTag(){
+	return generateToTag("0987654321-");
+}
+private String generateToTag(String s){
+	 	Date date = new Date();
+	    long time = date.getTime();
+	    Random rand = new Random();
+	    long myRand = rand.nextLong();
+	    return s+(new Long(time)).toString()+ (new Long(myRand)).toString();
+}
+
 private static String toHexString(byte b[]) {
 	final char[] toHex = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
     int pos = 0;
@@ -2602,6 +2681,10 @@ private String typeDecoder(int type){
 		s="Unknown Type";
 	}
 	return s;
+}
+
+public synchronized int getCoreState(){
+	return status;
 }
 
 }

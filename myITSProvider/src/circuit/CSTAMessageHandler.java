@@ -11,8 +11,10 @@ public class CSTAMessageHandler {
 	private static String device;
 	private static String monitorCrossRefID;
 	private static String callID;
+	private static String callIDSecondary;
 	private static CstaMessages messageOutgoing;
 	private static CstaMessages messageIncoming;
+	private static String myCstaXmlMessage;
 	private static volatile CSTAMessageHandler myCstaMessageHandler;
 	
 	
@@ -65,6 +67,22 @@ public class CSTAMessageHandler {
 
 	public  void setCallID(String callID) {
 		CSTAMessageHandler.callID = callID;
+	}
+
+	public String getCallIDSecondary() {
+		return callIDSecondary;
+	}
+
+	public void setCallIDSecondary(String callIDSecondary) {
+		CSTAMessageHandler.callIDSecondary = callIDSecondary;
+	}
+
+	public String getMyCstaXmlMessage() {
+		return myCstaXmlMessage;
+	}
+
+	public void setMyCstaXmlMessage(String myCstaXmlMessage) {
+		CSTAMessageHandler.myCstaXmlMessage = myCstaXmlMessage;
 	}
 
 	public void setCstaMessageOutgoing(CstaMessages mes){

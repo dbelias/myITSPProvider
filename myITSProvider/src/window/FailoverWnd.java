@@ -40,6 +40,7 @@ public class FailoverWnd extends JDialog {
 	private JRadioButton rdbtnServiceUnavailable;
 	private JRadioButton rdbtnServerTime;
 	private JRadioButton rdbtnBusyEverywhere;
+	private JRadioButton rdbtnCallTransactionNotExist;
 	private FailoverMode myFailoverMode;
 	private JTextField textField;
 	private JCheckBox lblRetryAftersecs;
@@ -50,7 +51,7 @@ public class FailoverWnd extends JDialog {
 	public FailoverWnd(FailoverMode failMode) {
 		myFailoverMode=failMode;
 		setTitle("Failover Modes");
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 450, 350);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
@@ -59,7 +60,7 @@ public class FailoverWnd extends JDialog {
 			JPanel panel = new JPanel();
 			panel.setBorder(new TitledBorder(UIManager.getBorder("TitledBorder.border"), "Modes", TitledBorder.CENTER, TitledBorder.TOP, null, new Color(0, 0, 0)));
 			contentPanel.add(panel, "cell 0 0,grow");
-			panel.setLayout(new MigLayout("", "[]", "[][][][][][]"));
+			panel.setLayout(new MigLayout("", "[]", "[][][][][][][]"));
 			{
 				rdbtnForbidden = new JRadioButton("403 Forbidden");
 				rdbtnForbidden.addMouseListener(new MouseAdapter() {
@@ -126,6 +127,17 @@ public class FailoverWnd extends JDialog {
 				panel.add(rdbtnBusyEverywhere, "cell 0 5");
 				buttonGroup.add(rdbtnBusyEverywhere);
 			}
+			{
+				rdbtnCallTransactionNotExist= new JRadioButton("481 Call/Transaction Not Exist");
+				rdbtnCallTransactionNotExist.addMouseListener(new MouseAdapter() {
+					@Override
+					public void mouseReleased(MouseEvent arg0) {
+						lblRetryAftersecs.setSelected(false);
+					}
+				});
+				panel.add(rdbtnCallTransactionNotExist, "cell 0 6");
+				buttonGroup.add(rdbtnCallTransactionNotExist);
+			}
 		}
 		{
 			lblRetryAftersecs = new JCheckBox("Retry After (secs)");
@@ -159,6 +171,12 @@ public class FailoverWnd extends JDialog {
 			}
 			{
 				JButton cancelButton = new JButton("Cancel");
+				cancelButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						setVisible(false);
+						dispose();
+					}
+				});
 				cancelButton.setActionCommand("Cancel");
 				buttonPane.add(cancelButton);
 				setVisible(false);
@@ -195,6 +213,10 @@ public class FailoverWnd extends JDialog {
 			failMode.setFailoverHeader(SIPResponse.BUSY_EVERYWHERE);
 			return;
 		}
+		if (rdbtnCallTransactionNotExist.isSelected()){
+			failMode.setFailoverHeader(SIPResponse.CALL_OR_TRANSACTION_DOES_NOT_EXIST);
+			return;
+		}
 		
 	}
 
@@ -221,6 +243,8 @@ public class FailoverWnd extends JDialog {
 			break;
 		case SIPResponse.BUSY_EVERYWHERE:
 			rdbtnBusyEverywhere.setSelected(true);
+			break;
+		case SIPResponse.CALL_OR_TRANSACTION_DOES_NOT_EXIST:
 			break;
 		
 		}

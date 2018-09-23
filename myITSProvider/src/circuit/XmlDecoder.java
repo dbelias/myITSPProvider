@@ -8,25 +8,29 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import org.xml.sax.SAXException;
 
-import cstaResponses.ConnectionClearedEvent;
-import cstaResponses.DeliveredEvent;
-import cstaResponses.EstablishedEvent;
-import cstaResponses.GetDoNotDisturbResponse;
-import cstaResponses.GetForwardingResponse;
-import cstaResponses.GetLogicalDeviceInformationResponse;
-import cstaResponses.MakeCallResponse;
-import cstaResponses.MonitorStartResponse;
-import cstaResponses.OriginatedEvent;
-import cstaResponses.RequestSystemStatusResponse;
-import cstaResponses.ServiceInitiatedEvent;
-import cstaResponses.SnapshotDeviceResponse;
+import cstaIncomingResponses.ConnectionClearedEvent;
+import cstaIncomingResponses.DeliveredEvent;
+import cstaIncomingResponses.EstablishedEvent;
+import cstaIncomingResponses.GetDoNotDisturbResponse;
+import cstaIncomingResponses.GetForwardingResponse;
+import cstaIncomingResponses.GetLogicalDeviceInformationResponse;
+import cstaIncomingResponses.HeldEvent;
+import cstaIncomingResponses.MakeCallResponse;
+import cstaIncomingResponses.MonitorStartResponse;
+import cstaIncomingResponses.OriginatedEvent;
+import cstaIncomingResponses.RequestSystemStatusResponse;
+import cstaIncomingResponses.RetrievedEvent;
+import cstaIncomingResponses.ServiceInitiatedEvent;
+import cstaIncomingResponses.SnapshotDeviceResponse;
 
 public class XmlDecoder {
+	private static Logger logger=Logger.getLogger("XmlDecoder");
 	private InputStream xmlInputStream;
 	public Document doc;
 	public Element rootElement;
@@ -48,13 +52,13 @@ public class XmlDecoder {
 			 for (CstaMessages m: CstaMessages.values()){
 				 if (m.getTag().equals(response)){
 					 myCstaMessage=m;
-					 
+					 logger.info("XML Decoder recognized XML message as "+m.getDescription());
 					 break;
 				 }
 			 }
 			 
 		}catch (ParserConfigurationException | SAXException | IOException e){
-			
+			logger.error("Exception in XML Decoder",e);
 		}
 	}
 	
@@ -62,7 +66,9 @@ public class XmlDecoder {
 		if (myCstaMessage!=null){
 			return myCstaMessage;
 		}else {
-			throw new NullPointerException();
+			logger.error("XML Decoder didn't recognize the XML message. Unknown or not implemented yet");
+			return CstaMessages.Unknown;
+			//throw new NullPointerException();
 		}
 	}
 	
@@ -113,6 +119,13 @@ public class XmlDecoder {
 			case OriginatedEvent:
 				myObject=new OriginatedEvent(doc);
 				break;
+			case HeldEvent:
+				myObject=new HeldEvent(doc);
+				break;
+			case RetrievedEvent:
+				myObject=new RetrievedEvent(doc);
+				break;
+				
 			default:
 				
 			}
